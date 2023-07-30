@@ -2,9 +2,9 @@ package org.knulikelion.moneyisinvest.controller;
 
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
-import org.knulikelion.moneyisinvest.data.dto.PostDto;
-import org.knulikelion.moneyisinvest.data.dto.PostResponseDto;
-import org.knulikelion.moneyisinvest.data.dto.PostUpdateDto;
+import org.knulikelion.moneyisinvest.data.dto.request.PostRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.response.PostResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.request.PostUpdateRequestDto;
 import org.knulikelion.moneyisinvest.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -35,15 +35,15 @@ public class PostController {
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @PostMapping("/new")
-    public ResponseEntity<PostResponseDto> newPost(@RequestBody PostDto postDto) {
-        PostResponseDto postResponseDto = postService.newPost(postDto);
+    public ResponseEntity<PostResponseDto> newPost(@RequestBody PostRequestDto postRequestDto) {
+        PostResponseDto postResponseDto = postService.newPost(postRequestDto);
 
         return ResponseEntity.status(HttpStatus.OK).body(postResponseDto);
     }
 
     @PutMapping("/modify")
-    public ResponseEntity<PostResponseDto> modifyPost(@RequestBody PostUpdateDto postUpdateDto) throws Exception {
-        PostResponseDto postResponseDto = postService.modifyPost(postUpdateDto);
+    public ResponseEntity<PostResponseDto> modifyPost(@RequestBody PostUpdateRequestDto postUpdateRequestDto) throws Exception {
+        PostResponseDto postResponseDto = postService.modifyPost(postUpdateRequestDto);
 
         return ResponseEntity.status(HttpStatus.OK).body(postResponseDto);
     }
