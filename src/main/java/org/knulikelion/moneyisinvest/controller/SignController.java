@@ -1,8 +1,9 @@
 package org.knulikelion.moneyisinvest.controller;
 
-import io.swagger.annotations.ApiParam;
-import org.knulikelion.moneyisinvest.data.dto.SignInResultDto;
-import org.knulikelion.moneyisinvest.data.dto.SignUpResultDto;
+import org.knulikelion.moneyisinvest.data.dto.request.SignInRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.response.SignInResultDto;
+import org.knulikelion.moneyisinvest.data.dto.request.SignUpRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.response.SignUpResultDto;
 import org.knulikelion.moneyisinvest.service.SignService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,31 +28,24 @@ public class SignController {
     }
 
     @PostMapping(value = "/sign-in")
-    public SignInResultDto signIn(
-            @ApiParam(value = "ID", required = true) @RequestParam String id,
-            @ApiParam(value = "Password", required = true) @RequestParam String password)
-            throws RuntimeException {
-        LOGGER.info("[signIn] 로그인을 시도하고 있습니다. id : {}, pw : ****", id);
-        SignInResultDto signInResultDto = signService.signIn(id, password);
+    public SignInResultDto signIn(@RequestBody SignInRequestDto signInRequestDto) throws RuntimeException {
+        LOGGER.info("[signIn] 로그인을 시도하고 있습니다. id : {}, pw : ****", signInRequestDto.getUsername());
+        SignInResultDto signInResultDto = signService.signIn(signInRequestDto);
 
         if (signInResultDto.getCode() == 0) {
-            LOGGER.info("[signIn] 정상적으로 로그인되었습니다. id : {}, token : {}", id,
+            LOGGER.info("[signIn] 정상적으로 로그인되었습니다. id : {}, token : {}", signInRequestDto.getUsername(),
                     signInResultDto.getToken());
         }
         return signInResultDto;
     }
 
     @PostMapping(value = "/sign-up")
-    public SignUpResultDto signUp(
-            @ApiParam(value = "ID", required = true) @RequestParam String id,
-            @ApiParam(value = "비밀번호", required = true) @RequestParam String password,
-            @ApiParam(value = "이름", required = true) @RequestParam String name,
-            @ApiParam(value = "권한", required = true) @RequestParam String role) {
-        LOGGER.info("[signUp] 회원가입을 수행합니다. id : {}, password : ****, name : {}, role : {}", id,
-                name, role);
-        SignUpResultDto signUpResultDto = signService.signUp(id, password, name, role);
+    public SignUpResultDto signUp(@RequestBody SignUpRequestDto signUpRequestDto) {
+        LOGGER.info("[signUp] 회원가입을 수행합니다. id : {}, password : ****, name : {}, role : {}", signUpRequestDto.getUsername(),
+                signUpRequestDto.getName(), signUpRequestDto.getRole());
+        SignUpResultDto signUpResultDto = signService.signUp(signUpRequestDto);
 
-        LOGGER.info("[signUp] 회원가입을 완료했습니다. id : {}", id);
+        LOGGER.info("[signUp] 회원가입을 완료했습니다. id : {}", signUpRequestDto.getUsername());
         return signUpResultDto;
     }
 
