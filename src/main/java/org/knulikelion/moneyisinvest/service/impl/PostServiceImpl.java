@@ -1,8 +1,8 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
-import org.knulikelion.moneyisinvest.data.dto.PostDto;
-import org.knulikelion.moneyisinvest.data.dto.PostResponseDto;
-import org.knulikelion.moneyisinvest.data.dto.PostUpdateDto;
+import org.knulikelion.moneyisinvest.data.dto.request.PostRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.response.PostResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.request.PostUpdateRequestDto;
 import org.knulikelion.moneyisinvest.data.entity.Post;
 import org.knulikelion.moneyisinvest.data.repository.PostRepository;
 import org.knulikelion.moneyisinvest.service.PostService;
@@ -31,10 +31,10 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PostResponseDto newPost(PostDto postDto) {
+    public PostResponseDto newPost(PostRequestDto postRequestDto) {
         Post post = new Post();
-        post.setTitle(postDto.getTitle());
-        post.setContents(postDto.getContents());
+        post.setTitle(postRequestDto.getTitle());
+        post.setContents(postRequestDto.getContents());
 
         Post savedPost = postRepository.save(post);
 
@@ -47,10 +47,10 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PostResponseDto modifyPost(PostUpdateDto postUpdateDto) {
-        Post post = postRepository.findById(postUpdateDto.getId()).get();
-        post.setTitle(postUpdateDto.getTitle());
-        post.setContents(postUpdateDto.getContents());
+    public PostResponseDto modifyPost(PostUpdateRequestDto postUpdateRequestDto) {
+        Post post = postRepository.findById(postUpdateRequestDto.getId()).get();
+        post.setTitle(postUpdateRequestDto.getTitle());
+        post.setContents(postUpdateRequestDto.getContents());
         Post modifiedPost = postRepository.save(post);
 
         PostResponseDto postResponseDto = new PostResponseDto();
