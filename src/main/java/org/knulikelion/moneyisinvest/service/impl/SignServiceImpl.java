@@ -2,8 +2,10 @@ package org.knulikelion.moneyisinvest.service.impl;
 
 import org.knulikelion.moneyisinvest.common.CommonResponse;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
-import org.knulikelion.moneyisinvest.data.dto.SignInResultDto;
-import org.knulikelion.moneyisinvest.data.dto.SignUpResultDto;
+import org.knulikelion.moneyisinvest.data.dto.request.SignInRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.response.SignInResultDto;
+import org.knulikelion.moneyisinvest.data.dto.request.SignUpRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.response.SignUpResultDto;
 import org.knulikelion.moneyisinvest.data.entity.User;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.SignService;
@@ -32,21 +34,21 @@ public class SignServiceImpl implements SignService {
     }
 
     @Override
-    public SignUpResultDto signUp(String id, String password, String name, String role) {
+    public SignUpResultDto signUp(SignUpRequestDto signUpRequestDto) {
         LOGGER.info("[getSignUpResult] 회원 가입 정보 전달");
         User user;
-        if (role.equalsIgnoreCase("admin")) {
+        if (signUpRequestDto.getRole().equalsIgnoreCase("admin")) {
             user = User.builder()
-                    .uid(id)
-                    .name(name)
-                    .password(passwordEncoder.encode(password))
+                    .uid(signUpRequestDto.getUsername())
+                    .name(signUpRequestDto.getName())
+                    .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
                     .roles(Collections.singletonList("ROLE_ADMIN"))
                     .build();
         } else {
             user = User.builder()
-                    .uid(id)
-                    .name(name)
-                    .password(passwordEncoder.encode(password))
+                    .uid(signUpRequestDto.getUsername())
+                    .name(signUpRequestDto.getName())
+                    .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
                     .roles(Collections.singletonList("ROLE_USER"))
                     .build();
         }
@@ -66,13 +68,13 @@ public class SignServiceImpl implements SignService {
     }
 
     @Override
-    public SignInResultDto signIn(String id, String password) throws RuntimeException {
+    public SignInResultDto signIn(SignInRequestDto signInRequestDto) throws RuntimeException {
         LOGGER.info("[getSignInResult] signDataHandler 로 회원 정보 요청");
-        User user = userRepository.getByUid(id);
-        LOGGER.info("[getSignInResult] Id : {}", id);
+        User user = userRepository.getByUid(signInRequestDto.getUsername());
+        LOGGER.info("[getSignInResult] Id : {}", signInRequestDto.getUsername());
 
         LOGGER.info("[getSignInResult] 패스워드 비교 수행");
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        if (!passwordEncoder.matches(signInRequestDto.getPassword(), user.getPassword())) {
             throw new RuntimeException();
         }
         LOGGER.info("[getSignInResult] 패스워드 일치");

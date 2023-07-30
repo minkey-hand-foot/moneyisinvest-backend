@@ -1,9 +1,11 @@
 package org.knulikelion.moneyisinvest.service;
 
-import org.knulikelion.moneyisinvest.data.dto.SignInResultDto;
-import org.knulikelion.moneyisinvest.data.dto.SignUpResultDto;
+import org.knulikelion.moneyisinvest.data.dto.request.SignInRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.response.SignInResultDto;
+import org.knulikelion.moneyisinvest.data.dto.request.SignUpRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.response.SignUpResultDto;
 
 public interface SignService {
-    SignUpResultDto signUp(String id, String password, String name, String role);
-    SignInResultDto signIn(String id, String password) throws RuntimeException;
+    SignUpResultDto signUp(SignUpRequestDto signUpRequestDto);
+    SignInResultDto signIn(SignInRequestDto signInRequestDto) throws RuntimeException;
 }
