@@ -1,4 +1,4 @@
-package org.knulikelion.moneyisinvest.data.dto;
+package org.knulikelion.moneyisinvest.data.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,6 +9,8 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class EntryPointErrorResponse {
+public class SignUpResultDto {
+    private boolean success;
+    private int code;
     private String msg;
 }

@@ -1,4 +1,4 @@
-package org.knulikelion.moneyisinvest.data.dto;
+package org.knulikelion.moneyisinvest.data.dto.response;
 
 import lombok.*;
 
