@@ -1,7 +1,7 @@
 package org.knulikelion.moneyisinvest.config.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.knulikelion.moneyisinvest.data.dto.EntryPointErrorResponse;
+import org.knulikelion.moneyisinvest.data.dto.response.EntryPointErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.AuthenticationException;
