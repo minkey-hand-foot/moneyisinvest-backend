@@ -1,4 +1,4 @@
-package org.knulikelion.moneyisinvest.data.dto;
+package org.knulikelion.moneyisinvest.data.dto.request;
 
 import lombok.*;
 
@@ -7,7 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 @Builder
-public class PostDto {
+public class PostRequestDto {
     private String title;
     private String contents;
 }
