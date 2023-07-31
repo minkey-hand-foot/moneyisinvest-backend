@@ -40,14 +40,14 @@ public class SignServiceImpl implements SignService {
 
         if (signUpRequestDto.getRole().equalsIgnoreCase("admin")) {
             user = User.builder()
-                    .uid(signUpRequestDto.getUsername())
+                    .uid(signUpRequestDto.getUid())
                     .name(signUpRequestDto.getName())
                     .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
                     .roles(Collections.singletonList("ROLE_ADMIN"))
                     .build();
         } else {
             user = User.builder()
-                    .uid(signUpRequestDto.getUsername())
+                    .uid(signUpRequestDto.getUid())
                     .name(signUpRequestDto.getName())
                     .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
                     .roles(Collections.singletonList("ROLE_USER"))
@@ -78,8 +78,8 @@ public class SignServiceImpl implements SignService {
     @Override
     public SignInResultDto signIn(SignInRequestDto signInRequestDto) throws RuntimeException {
         LOGGER.info("[getSignInResult] signDataHandler 로 회원 정보 요청");
-        User user = userRepository.getByUid(signInRequestDto.getUsername());
-        LOGGER.info("[getSignInResult] Id : {}", signInRequestDto.getUsername());
+        User user = userRepository.getByUid(signInRequestDto.getUid());
+        LOGGER.info("[getSignInResult] Id : {}", signInRequestDto.getUid());
 
         LOGGER.info("[getSignInResult] 패스워드 비교 수행");
         if (!passwordEncoder.matches(signInRequestDto.getPassword(), user.getPassword())) {
@@ -91,7 +91,7 @@ public class SignServiceImpl implements SignService {
         SignInResultDto signInResultDto = SignInResultDto.builder()
                 .token(jwtTokenProvider.createToken(String.valueOf(user.getUid()),
                         user.getRoles()))
-                .username(user.getUsername())
+                .uid(user.getUid())
                 .build();
 
         LOGGER.info("[getSignInResult] SignInResultDto 객체에 값 주입");
