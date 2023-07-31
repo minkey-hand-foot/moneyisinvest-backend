@@ -35,7 +35,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                                 "exception").permitAll() // 가입 및 로그인 주소는 허용
                 .antMatchers(HttpMethod.GET, "/post/**").permitAll() // product로 시작하는 Get 요청은 허용
                 .antMatchers(HttpMethod.POST, "/post/**").hasRole("USER") // product로 시작하는 Post 요청은 허용, USER
-
+                .antMatchers("/api/v1/community/**").hasRole("USER")
                 .antMatchers("**exception**").permitAll()
 
                 .anyRequest().hasRole("ADMIN") // 나머지 요청은 인증된 ADMIN만 접근 가능
