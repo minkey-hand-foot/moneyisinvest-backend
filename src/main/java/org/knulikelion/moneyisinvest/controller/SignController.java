@@ -29,11 +29,11 @@ public class SignController {
 
     @PostMapping(value = "/sign-in")
     public SignInResultDto signIn(@RequestBody SignInRequestDto signInRequestDto) throws RuntimeException {
-        LOGGER.info("[signIn] 로그인을 시도하고 있습니다. id : {}, pw : ****", signInRequestDto.getUsername());
+        LOGGER.info("[signIn] 로그인을 시도하고 있습니다. id : {}, pw : ****", signInRequestDto.getUid());
         SignInResultDto signInResultDto = signService.signIn(signInRequestDto);
 
         if (signInResultDto.getCode() == 0) {
-            LOGGER.info("[signIn] 정상적으로 로그인되었습니다. id : {}, token : {}", signInRequestDto.getUsername(),
+            LOGGER.info("[signIn] 정상적으로 로그인되었습니다. id : {}, token : {}", signInRequestDto.getUid(),
                     signInResultDto.getToken());
         }
         return signInResultDto;
@@ -41,14 +41,14 @@ public class SignController {
 
     @PostMapping(value = "/sign-up")
     public SignUpResultDto signUp(@RequestBody SignUpRequestDto signUpRequestDto) {
-        LOGGER.info("[signUp] 회원가입을 수행합니다. id : {}, password : ****, name : {}, role : {}", signUpRequestDto.getUsername(),
+        LOGGER.info("[signUp] 회원가입을 수행합니다. id : {}, password : ****, name : {}, role : {}", signUpRequestDto.getUid(),
                 signUpRequestDto.getName(), signUpRequestDto.getRole());
         SignUpResultDto signUpResultDto = signService.signUp(signUpRequestDto);
 
         if(signUpResultDto.getCode() == 1) {
-            LOGGER.info("[signUp] 회원가입을 완료할 수 없습니다. id : {}", signUpRequestDto.getUsername());
+            LOGGER.info("[signUp] 회원가입을 완료할 수 없습니다. id : {}", signUpRequestDto.getUid());
         } else {
-            LOGGER.info("[signUp] 회원가입을 완료했습니다. id : {}", signUpRequestDto.getUsername());
+            LOGGER.info("[signUp] 회원가입을 완료했습니다. id : {}", signUpRequestDto.getUid());
         }
 
         return signUpResultDto;
