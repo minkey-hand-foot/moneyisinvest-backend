@@ -8,12 +8,12 @@ import lombok.*;
 @ToString
 public class SignInResultDto extends SignUpResultDto {
     private String token;
-    private String username;
+    private String uid;
 
     @Builder
-    public SignInResultDto(boolean success, int code, String msg, String token, String username) {
+    public SignInResultDto(boolean success, int code, String msg, String token, String uid) {
         super(success, code, msg);
         this.token = token;
-        this.username = username;
+        this.uid = uid;
     }
 }
