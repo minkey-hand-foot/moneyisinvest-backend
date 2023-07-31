@@ -8,6 +8,7 @@ import lombok.*;
 @ToString
 @Builder
 public class CommentResponseDto {
+    private Long id;
     private String comment;
     private String uid;
     private String name;

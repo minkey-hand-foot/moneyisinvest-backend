@@ -61,6 +61,7 @@ public class CommunityServiceImpl implements CommunityService {
         for (Community foundComment : foundComments) {
             CommentResponseDto commentResponseDto = new CommentResponseDto();
 
+            commentResponseDto.setId(foundComment.getId());
             commentResponseDto.setComment(foundComment.getComment());
             commentResponseDto.setUid(foundComment.getUser().getUid());
             commentResponseDto.setName(foundComment.getUser().getName());
