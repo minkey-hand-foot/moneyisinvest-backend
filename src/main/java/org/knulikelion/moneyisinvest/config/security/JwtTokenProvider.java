@@ -49,10 +49,14 @@ public class JwtTokenProvider {
 
         Date now = new Date();
         String token = Jwts.builder()
+//                정보 저장
                 .setClaims(claims)
+//                토큰 발행 시간 정보
                 .setIssuedAt(now)
+//                토큰 만료 시간 정보
                 .setExpiration(new Date(now.getTime() + tokenValidMillisecond))
-                .signWith(SignatureAlgorithm.HS256, secretKey) // 암호화 알고리즘, secret 값 세팅
+//                암호화 알고리즘, secret 값 세팅
+                .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
 
         LOGGER.info("[createToken] 토큰 생성 완료");
