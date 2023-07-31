@@ -30,8 +30,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
                 .and()
                 .authorizeRequests() // 리퀘스트에 대한 사용권한 체크
-                .antMatchers("/sign-api/sign-in", "/sign-api/sign-up",
-                        "/sign-api/exception").permitAll() // 가입 및 로그인 주소는 허용
+                .antMatchers("/api/v1/sign-in", "/api/v1/sign-up",
+                        "/api/v1/" +
+                                "exception").permitAll() // 가입 및 로그인 주소는 허용
                 .antMatchers(HttpMethod.GET, "/post/**").permitAll() // product로 시작하는 Get 요청은 허용
                 .antMatchers(HttpMethod.POST, "/post/**").hasRole("USER") // product로 시작하는 Post 요청은 허용, USER
 
