@@ -37,6 +37,7 @@ public class SignServiceImpl implements SignService {
     public SignUpResultDto signUp(SignUpRequestDto signUpRequestDto) {
         LOGGER.info("[getSignUpResult] 회원 가입 정보 전달");
         User user;
+
         if (signUpRequestDto.getRole().equalsIgnoreCase("admin")) {
             user = User.builder()
                     .uid(signUpRequestDto.getUsername())
@@ -53,17 +54,24 @@ public class SignServiceImpl implements SignService {
                     .build();
         }
 
-        User savedUser = userRepository.save(user);
         SignUpResultDto signUpResultDto = new SignInResultDto();
 
-        LOGGER.info("[getSignUpResult] userEntity 값이 들어왔는지 확인 후 결과값 주입");
-        if (!savedUser.getName().isEmpty()) {
-            LOGGER.info("[getSignUpResult] 정상 처리 완료");
-            setSuccessResult(signUpResultDto);
+        if(userRepository.findByUid(user.getUid()) != null) {
+            signUpResultDto.setSuccess(false);
+            signUpResultDto.setMsg("이미 가입된 회원");
+            signUpResultDto.setCode(1);
         } else {
-            LOGGER.info("[getSignUpResult] 실패 처리 완료");
-            setFailResult(signUpResultDto);
+            User savedUser = userRepository.save(user);
+            LOGGER.info("[getSignUpResult] userEntity 값이 들어왔는지 확인 후 결과값 주입");
+            if (!savedUser.getName().isEmpty()) {
+                LOGGER.info("[getSignUpResult] 정상 처리 완료");
+                setSuccessResult(signUpResultDto);
+            } else {
+                LOGGER.info("[getSignUpResult] 실패 처리 완료");
+                setFailResult(signUpResultDto);
+            }
         }
+
         return signUpResultDto;
     }
 
