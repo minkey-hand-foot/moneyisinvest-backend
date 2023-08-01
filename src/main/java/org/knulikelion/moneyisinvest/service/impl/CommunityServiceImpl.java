@@ -1,6 +1,7 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
 import org.knulikelion.moneyisinvest.data.dto.request.CommentRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.request.CommentUpdateRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.CommentResponseDto;
 import org.knulikelion.moneyisinvest.data.entity.Community;
@@ -91,4 +92,24 @@ public class CommunityServiceImpl implements CommunityService {
         return baseResponseDto;
     }
 
+    @Override
+    public BaseResponseDto updateComment(CommentUpdateRequestDto commentUpdateRequestDto) {
+        BaseResponseDto baseResponseDto = new BaseResponseDto();
+
+        Community newComment = communityRepository.getById(commentUpdateRequestDto.getId());
+        if(newComment != null) {
+            newComment.setComment(commentUpdateRequestDto.getComment());
+            newComment.setUpdatedAt(LocalDateTime.now());
+
+            communityRepository.save(newComment);
+            System.out.println(newComment);
+
+            baseResponseDto.setSuccess(true);
+            baseResponseDto.setMsg("댓글 업데이트가 완료되었습니다.");
+        } else {
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("해당 댓글을 찾을 수 없습니다.");
+        }
+        return baseResponseDto;
+    }
 }
