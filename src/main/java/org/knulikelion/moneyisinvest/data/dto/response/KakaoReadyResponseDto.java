@@ -14,5 +14,7 @@ public class KakaoReadyResponseDto {
     private String next_redirect_mobile_url;
 //    PC 결제 페이지 URL
     private String next_redirect_pc_url;
+//    결제 요청 사용자
+    private String uid;
     private String created_at;
 }

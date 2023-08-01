@@ -37,7 +37,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST, "/post/**").hasRole("USER") // product로 시작하는 Post 요청은 허용, USER
                 .antMatchers("/api/v1/community/**").hasRole("USER")
                 .antMatchers("**exception**").permitAll()
-                .antMatchers("/api/v1/payment/**").permitAll()
+                .antMatchers("/api/v1/payment/kakao/pay").hasRole("USER")
+                .antMatchers("/api/v1/payment/kakao/success").permitAll()
+                .antMatchers("/api/v1/payment/kakao/cancel").permitAll()
+                .antMatchers("/api/v1/payment/kakao/fail").permitAll()
 
                 .anyRequest().hasRole("ADMIN") // 나머지 요청은 인증된 ADMIN만 접근 가능
 
