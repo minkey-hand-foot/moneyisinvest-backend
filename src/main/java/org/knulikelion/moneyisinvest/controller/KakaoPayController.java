@@ -1,6 +1,7 @@
 package org.knulikelion.moneyisinvest.controller;
 
-import lombok.RequiredArgsConstructor;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import org.knulikelion.moneyisinvest.data.dto.response.KakaoApproveResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.KakaoReadyResponseDto;
 import org.knulikelion.moneyisinvest.service.KakaoPayService;
@@ -10,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/payment")
+@RequestMapping("/api/v1/payment/kakao")
 public class KakaoPayController {
     private final KakaoPayService kakaoPayService;
 
@@ -20,9 +21,12 @@ public class KakaoPayController {
     }
 
 //    결제 요청
-    @PostMapping("/ready")
-    public KakaoReadyResponseDto readyToKakaoPay() {
-        return kakaoPayService.kakaoPayReady();
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
+    @PostMapping("/pay")
+    public KakaoReadyResponseDto paySubscriptionFeewithKakaopay(String uid) {
+        return kakaoPayService.kakaoPayReady(uid);
     }
 
 //    결제 성공

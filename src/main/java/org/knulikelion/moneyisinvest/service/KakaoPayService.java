@@ -3,6 +3,10 @@ package org.knulikelion.moneyisinvest.service;
 import lombok.RequiredArgsConstructor;
 import org.knulikelion.moneyisinvest.data.dto.response.KakaoApproveResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.KakaoReadyResponseDto;
+import org.knulikelion.moneyisinvest.data.entity.PlanPayment;
+import org.knulikelion.moneyisinvest.data.repository.PlanPaymentRepository;
+import org.knulikelion.moneyisinvest.data.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -11,18 +15,23 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import javax.transaction.Transactional;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class KakaoPayService {
     static final String cid = "TC0ONETIME"; // 가맹점 테스트 코드
-    static final String admin_Key = "fdbcff172ec17d060abaee5bc8b65568"; // 공개 조심! 본인 애플리케이션의 어드민 키를 넣어주세요
+
+    @Value("${KAKAOPAY.ADMIN.KEY}")
+    private String admin_Key;
+
+    private final PlanPaymentRepository planPaymentRepository;
+    private final UserRepository userRepository;
     private KakaoReadyResponseDto kakaoReady;
 
-    public KakaoReadyResponseDto kakaoPayReady() {
-
-        // 카카오페이 요청 양식
+    public KakaoReadyResponseDto kakaoPayReady(String uid) {
         MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
         parameters.add("cid", cid);
         parameters.add("partner_order_id", "0000000001");
@@ -32,14 +41,12 @@ public class KakaoPayService {
         parameters.add("total_amount", "1000");
         parameters.add("vat_amount", "0");
         parameters.add("tax_free_amount", "0");
-        parameters.add("approval_url", "http://localhost:8080/api/v1/payment/success"); // 성공 시 redirect url
-        parameters.add("cancel_url", "http://localhost:8080/api/v1/payment/cancel"); // 취소 시 redirect url
-        parameters.add("fail_url", "http://localhost:8080/api/v1/payment/fail"); // 실패 시 redirect url
+        parameters.add("approval_url", "http://localhost:8080/api/v1/payment/kakao/success"); // 성공 시 redirect url
+        parameters.add("cancel_url", "http://localhost:8080/api/v1/payment/kakao/cancel"); // 취소 시 redirect url
+        parameters.add("fail_url", "http://localhost:8080/api/v1/payment/kakao/fail"); // 실패 시 redirect url
 
-        // 파라미터, 헤더
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(parameters, this.getHeaders());
 
-        // 외부에 보낼 url
         RestTemplate restTemplate = new RestTemplate();
 
         kakaoReady = restTemplate.postForObject(
@@ -47,13 +54,13 @@ public class KakaoPayService {
                 requestEntity,
                 KakaoReadyResponseDto.class);
 
+        kakaoReady.setUid(uid);
+
         return kakaoReady;
     }
 
 //    결제 완료 승인
     public KakaoApproveResponseDto ApproveResponse(String pgToken) {
-
-        // 카카오 요청
         MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
         parameters.add("cid", cid);
         parameters.add("tid", kakaoReady.getTid());
@@ -61,16 +68,30 @@ public class KakaoPayService {
         parameters.add("partner_user_id", "0000000001");
         parameters.add("pg_token", pgToken);
 
-        // 파라미터, 헤더
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(parameters, this.getHeaders());
 
-        // 외부에 보낼 url
         RestTemplate restTemplate = new RestTemplate();
 
         KakaoApproveResponseDto approveResponse = restTemplate.postForObject(
                 "https://kapi.kakao.com/v1/payment/approve",
                 requestEntity,
                 KakaoApproveResponseDto.class);
+
+        PlanPayment planPayment = new PlanPayment();
+        planPayment.setEnable(true);
+        planPayment.setUser(userRepository.getByUid(kakaoReady.getUid()));
+        planPayment.setItemName(approveResponse.getItem_name());
+        planPayment.setTotal(approveResponse.getAmount().getTotal());
+        planPayment.setApprovedAt(approveResponse.getApproved_at());
+        planPayment.setPaymentMethod("kakaopay");
+
+        String inputDate = approveResponse.getApproved_at();
+        LocalDateTime dateTime = LocalDateTime.parse(inputDate);
+        LocalDateTime dateAfter30Days = dateTime.plusDays(30);
+
+        planPayment.setExpirationAt(dateAfter30Days.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+
+        planPaymentRepository.save(planPayment);
 
         return approveResponse;
     }
