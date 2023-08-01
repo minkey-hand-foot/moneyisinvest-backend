@@ -1,6 +1,7 @@
 package org.knulikelion.moneyisinvest.service;
 
 import org.knulikelion.moneyisinvest.data.dto.request.CommentRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.request.CommentUpdateRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.CommentResponseDto;
 
@@ -10,4 +11,5 @@ public interface CommunityService {
     BaseResponseDto postComment(CommentRequestDto commentRequestDto);
     List<CommentResponseDto> getAllCommentByStockId(Long stockId);
     BaseResponseDto removeComment(Long id);
+    BaseResponseDto updateComment(CommentUpdateRequestDto commentUpdateRequestDto);
 }
