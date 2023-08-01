@@ -9,4 +9,5 @@ import java.util.List;
 public interface CommunityService {
     BaseResponseDto postComment(CommentRequestDto commentRequestDto);
     List<CommentResponseDto> getAllCommentByStockId(Long stockId);
+    BaseResponseDto removeComment(Long id);
 }

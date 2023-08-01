@@ -74,4 +74,21 @@ public class CommunityServiceImpl implements CommunityService {
         return commentResponseDtoList;
     }
 
+    @Override
+    public BaseResponseDto removeComment(Long id) {
+        BaseResponseDto baseResponseDto = new BaseResponseDto();
+        Community foundComment = communityRepository.getById(id);
+        if(foundComment != null) {
+            foundComment.setUser(null);
+            communityRepository.delete(foundComment);
+
+            baseResponseDto.setSuccess(true);
+            baseResponseDto.setMsg("댓글 삭제가 완료되었습니다.");
+        } else {
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("해당 댓글을 찾을 수 없습니다.");
+        }
+        return baseResponseDto;
+    }
+
 }
