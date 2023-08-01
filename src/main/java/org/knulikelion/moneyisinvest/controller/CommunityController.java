@@ -40,4 +40,12 @@ public class CommunityController {
     public List<CommentResponseDto> getAllCommentByStockId(Long stockId) {
         return communityService.getAllCommentByStockId(stockId);
     }
+
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
+    @DeleteMapping("/remove")
+    public BaseResponseDto removeCommentById(Long id) {
+        return communityService.removeComment(id);
+    }
 }
