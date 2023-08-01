@@ -3,6 +3,7 @@ package org.knulikelion.moneyisinvest.controller;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import org.knulikelion.moneyisinvest.data.dto.request.CommentRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.request.CommentUpdateRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.CommentResponseDto;
 import org.knulikelion.moneyisinvest.data.entity.Community;
@@ -47,5 +48,13 @@ public class CommunityController {
     @DeleteMapping("/remove")
     public BaseResponseDto removeCommentById(Long id) {
         return communityService.removeComment(id);
+    }
+
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
+    @PutMapping("/update")
+    public BaseResponseDto updateCommentById(@RequestBody CommentUpdateRequestDto commentUpdateRequestDto) {
+        return communityService.updateComment(commentUpdateRequestDto);
     }
 }
