@@ -42,6 +42,7 @@ public class SignServiceImpl implements SignService {
             user = User.builder()
                     .uid(signUpRequestDto.getUid())
                     .name(signUpRequestDto.getName())
+                    .plan("basic")
                     .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
                     .roles(Collections.singletonList("ROLE_ADMIN"))
                     .build();
@@ -49,6 +50,7 @@ public class SignServiceImpl implements SignService {
             user = User.builder()
                     .uid(signUpRequestDto.getUid())
                     .name(signUpRequestDto.getName())
+                    .plan("basic")
                     .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
                     .roles(Collections.singletonList("ROLE_USER"))
                     .build();
