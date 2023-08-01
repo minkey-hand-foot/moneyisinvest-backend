@@ -19,6 +19,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,7 +32,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Builder
 @Table
 public class User implements UserDetails {
-    private static final long serialVersionUID = 6014984039564979072L;
+    private static final long serialVersionUID = 6014984039564979062L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,15 +48,18 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String name;
 
+    @Column
+    private String plan;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @Builder.Default
+    @Column
     private List<String> roles = new ArrayList<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return this.roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
     }
-
 
     @JsonProperty(access = Access.WRITE_ONLY)
     @Override
