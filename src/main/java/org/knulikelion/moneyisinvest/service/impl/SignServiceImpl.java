@@ -8,6 +8,7 @@ import org.knulikelion.moneyisinvest.data.dto.request.SignUpRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignUpResultDto;
 import org.knulikelion.moneyisinvest.data.entity.User;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
+import org.knulikelion.moneyisinvest.service.ProfileService;
 import org.knulikelion.moneyisinvest.service.SignService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,15 +23,17 @@ public class SignServiceImpl implements SignService {
     private final Logger LOGGER = LoggerFactory.getLogger(SignServiceImpl.class);
 
     public UserRepository userRepository;
+    public ProfileService profileService;
     public JwtTokenProvider jwtTokenProvider;
     public PasswordEncoder passwordEncoder;
 
     @Autowired
     public SignServiceImpl(UserRepository userRepository, JwtTokenProvider jwtTokenProvider,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder, ProfileService profileService) {
         this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
+        this.profileService = profileService;
     }
 
     @Override
@@ -43,6 +46,7 @@ public class SignServiceImpl implements SignService {
                     .uid(signUpRequestDto.getUid())
                     .name(signUpRequestDto.getName())
                     .plan("basic")
+                    .profileUrl("default-profile.png")
                     .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
                     .roles(Collections.singletonList("ROLE_ADMIN"))
                     .build();
@@ -51,6 +55,7 @@ public class SignServiceImpl implements SignService {
                     .uid(signUpRequestDto.getUid())
                     .name(signUpRequestDto.getName())
                     .plan("basic")
+                    .profileUrl("default-profile.png")
                     .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
                     .roles(Collections.singletonList("ROLE_USER"))
                     .build();
