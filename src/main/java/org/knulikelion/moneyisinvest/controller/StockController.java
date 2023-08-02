@@ -29,6 +29,10 @@ public class StockController {
     @GetMapping("/get/news")
     public List<StockCompanyNewsResponseDto> getCompanyNewsByStockId(String stockId) {
         return stockService.getCompanyNewsByStockId(stockId);
-//        return stockService.getCompanyNewsByStockId(stockId);
+    }
+
+    @GetMapping("/get/name")
+    public String getStockNameByStockId(String stockId) {
+        return stockService.getStockNameByStockId(stockId);
     }
 }
