@@ -8,4 +8,5 @@ import java.util.List;
 public interface StockService {
     StockCompanyInfoResponseDto getCompanyInfoByStockId(String stockId);
     List<StockCompanyNewsResponseDto> getCompanyNewsByStockId(String stockId);
+    String getStockNameByStockId(String stockId);
 }

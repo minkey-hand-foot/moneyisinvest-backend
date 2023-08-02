@@ -182,4 +182,26 @@ public class StockServiceImpl implements StockService {
 
         return null;
     }
+
+    @Override
+    public String getStockNameByStockId(String stockId) {
+        String url = "https://comp.kisline.com/co/CO0100M010GE.nice?stockcd=" + stockId + "&nav=2&header=N";
+
+        try {
+            Document document = Jsoup.connect(url).get();
+
+            Element biztopDiv = document.select("div.biztop").first();
+            if (biztopDiv != null) {
+                Element h2Element = biztopDiv.select("h2").first();
+                if (h2Element != null) {
+                    h2Element.select("small").remove();
+                    return h2Element.text();
+                }
+            }
+        } catch (IOException e) {
+            return "해당 종목 이름을 가져올 수 없거나, 존재하지 않은 종목 코드임";
+        }
+
+        return "해당 종목 이름을 가져올 수 없거나, 존재하지 않은 종목 코드임";
+    }
 }
