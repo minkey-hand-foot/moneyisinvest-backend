@@ -22,6 +22,9 @@ public class StockServiceImpl implements StockService {
         StockCompanyInfoResponseDto stockCompanyInfoResponseDto = new StockCompanyInfoResponseDto();
         String url = "https://comp.kisline.com/co/CO0100M010GE.nice?stockcd=" + stockId + "&nav=2&header=N";
 
+        String logoUrl = "https://file.alphasquare.co.kr/media/images/stock_logo/kr/" + stockId + ".png";
+        stockCompanyInfoResponseDto.setStockLogoUrl(logoUrl);
+
         try {
             Document document = Jsoup.connect(url).get();
 
@@ -171,6 +174,13 @@ public class StockServiceImpl implements StockService {
                     officeId = officeIdMatcher.group(1);
                 }
                 stockCompanyNewsResponseDto.setNewsUrl("https://n.news.naver.com/article/" + officeId + "/" + articleId);
+
+                Document newsDocument = Jsoup.connect("https://n.news.naver.com/article/" + officeId + "/" + articleId).get();
+                Element metaElement = newsDocument.select("head meta[property=og:image]").first();
+
+                if(metaElement != null) {
+                    stockCompanyNewsResponseDto.setNewsThumbnail(metaElement.attr("content"));
+                }
 
                 stockCompanyNewsList.add(stockCompanyNewsResponseDto);
             }

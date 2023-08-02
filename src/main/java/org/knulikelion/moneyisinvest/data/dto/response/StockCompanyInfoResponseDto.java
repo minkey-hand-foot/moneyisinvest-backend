@@ -12,6 +12,7 @@ import lombok.ToString;
 public class StockCompanyInfoResponseDto {
     private String stockId;
     private String stockName;
+    private String stockLogoUrl;
     private String companyName;
     private String companyEnName;
     private String goPublicDate;
