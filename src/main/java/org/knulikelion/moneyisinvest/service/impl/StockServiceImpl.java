@@ -21,6 +21,15 @@ public class StockServiceImpl implements StockService {
         try {
             Document document = Jsoup.connect(url).get(); // URL의 HTML 문서 가져오기
 
+            Element biztopDiv = document.select("div.biztop").first();
+            if (biztopDiv != null) {
+                Element h2Element = biztopDiv.select("h2").first();
+                if (h2Element != null) {
+                    h2Element.select("small").remove(); // <small> 태그 삭제
+                    stockCompanyInfoResponseDto.setStockName(h2Element.text());
+                }
+            }
+
             // data-top 속성이 '1'인 section 요소 검색
             Element sectionElement = document.select("section.con[data-top=1]").first();
             stockCompanyInfoResponseDto.setStockId(stockId);
