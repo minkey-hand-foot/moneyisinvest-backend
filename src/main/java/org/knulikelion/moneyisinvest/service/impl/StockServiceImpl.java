@@ -5,42 +5,42 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.knulikelion.moneyisinvest.data.dto.response.StockCompanyInfoResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.StockCompanyNewsResponseDto;
 import org.knulikelion.moneyisinvest.service.StockService;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class StockServiceImpl implements StockService {
     @Override
     public StockCompanyInfoResponseDto getCompanyInfoByStockId(String stockId) {
         StockCompanyInfoResponseDto stockCompanyInfoResponseDto = new StockCompanyInfoResponseDto();
-        String url = "https://comp.kisline.com/co/CO0100M010GE.nice?stockcd=" + stockId + "&nav=2&header=N"; // 크롤링할 URL 지정
-        System.out.println(url);
+        String url = "https://comp.kisline.com/co/CO0100M010GE.nice?stockcd=" + stockId + "&nav=2&header=N";
 
         try {
-            Document document = Jsoup.connect(url).get(); // URL의 HTML 문서 가져오기
+            Document document = Jsoup.connect(url).get();
 
             Element biztopDiv = document.select("div.biztop").first();
             if (biztopDiv != null) {
                 Element h2Element = biztopDiv.select("h2").first();
                 if (h2Element != null) {
-                    h2Element.select("small").remove(); // <small> 태그 삭제
+                    h2Element.select("small").remove();
                     stockCompanyInfoResponseDto.setStockName(h2Element.text());
                 }
             }
 
-            // data-top 속성이 '1'인 section 요소 검색
             Element sectionElement = document.select("section.con[data-top=1]").first();
             stockCompanyInfoResponseDto.setStockId(stockId);
             if (sectionElement != null) {
-                // 클래스 이름이 'tbl'인 div 요소 검색
                 Element tblDiv = sectionElement.select("div.tbl").first();
                 if (tblDiv != null) {
-                    // tbody 요소 선택
                     Element tbody = tblDiv.select("tbody").first();
                     if (tbody != null) {
-                        // 홈페이지가 포함된 tr 요소 검색
                         Elements trElements = tbody.select("tr");
 
                         for (Element trElement : trElements) {
@@ -110,7 +110,6 @@ public class StockServiceImpl implements StockService {
                                 Element tdElement = trElement.select("td").first();
                                 if (tdElement != null) {
                                     String originalUrl = tdElement.text();
-                                    System.out.println("홈페이지 URL: " + originalUrl);
 
                                     // URL이 http:// 또는 https://로 시작하지 않으면, 프로토콜(http://)추가
                                     if (!originalUrl.startsWith("http://") && !originalUrl.startsWith("https://")) {
@@ -129,5 +128,54 @@ public class StockServiceImpl implements StockService {
         }
 
         return stockCompanyInfoResponseDto;
+    }
+
+    @Override
+    public List<StockCompanyNewsResponseDto> getCompanyNewsByStockId(String stockId) {
+        List<StockCompanyNewsResponseDto> stockCompanyNewsList = new ArrayList<>();
+        String url = "https://finance.naver.com/item/news_news.naver?code=" + stockId + "&page=&sm=title_entity_id.basic&clusterId=";
+
+        try {
+            Document document = Jsoup.connect(url).get();
+            Elements trElements = document.select("tbody > tr.first, tbody > tr.last, tbody > tr:not([class]), tbody > tr.first.relation_tit, tbody > tr.last.relation_tit");
+
+            for (Element trElement : trElements) {
+                StockCompanyNewsResponseDto stockCompanyNewsResponseDto = new StockCompanyNewsResponseDto();
+
+                String newsTitle = trElement.select("td.title a").text();
+                stockCompanyNewsResponseDto.setNewsTitle(newsTitle);
+
+                String newsCompany = trElement.select("td.info").text();
+                stockCompanyNewsResponseDto.setNewsCompany(newsCompany);
+
+                String newsDate = trElement.select("td.date").text();
+                stockCompanyNewsResponseDto.setNewsCreatedAt(newsDate);
+
+                String newsUrl = trElement.select("td.title a").attr("href");
+                Pattern articleIdPattern = Pattern.compile("article_id=(\\d+)");
+                Pattern officeIdPattern = Pattern.compile("office_id=(\\d+)");
+                Matcher articleIdMatcher = articleIdPattern.matcher(newsUrl);
+                Matcher officeIdMatcher = officeIdPattern.matcher(newsUrl);
+                String articleId = null;
+                String officeId = null;
+
+                if (articleIdMatcher.find()) {
+                    articleId = articleIdMatcher.group(1);
+                }
+
+                if (officeIdMatcher.find()) {
+                    officeId = officeIdMatcher.group(1);
+                }
+                stockCompanyNewsResponseDto.setNewsUrl("https://n.news.naver.com/article/" + officeId + "/" + articleId);
+
+                stockCompanyNewsList.add(stockCompanyNewsResponseDto);
+            }
+
+            return stockCompanyNewsList;
+        } catch (IOException e) {
+            System.out.println("Error fetching data: " + e.getMessage());
+        }
+
+        return null;
     }
 }
