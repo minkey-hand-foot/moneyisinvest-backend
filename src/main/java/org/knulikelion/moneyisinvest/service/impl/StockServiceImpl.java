@@ -142,6 +142,10 @@ public class StockServiceImpl implements StockService {
             for (Element trElement : trElements) {
                 StockCompanyNewsResponseDto stockCompanyNewsResponseDto = new StockCompanyNewsResponseDto();
 
+                if(trElement.select("td.title a").text().isEmpty()) {
+                    break;
+                }
+
                 String newsTitle = trElement.select("td.title a").text();
                 stockCompanyNewsResponseDto.setNewsTitle(newsTitle);
 
