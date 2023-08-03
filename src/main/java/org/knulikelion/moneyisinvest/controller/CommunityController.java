@@ -4,9 +4,10 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import org.knulikelion.moneyisinvest.data.dto.request.CommentRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.CommentUpdateRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.request.ReplyCommentRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.CommentDetailResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.CommentResponseDto;
-import org.knulikelion.moneyisinvest.data.entity.Community;
 import org.knulikelion.moneyisinvest.service.CommunityService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,8 +39,16 @@ public class CommunityController {
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @GetMapping("/get")
-    public List<CommentResponseDto> getAllCommentByStockId(Long stockId) {
+    public List<CommentResponseDto> getAllCommentByStockId(String stockId) {
         return communityService.getAllCommentByStockId(stockId);
+    }
+
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
+    @GetMapping("/get/detail")
+    public List<CommentDetailResponseDto> getAllCommentByStockIdContainsAllReply(String stockId) {
+        return communityService.getAllCommentByStockIdContainsAllReply(stockId);
     }
 
     @ApiImplicitParams({
@@ -56,5 +65,13 @@ public class CommunityController {
     @PutMapping("/update")
     public BaseResponseDto updateCommentById(@RequestBody CommentUpdateRequestDto commentUpdateRequestDto) {
         return communityService.updateComment(commentUpdateRequestDto);
+    }
+
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
+    @PostMapping("/reply")
+    public BaseResponseDto replyComment(@RequestBody ReplyCommentRequestDto replyCommentRequestDto) {
+        return communityService.replyComment(replyCommentRequestDto);
     }
 }
