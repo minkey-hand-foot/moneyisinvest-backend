@@ -2,14 +2,18 @@ package org.knulikelion.moneyisinvest.service;
 
 import org.knulikelion.moneyisinvest.data.dto.request.CommentRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.CommentUpdateRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.request.ReplyCommentRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.CommentDetailResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.CommentResponseDto;
 
 import java.util.List;
 
 public interface CommunityService {
     BaseResponseDto postComment(CommentRequestDto commentRequestDto);
-    List<CommentResponseDto> getAllCommentByStockId(Long stockId);
+    BaseResponseDto replyComment(ReplyCommentRequestDto replyCommentRequestDto);
+    List<CommentResponseDto> getAllCommentByStockId(String stockId);
+    List<CommentDetailResponseDto> getAllCommentByStockIdContainsAllReply(String stockId);
     BaseResponseDto removeComment(Long id);
     BaseResponseDto updateComment(CommentUpdateRequestDto commentUpdateRequestDto);
 }
