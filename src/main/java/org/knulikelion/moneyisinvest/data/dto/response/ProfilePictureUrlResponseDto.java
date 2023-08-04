@@ -9,10 +9,6 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class StockCompanyNewsResponseDto {
-    private String newsTitle;
-    private String newsCompany;
-    private String newsThumbnail;
-    private String newsCreatedAt;
-    private String newsUrl;
+public class ProfilePictureUrlResponseDto {
+    private String url;
 }

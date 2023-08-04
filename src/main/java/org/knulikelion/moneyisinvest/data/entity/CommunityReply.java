@@ -15,21 +15,22 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(callSuper = true)
-@Table(name = "community")
-public class Community {
+@Table(name = "community_reply")
+public class CommunityReply {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String stockId;
-
-    @Column(nullable = false)
-    private String comment;
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "comment_id", nullable = false)
+    private Community community;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column(nullable = false)
+    private String comment;
 
     @CreatedDate
     @Column(updatable = false)

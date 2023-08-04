@@ -2,6 +2,7 @@ package org.knulikelion.moneyisinvest.controller;
 
 import org.knulikelion.moneyisinvest.data.dto.response.StockCompanyInfoResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.StockCompanyNewsResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.StockSearchResponseDto;
 import org.knulikelion.moneyisinvest.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 @RestController
@@ -34,5 +36,10 @@ public class StockController {
     @GetMapping("/get/name")
     public String getStockNameByStockId(String stockId) {
         return stockService.getStockNameByStockId(stockId);
+    }
+
+    @GetMapping("/search")
+    public List<StockSearchResponseDto> searchStockByKeyword(String keyword) throws UnsupportedEncodingException {
+        return stockService.searchStockByKeyword(keyword);
     }
 }
