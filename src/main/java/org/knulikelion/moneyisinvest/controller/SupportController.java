@@ -21,14 +21,19 @@ public class SupportController {
         return supportService.addSupport(supportRequestDto);
     }
 
-    @GetMapping("/get")
+    @GetMapping("/getOne")
+    public SupportResponseDto getOneSupportById(Long id) {
+        return supportService.getOne(id);
+    }
+
+    @GetMapping("/getAll")
     public List<SupportResponseDto> getAllSupportById(Long id) {
-        return supportService.getAllSupportById(id);
+        return supportService.getAll(id);
     }
 
     @DeleteMapping("/remove")
     public BaseResponseDto removeSupport(Long id) {
-        return supportService.removerSupport(id);
+        return supportService.removeSupport(id);
     }
 
 }
