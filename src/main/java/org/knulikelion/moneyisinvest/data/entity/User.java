@@ -51,6 +51,9 @@ public class User implements UserDetails {
     @Column
     private String plan;
 
+    @Column
+    private String profileUrl;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @Builder.Default
     @Column

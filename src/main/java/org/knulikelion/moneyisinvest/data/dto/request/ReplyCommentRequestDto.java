@@ -7,8 +7,8 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 @Builder
-public class CommentRequestDto {
-    private String stockId;
+public class ReplyCommentRequestDto {
+    private Long targetCommentId;
     private String comment;
     private String uid;
 }
