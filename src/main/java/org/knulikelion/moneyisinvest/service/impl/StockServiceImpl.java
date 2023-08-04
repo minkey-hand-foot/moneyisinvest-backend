@@ -6,10 +6,13 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.knulikelion.moneyisinvest.data.dto.response.StockCompanyInfoResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.StockCompanyNewsResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.StockSearchResponseDto;
 import org.knulikelion.moneyisinvest.service.StockService;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -213,5 +216,39 @@ public class StockServiceImpl implements StockService {
         }
 
         return "해당 종목 이름을 가져올 수 없거나, 존재하지 않은 종목 코드임";
+    }
+
+    @Override
+    public List<StockSearchResponseDto> searchStockByKeyword(String keyword) throws UnsupportedEncodingException {
+        String encodedKeyword = URLEncoder.encode(keyword, "EUC_KR");
+        String url = "https://finance.naver.com/search/searchList.naver?query=" + encodedKeyword;
+
+        List<StockSearchResponseDto> stockSearchResponseDtoList = new ArrayList<>();
+
+        try {
+            Document document = Jsoup.connect(url).get();
+
+            Elements aElements = document.select("div.section_search > table > tbody > tr > td.tit > a");
+
+            for (Element aElement : aElements) {
+                StockSearchResponseDto stockSearchResponseDto = new StockSearchResponseDto();
+
+                String hrefValue = aElement.attr("href");
+                Pattern pattern = Pattern.compile("code=(\\d+)");
+                Matcher matcher = pattern.matcher(hrefValue);
+                if (matcher.find()) {
+                    stockSearchResponseDto.setStockId(matcher.group(1));
+                }
+
+                String linkText = aElement.text();
+                stockSearchResponseDto.setStockName(linkText);
+
+                stockSearchResponseDtoList.add(stockSearchResponseDto);
+            }
+        } catch (IOException e) {
+            return stockSearchResponseDtoList;
+        }
+
+        return stockSearchResponseDtoList;
     }
 }
