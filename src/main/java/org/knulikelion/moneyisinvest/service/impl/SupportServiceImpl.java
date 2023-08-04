@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class SupportServiceImpl implements SupportService {
@@ -48,7 +50,24 @@ public class SupportServiceImpl implements SupportService {
     }
 
     @Override
-    public List<SupportResponseDto> getAllSupportById(Long id) {
+    public SupportResponseDto getOne(Long id) {
+        if(id == null) throw new RuntimeException("사용자 id가 없습니다.");
+        Optional<Support> support = supportRepository.findById(id);
+
+        SupportResponseDto responseDto = new SupportResponseDto();
+
+        responseDto.setId(support.get().getId());
+        responseDto.setUid(support.get().getUser().getUid());
+        responseDto.setTitle(support.get().getTitle());
+        responseDto.setContents(support.get().getContents());
+        responseDto.setCreatedAt(support.get().getCreatedAt().toString());
+        responseDto.setUpdatedAt(support.get().getUpdatedAt().toString());
+
+        return responseDto;
+    }
+
+    @Override
+    public List<SupportResponseDto> getAll(Long id) {
         List<SupportResponseDto> supportResponseDtoList = new ArrayList<>();
 
         List<Support> getSupports = supportRepository.findAllSupportId(id);
@@ -67,8 +86,9 @@ public class SupportServiceImpl implements SupportService {
         return supportResponseDtoList;
     }
 
+
     @Override
-    public BaseResponseDto removerSupport(Long id) {
+    public BaseResponseDto removeSupport(Long id) {
         BaseResponseDto baseResponseDto = new BaseResponseDto();
 
         Support getSupport =supportRepository.getById(id);
