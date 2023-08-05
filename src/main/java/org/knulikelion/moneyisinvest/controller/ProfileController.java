@@ -2,6 +2,7 @@ package org.knulikelion.moneyisinvest.controller;
 
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
+import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.ProfilePictureUrlResponseDto;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.nio.file.Files;
 
@@ -22,19 +24,21 @@ import java.nio.file.Files;
 public class ProfileController {
     private final ProfileService profileService;
     private final UserRepository userRepository;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    public ProfileController(ProfileService profileService, UserRepository userRepository) {
+    public ProfileController(ProfileService profileService, UserRepository userRepository, JwtTokenProvider jwtTokenProvider) {
         this.profileService = profileService;
         this.userRepository = userRepository;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @PostMapping("/upload")
-    public BaseResponseDto uploadProfilePicture(@RequestParam("file") MultipartFile file, @RequestParam("uid") String uid) {
-        return profileService.storeFile(file, uid);
+    public BaseResponseDto uploadProfilePicture(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
+        return profileService.storeFile(file, jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")));
     }
 
     @GetMapping("/images/{fileName:.+}")
@@ -58,9 +62,9 @@ public class ProfileController {
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @GetMapping("/get")
-    public ProfilePictureUrlResponseDto getUserProfilePicUrl(String uid) {
+    public ProfilePictureUrlResponseDto getUserProfilePicUrl(HttpServletRequest request) {
         ProfilePictureUrlResponseDto profilePictureUrlResponseDto = new ProfilePictureUrlResponseDto();
-        String pictureUrl = userRepository.getByUid(uid).getProfileUrl();
+        String pictureUrl = userRepository.getByUid(jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN"))).getProfileUrl();
         Resource file = profileService.loadFileAsResource(pictureUrl);
 
         String picUrl = "http://localhost:8080/api/v1/profile/images/" + file.getFilename();

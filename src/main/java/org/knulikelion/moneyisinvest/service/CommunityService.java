@@ -10,8 +10,8 @@ import org.knulikelion.moneyisinvest.data.dto.response.CommentResponseDto;
 import java.util.List;
 
 public interface CommunityService {
-    BaseResponseDto postComment(CommentRequestDto commentRequestDto);
-    BaseResponseDto replyComment(ReplyCommentRequestDto replyCommentRequestDto);
+    BaseResponseDto postComment(CommentRequestDto commentRequestDto, String token);
+    BaseResponseDto replyComment(ReplyCommentRequestDto replyCommentRequestDto, String token);
     List<CommentResponseDto> getAllCommentByStockId(String stockId);
     List<CommentDetailResponseDto> getAllCommentByStockIdContainsAllReply(String stockId);
     BaseResponseDto removeComment(Long id);
