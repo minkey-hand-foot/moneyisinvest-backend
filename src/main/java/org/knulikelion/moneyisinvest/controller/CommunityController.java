@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @RestController
@@ -31,8 +32,8 @@ public class CommunityController {
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @PostMapping("/post")
-    public BaseResponseDto postComment(@RequestBody CommentRequestDto commentRequestDto) {
-        return communityService.postComment(commentRequestDto);
+    public BaseResponseDto postComment(@RequestBody CommentRequestDto commentRequestDto, HttpServletRequest request) {
+        return communityService.postComment(commentRequestDto, request.getHeader("X-AUTH-TOKEN"));
     }
 
     @ApiImplicitParams({
@@ -71,7 +72,7 @@ public class CommunityController {
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @PostMapping("/reply")
-    public BaseResponseDto replyComment(@RequestBody ReplyCommentRequestDto replyCommentRequestDto) {
-        return communityService.replyComment(replyCommentRequestDto);
+    public BaseResponseDto replyComment(@RequestBody ReplyCommentRequestDto replyCommentRequestDto, HttpServletRequest request) {
+        return communityService.replyComment(replyCommentRequestDto, request.getHeader("X-AUTH-TOKEN"));
     }
 }
