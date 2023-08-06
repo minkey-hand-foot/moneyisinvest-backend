@@ -1,5 +1,6 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
+import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.request.CommentRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.CommentUpdateRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.CommunityReplyDto;
@@ -27,17 +28,24 @@ public class CommunityServiceImpl implements CommunityService {
     private final CommunityRepository communityRepository;
     private final CommunityReplyRepository communityReplyRepository;
     private final UserRepository userRepository;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    public CommunityServiceImpl(CommunityRepository communityRepository, UserRepository userRepository, CommunityReplyRepository communityReplyRepository) {
+    public CommunityServiceImpl(
+            CommunityRepository communityRepository,
+            UserRepository userRepository,
+            CommunityReplyRepository communityReplyRepository,
+            JwtTokenProvider jwtTokenProvider
+    ) {
         this.communityRepository = communityRepository;
         this.userRepository = userRepository;
         this.communityReplyRepository = communityReplyRepository;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @Override
-    public BaseResponseDto postComment(CommentRequestDto commentRequestDto) {
-        User foundUser = userRepository.findByUid(commentRequestDto.getUid());
+    public BaseResponseDto postComment(CommentRequestDto commentRequestDto, String token) {
+        User foundUser = userRepository.findByUid(jwtTokenProvider.getUsername(token));
 
         BaseResponseDto baseResponseDto = new BaseResponseDto();
 
@@ -62,10 +70,10 @@ public class CommunityServiceImpl implements CommunityService {
     }
 
     @Override
-    public BaseResponseDto replyComment(ReplyCommentRequestDto replyCommentRequestDto) {
+    public BaseResponseDto replyComment(ReplyCommentRequestDto replyCommentRequestDto, String token) {
         BaseResponseDto baseResponseDto = new BaseResponseDto();
 
-        if(userRepository.getByUid(replyCommentRequestDto.getUid()) == null) {
+        if(userRepository.getByUid(jwtTokenProvider.getUsername(token)) == null) {
             baseResponseDto.setSuccess(false);
             baseResponseDto.setMsg("사용자를 찾을 수 없음");
         } else if(communityRepository.getById(replyCommentRequestDto.getTargetCommentId()) != null) {
@@ -73,7 +81,7 @@ public class CommunityServiceImpl implements CommunityService {
 
             communityReply.setCommunity(communityRepository.getById(replyCommentRequestDto.getTargetCommentId()));
             communityReply.setComment(replyCommentRequestDto.getComment());
-            communityReply.setUser(userRepository.getByUid(replyCommentRequestDto.getUid()));
+            communityReply.setUser(userRepository.getByUid(jwtTokenProvider.getUsername(token)));
             communityReply.setUpdatedAt(LocalDateTime.now());
             communityReply.setCreatedAt(LocalDateTime.now());
 

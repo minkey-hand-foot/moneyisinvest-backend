@@ -10,5 +10,4 @@ import lombok.*;
 public class CommentRequestDto {
     private String stockId;
     private String comment;
-    private String uid;
 }
