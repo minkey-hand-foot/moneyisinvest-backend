@@ -21,17 +21,17 @@ public class FavoriteController {
 
     private final FavoriteService favoriteService;
     private final StockService stockService;
-    @PostMapping("/{userId}")
-    public BaseResponseDto addFavorite(@PathVariable String userId, @RequestBody StockCompanyInfoResponseDto stockCompanyInfoResponseDto) {
-        return favoriteService.addFavorite(userId, stockCompanyInfoResponseDto.getStockId());
+    @PostMapping("/add")
+    public BaseResponseDto addFavorite(@RequestBody FavoriteRequestDto request) {
+        return favoriteService.addFavorite(request.getUid(),request.getStockId());
     }
-    @DeleteMapping("/{userId}/{stockId}")
-    public BaseResponseDto removeFavorite(@PathVariable String userId, @PathVariable String stockId) {
-        return favoriteService.removeFavorite(userId,stockId);
+    @DeleteMapping("/remove")
+    public BaseResponseDto removeFavorite(@RequestBody FavoriteRequestDto request) {
+        return favoriteService.removeFavorite(request.getUid(),request.getStockId());
     }
-    @GetMapping("/{userId}")
-    public ResponseEntity<List<StockCompanyInfoResponseDto>> getUserFavoriteStock(@PathVariable String userId) {
-        List<String> favoriteStockIds = favoriteService.findUserFavoriteStockIds(userId);
+    @GetMapping("/readAll")
+    public ResponseEntity<List<StockCompanyInfoResponseDto>> getUserFavoriteStock(@RequestBody FavoriteRequestDto request) {
+        List<String> favoriteStockIds = favoriteService.findUserFavoriteStockIds(request.getUid());
 
         List<StockCompanyInfoResponseDto> favoriteStocks = favoriteStockIds.stream()
                 .map(stockService::getCompanyInfoByStockId)
