@@ -17,22 +17,18 @@ import java.util.List;
 @RequestMapping("/api/v1/stock")
 public class StockController {
     private final StockService stockService;
-
     @Autowired
     public StockController(StockService stockService) {
         this.stockService = stockService;
     }
-
     @GetMapping("/get/info")
     public StockCompanyInfoResponseDto getCompanyInfoByStockId(String stockId) throws IOException {
         return stockService.getCompanyInfoByStockId(stockId);
     }
-
     @GetMapping("/get/news")
     public List<StockCompanyNewsResponseDto> getCompanyNewsByStockId(String stockId) {
         return stockService.getCompanyNewsByStockId(stockId);
     }
-
     @GetMapping("/get/name")
     public String getStockNameByStockId(String stockId) {
         return stockService.getStockNameByStockId(stockId);
