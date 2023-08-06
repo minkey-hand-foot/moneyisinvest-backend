@@ -60,7 +60,6 @@ public class JwtTokenProvider {
         return token;
     }
 
-
     // JWT 토큰으로 인증 정보 조회
     public Authentication getAuthentication(String token) {
         LOGGER.info("[getAuthentication] 토큰 인증 정보 조회 시작");
@@ -80,7 +79,6 @@ public class JwtTokenProvider {
         return info;
     }
 
-
     /**
      * HTTP Request Header 에 설정된 토큰 값을 가져옴
      *
@@ -91,7 +89,6 @@ public class JwtTokenProvider {
         LOGGER.info("[resolveToken] HTTP 헤더에서 Token 값 추출");
         return request.getHeader("X-AUTH-TOKEN");
     }
-
 
     // JWT 토큰의 유효성 + 만료일 체크
     public boolean validateToken(String token) {
