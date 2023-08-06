@@ -49,7 +49,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/payment/kakao/fail").permitAll()
                 .antMatchers("/api/v1/favorite/add").permitAll()
                 .antMatchers("/api/v1/favorite/remove").permitAll()
-                .antMatchers("/api/v1/favorite/readAll").permitAll()
+                .antMatchers("/api/v1/favorite/get").permitAll()
                 .antMatchers("/api/v1/support/post").permitAll()
                 .antMatchers("/api/v1/support/getOne").permitAll()
                 .antMatchers("/api/v1/support/getAll").permitAll()
