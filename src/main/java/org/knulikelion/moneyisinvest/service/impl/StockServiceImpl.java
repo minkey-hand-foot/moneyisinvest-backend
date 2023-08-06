@@ -4,15 +4,20 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.knulikelion.moneyisinvest.data.dto.response.StockCompanyInfoResponseDto;
-import org.knulikelion.moneyisinvest.data.dto.response.StockCompanyNewsResponseDto;
-import org.knulikelion.moneyisinvest.data.dto.response.StockSearchResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.*;
+import org.knulikelion.moneyisinvest.data.entity.StockHoliday;
+import org.knulikelion.moneyisinvest.data.repository.StockHolidayRepository;
 import org.knulikelion.moneyisinvest.service.StockService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.time.DayOfWeek;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -20,6 +25,13 @@ import java.util.regex.Pattern;
 
 @Service
 public class StockServiceImpl implements StockService {
+    private final StockHolidayRepository stockHolidayRepository;
+
+    @Autowired
+    public StockServiceImpl(StockHolidayRepository stockHolidayRepository) {
+        this.stockHolidayRepository = stockHolidayRepository;
+    }
+
     @Override
     public StockCompanyInfoResponseDto getCompanyInfoByStockId(String stockId) {
         StockCompanyInfoResponseDto stockCompanyInfoResponseDto = new StockCompanyInfoResponseDto();
@@ -250,5 +262,71 @@ public class StockServiceImpl implements StockService {
         }
 
         return stockSearchResponseDtoList;
+    }
+
+    @Override
+    public CheckHolidayResponseDto checkIsHolidayNow() {
+//        API 호출 시 현재 시간 조회
+        LocalDateTime currentDate = LocalDateTime.now();
+
+        List<StockHoliday> getHolidays = stockHolidayRepository.getAllByYear(currentDate.getYear());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+//        주식 장 거래 시간: 오전 9시 ~ 오후 3시 30분
+        LocalTime startTime = LocalTime.of(9, 0);
+        LocalTime endTime = LocalTime.of(15, 30);
+
+        CheckHolidayResponseDto checkHolidayResponseDto = new CheckHolidayResponseDto();
+
+        for (StockHoliday temp : getHolidays) {
+//            현재 날짜가 DB에 저장된 공휴일 날짜와 같은지 판단
+            if(temp.getDate().toString().equals(currentDate.format(formatter))) {
+                checkHolidayResponseDto.setOpened(false);
+                checkHolidayResponseDto.setReason(temp.getReason());
+
+                return checkHolidayResponseDto;
+            }
+        }
+
+//        주말 여부 판단
+        if (currentDate.getDayOfWeek() == DayOfWeek.SATURDAY || currentDate.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            checkHolidayResponseDto.setOpened(false);
+            checkHolidayResponseDto.setReason("주말으로 인한 주식 거래 제한 (토요일, 일요일)");
+
+            return checkHolidayResponseDto;
+//            장 거래 시간 판단
+        } else if (currentDate.toLocalTime().isBefore(startTime) || currentDate.toLocalTime().isAfter(endTime)) {
+            checkHolidayResponseDto.setOpened(false);
+            checkHolidayResponseDto.setReason("주식 거래 시간이 아님 (오전 9시 ~ 오후 3시 30분)");
+
+            return checkHolidayResponseDto;
+        }
+        else {
+            checkHolidayResponseDto.setOpened(true);
+            checkHolidayResponseDto.setReason("장 거래 중 (오전 9시 ~ 오후 3시 30분)");
+
+            return checkHolidayResponseDto;
+        }
+    }
+
+    @Override
+    public List<HolidayResponseDto> getAllHoliday() {
+        //        API 호출 시 현재 시간 조회
+        LocalDateTime currentDate = LocalDateTime.now();
+
+        List<StockHoliday> getHolidays = stockHolidayRepository.getAllByYear(currentDate.getYear());
+
+        List<HolidayResponseDto> holidayResponseDtoList = new ArrayList<>();
+
+        for(StockHoliday temp : getHolidays) {
+            HolidayResponseDto holidayResponseDto = new HolidayResponseDto();
+
+            holidayResponseDto.setDate(temp.getDate().toString());
+            holidayResponseDto.setReason(temp.getReason());
+
+            holidayResponseDtoList.add(holidayResponseDto);
+        }
+
+        return holidayResponseDtoList;
     }
 }
