@@ -51,7 +51,6 @@ public class StockServiceImpl implements StockService {
                     stockCompanyInfoResponseDto.setStockName(h2Element.text());
                 }
             }
-
             Element sectionElement = document.select("section.con[data-top=1]").first();
             stockCompanyInfoResponseDto.setStockId(stockId);
             if (sectionElement != null) {
@@ -233,6 +232,7 @@ public class StockServiceImpl implements StockService {
     @Override
     public List<StockSearchResponseDto> searchStockByKeyword(String keyword) throws UnsupportedEncodingException {
         String encodedKeyword = URLEncoder.encode(keyword, "EUC_KR");
+
         String url = "https://finance.naver.com/search/searchList.naver?query=" + encodedKeyword;
 
         List<StockSearchResponseDto> stockSearchResponseDtoList = new ArrayList<>();

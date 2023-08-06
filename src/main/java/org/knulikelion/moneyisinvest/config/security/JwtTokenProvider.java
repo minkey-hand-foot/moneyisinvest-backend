@@ -38,7 +38,6 @@ public class JwtTokenProvider {
         LOGGER.info("[init] JwtTokenProvider 내 secretKey 초기화 완료");
     }
 
-
     // JWT 토큰 생성
     public String createToken(String userUid, List<String> roles) {
         LOGGER.info("[createToken] 토큰 생성 시작");
@@ -71,7 +70,6 @@ public class JwtTokenProvider {
         return new UsernamePasswordAuthenticationToken(userDetails, "",
                 userDetails.getAuthorities());
     }
-
 
     // JWT 토큰에서 회원 구별 정보 추출
     public String getUsername(String token) {
