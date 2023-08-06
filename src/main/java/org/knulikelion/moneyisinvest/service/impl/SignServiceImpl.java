@@ -3,6 +3,7 @@ package org.knulikelion.moneyisinvest.service.impl;
 import org.knulikelion.moneyisinvest.common.CommonResponse;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.request.SignInRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.response.MypageResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignInResultDto;
 import org.knulikelion.moneyisinvest.data.dto.request.SignUpRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignUpResultDto;
@@ -13,6 +14,7 @@ import org.knulikelion.moneyisinvest.service.SignService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -80,6 +82,22 @@ public class SignServiceImpl implements SignService {
         }
 
         return signUpResultDto;
+    }
+
+    @Override
+    public MypageResponseDto getUserDetail(String token) {
+        User user = userRepository.getByUid(jwtTokenProvider.getUsername(token));
+
+        MypageResponseDto mypageResponseDto = new MypageResponseDto();
+        mypageResponseDto.setName(user.getName());
+        mypageResponseDto.setUid(user.getUid());
+
+        Resource file = profileService.loadFileAsResource(user.getProfileUrl());
+        String picUrl = "http://localhost:8080/api/v1/profile/images/" + file.getFilename();
+
+        mypageResponseDto.setProfileUrl(picUrl);
+
+        return mypageResponseDto;
     }
 
     @Override
