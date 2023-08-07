@@ -31,7 +31,9 @@ public class KosdaqWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         log.info("Web Socket DisConnected");
         log.info("session id : {}", session.getId());
-        sessionMap.remove(session.getId());
+        synchronized (sessionMap) {
+            sessionMap.remove(session.getId());
+        }
         super.afterConnectionClosed(session,status); /*실제로 closed*/
     }
     @Override
@@ -39,8 +41,10 @@ public class KosdaqWebSocketHandler extends TextWebSocketHandler {
         log.info("Web Socket Connected");
         log.info("session id : {}",session.getId());
         super.afterConnectionEstablished(session);
-        sessionMap.put(session.getId(),session);
 
+        synchronized (sessionMap) {
+            sessionMap.put(session.getId(), session);
+        }
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("sessionId",session.getId());
 
@@ -48,17 +52,23 @@ public class KosdaqWebSocketHandler extends TextWebSocketHandler {
     }
     @Scheduled(fixedRate = 1000)
     public void sendKosdaqData() throws RuntimeException  {
-        for (WebSocketSession session : sessionMap.values()) {
-            if (session.isOpen()) {
-                try {
-                    KosdaqResponseDto kosdaqResponseDto= stockWebSocketService.getKosdaq();
-                    if (kosdaqResponseDto != null) {
-                        String response = new ObjectMapper().writeValueAsString(kosdaqResponseDto);
-                        log.info("Sending kospi data : {}" , response);
-                        session.sendMessage(new TextMessage(response));
+        synchronized (sessionMap){
+            for (WebSocketSession session : sessionMap.values()) {
+                if (session.isOpen()) {
+                    try {
+                        KosdaqResponseDto kosdaqResponseDto = stockWebSocketService.getKosdaq();
+                        if (kosdaqResponseDto != null) {
+                            String response = new ObjectMapper().writeValueAsString(kosdaqResponseDto);
+                            log.info("Sending kospi data : {}", response);
+                            try {
+                                session.sendMessage(new TextMessage(response));
+                            }catch (IllegalStateException ex){
+                                log.warn("Failed to send message, ignoring: {}", ex.getMessage());
+                            }
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
                 }
             }
         }

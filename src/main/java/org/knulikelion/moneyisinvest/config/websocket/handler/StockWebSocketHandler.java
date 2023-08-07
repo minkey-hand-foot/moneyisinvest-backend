@@ -38,7 +38,9 @@ public class StockWebSocketHandler extends TextWebSocketHandler {
         log.info("===============Message=================");
         log.info("Received stockCode : {}", stockCode);
         log.info("===============Message=================");
-        sessionStockCodeMap.put(session,stockCode);
+        synchronized (sessionMap) {
+            sessionStockCodeMap.put(session, stockCode);
+        }
     }
 
     /* 클라이언트가 소켓 연결시 동작 */
@@ -47,7 +49,9 @@ public class StockWebSocketHandler extends TextWebSocketHandler {
         log.info("Web Socket Connected");
         log.info("session id : {}",session.getId());
         super.afterConnectionEstablished(session);
-        sessionMap.put(session.getId(),session);
+        synchronized (sessionMap) {
+            sessionMap.put(session.getId(), session);
+        }
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("sessionId",session.getId());
@@ -60,26 +64,34 @@ public class StockWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         log.info("Web Socket DisConnected");
         log.info("session id : {}", session.getId());
-        sessionMap.remove(session.getId());
+        synchronized (sessionMap) {
+            sessionMap.remove(session.getId());
+        }
         super.afterConnectionClosed(session,status); /*실제로 closed*/
     }
 
     @Scheduled(fixedRate = 1000)
     public void sendStockCode() throws JSONException, IOException {
-        for (WebSocketSession session : sessionMap.values()){
-            String stockCode = sessionStockCodeMap.get(session);
-            if(stockCode!=null){
-                try{
-                    StockPriceResponseDto stockPriceResponseDto = stockWebSocketService.getStock(stockCode);
-                    if(stockPriceResponseDto != null){
-                        String response = new ObjectMapper().writeValueAsString(stockPriceResponseDto);
-                        log.info("Sending stock data : {}", response);
-                        session.sendMessage(new TextMessage(response));
-                    }else {
-                        log.warn("No stock data found for stockCode : {}", stockCode);
+        synchronized (sessionMap){
+            for (WebSocketSession session : sessionMap.values()){
+                String stockCode = sessionStockCodeMap.get(session);
+                if(stockCode!=null) {
+                    try {
+                        StockPriceResponseDto stockPriceResponseDto = stockWebSocketService.getStock(stockCode);
+                        if (stockPriceResponseDto != null) {
+                            String response = new ObjectMapper().writeValueAsString(stockPriceResponseDto);
+                            log.info("Sending stock data : {}", response);
+                            try {
+                                session.sendMessage(new TextMessage(response));
+                            }catch (IllegalStateException ex){
+                                log.warn("Failed to send message, ignoring: {}",ex.getMessage());
+                            }
+                        } else {
+                            log.warn("No stock data found for stockCode : {}", stockCode);
+                        }
+                    } catch (Exception e) {
+                        log.error("Error while sending stock data : {}", e.getMessage());
                     }
-                }catch (Exception e){
-                    log.error("Error while sending stock data : {}", e.getMessage());
                 }
             }
         }
