@@ -1,8 +1,6 @@
 package org.knulikelion.moneyisinvest.controller;
 
-import org.knulikelion.moneyisinvest.data.dto.response.StockCompanyInfoResponseDto;
-import org.knulikelion.moneyisinvest.data.dto.response.StockCompanyNewsResponseDto;
-import org.knulikelion.moneyisinvest.data.dto.response.StockSearchResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.*;
 import org.knulikelion.moneyisinvest.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,5 +35,15 @@ public class StockController {
     @GetMapping("/search")
     public List<StockSearchResponseDto> searchStockByKeyword(String keyword) throws UnsupportedEncodingException {
         return stockService.searchStockByKeyword(keyword);
+    }
+
+    @GetMapping("/holiday/now")
+    public CheckHolidayResponseDto checkIsHolidayNow() {
+        return stockService.checkIsHolidayNow();
+    }
+
+    @GetMapping("/holiday/year")
+    public List<HolidayResponseDto> checkHolidaySchedules() {
+        return stockService.getAllHoliday();
     }
 }
