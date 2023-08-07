@@ -33,7 +33,9 @@ public class StockRankWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         log.info("Web Socket DisConnected");
         log.info("session id : {}", session.getId());
-        sessionMap.remove(session.getId());
+        synchronized (sessionMap) {
+            sessionMap.remove(session.getId());
+        }
         super.afterConnectionClosed(session,status); /*실제로 closed*/
     }
     @Override
@@ -41,8 +43,10 @@ public class StockRankWebSocketHandler extends TextWebSocketHandler {
         log.info("Web Socket Connected");
         log.info("session id : {}",session.getId());
         super.afterConnectionEstablished(session);
-        sessionMap.put(session.getId(),session);
 
+        synchronized (sessionMap) {
+            sessionMap.put(session.getId(), session);
+        }
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("sessionId",session.getId());
 
@@ -51,18 +55,24 @@ public class StockRankWebSocketHandler extends TextWebSocketHandler {
 
     @Scheduled(fixedRate = 1000)
     public void sendStockRank() throws RuntimeException {
+        synchronized (sessionMap){
         for (WebSocketSession session : sessionMap.values()){
-            if(session.isOpen()){
-                try{
+            if(session.isOpen()) {
+                try {
                     List<StockRankResponseDto> stockRankResponseDtoList = stockWebSocketService.getStockRank();
-                    if(stockRankResponseDtoList != null) {
+                    if (stockRankResponseDtoList != null) {
                         String response = new ObjectMapper().writeValueAsString(stockRankResponseDtoList);
                         log.info("Sending stock rank data 1 ~ 5 : {}", response);
-                        session.sendMessage(new TextMessage(response));
+                        try {
+                            session.sendMessage(new TextMessage(response));
+                        }catch (IllegalStateException ex){
+                            log.warn("Failed to send message, ignoring: {}", ex.getMessage());
+                        }
                     }
                 } catch (JSONException | IOException e) {
                     throw new RuntimeException(e);
                 }
+            }
             }
         }
     }
