@@ -11,8 +11,7 @@ import org.knulikelion.moneyisinvest.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URLEncoder;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
@@ -31,6 +30,7 @@ public class StockServiceImpl implements StockService {
     public StockServiceImpl(StockHolidayRepository stockHolidayRepository) {
         this.stockHolidayRepository = stockHolidayRepository;
     }
+
 
     @Override
     public StockCompanyInfoResponseDto getCompanyInfoByStockId(String stockId) {
@@ -160,7 +160,7 @@ public class StockServiceImpl implements StockService {
             for (Element trElement : trElements) {
                 StockCompanyNewsResponseDto stockCompanyNewsResponseDto = new StockCompanyNewsResponseDto();
 
-                if(trElement.select("td.title a").text().isEmpty()) {
+                if (trElement.select("td.title a").text().isEmpty()) {
                     break;
                 }
 
@@ -193,7 +193,7 @@ public class StockServiceImpl implements StockService {
                 Document newsDocument = Jsoup.connect("https://n.news.naver.com/article/" + officeId + "/" + articleId).get();
                 Element metaElement = newsDocument.select("head meta[property=og:image]").first();
 
-                if(metaElement != null) {
+                if (metaElement != null) {
                     stockCompanyNewsResponseDto.setNewsThumbnail(metaElement.attr("content"));
                 }
 
@@ -280,7 +280,7 @@ public class StockServiceImpl implements StockService {
 
         for (StockHoliday temp : getHolidays) {
 //            현재 날짜가 DB에 저장된 공휴일 날짜와 같은지 판단
-            if(temp.getDate().toString().equals(currentDate.format(formatter))) {
+            if (temp.getDate().toString().equals(currentDate.format(formatter))) {
                 checkHolidayResponseDto.setOpened(false);
                 checkHolidayResponseDto.setReason(temp.getReason());
 
@@ -300,8 +300,7 @@ public class StockServiceImpl implements StockService {
             checkHolidayResponseDto.setReason("주식 거래 시간이 아님 (오전 9시 ~ 오후 3시 30분)");
 
             return checkHolidayResponseDto;
-        }
-        else {
+        } else {
             checkHolidayResponseDto.setOpened(true);
             checkHolidayResponseDto.setReason("장 거래 중 (오전 9시 ~ 오후 3시 30분)");
 
@@ -318,7 +317,7 @@ public class StockServiceImpl implements StockService {
 
         List<HolidayResponseDto> holidayResponseDtoList = new ArrayList<>();
 
-        for(StockHoliday temp : getHolidays) {
+        for (StockHoliday temp : getHolidays) {
             HolidayResponseDto holidayResponseDto = new HolidayResponseDto();
 
             holidayResponseDto.setDate(temp.getDate().toString());
@@ -330,3 +329,4 @@ public class StockServiceImpl implements StockService {
         return holidayResponseDtoList;
     }
 }
+
