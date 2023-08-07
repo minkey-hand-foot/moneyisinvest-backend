@@ -48,12 +48,14 @@ public class FavoriteServiceImpl implements FavoriteService {
 
         User user = userRepository.findByUid(userId);
 
-        Favorite favorite = favoriteRepository.findByUserAndStockId(user, stockId);
+        List<Favorite> favorites = favoriteRepository.findByUserAndStockId(user, stockId);
 
-        if(favorite != null) {
-            favorite.setUser(null);
-            favoriteRepository.delete(favorite);
+        if(favorites != null && !favorites.isEmpty()) {
 
+            for(Favorite favorite : favorites) {
+                favorite.setUser(null);
+                favoriteRepository.delete(favorite);
+            }
             baseResponseDto.setSuccess(true);
             baseResponseDto.setMsg("관심 종목이 삭제 완료되었습니다.");
         }else {
