@@ -30,7 +30,7 @@ public class FavoriteController {
         return favoriteService.removeFavorite(request.getUid(),request.getStockId());
     }
     // 관심 주식 리스트 끌어오기
-    @GetMapping("/readAll")
+    @GetMapping("/get")
     public ResponseEntity<List<StockCompanyInfoResponseDto>> getUserFavoriteStock(@RequestBody FavoriteRequestDto request) {
         List<String> favoriteStockIds = favoriteService.findUserFavoriteStockIds(request.getUid());
 
