@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/favorite")
 public class FavoriteController {
+
     private final FavoriteService favoriteService;
     private final StockService stockService;
 
