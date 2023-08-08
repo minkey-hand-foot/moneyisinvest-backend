@@ -38,6 +38,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/community/**").hasRole("USER")
                 .antMatchers("**exception**").permitAll()
                 .antMatchers("/api/v1/stock/**").permitAll()
+                .antMatchers("/api/v1/coin/**").permitAll()
                 .antMatchers("/api/v1/profile/**").hasRole("USER")
                 .antMatchers("/api/v1/user/detail").hasRole("USER")
                 .antMatchers("/api/v1/payment/kakao/pay").hasRole("USER")
