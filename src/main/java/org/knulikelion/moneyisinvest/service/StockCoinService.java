@@ -9,6 +9,9 @@ import java.util.List;
 public interface StockCoinService {
     Block mineBlock(List<Transaction> transactions);
     double getBalance(String userName);
+
+    double checkBalance(String name);
+
     boolean isChainValid();
     void initializeBlockchain();
     Block getLatestBlock();
