@@ -1,11 +1,14 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.knulikelion.moneyisinvest.data.dto.request.TransactionRequestDto;
 import org.knulikelion.moneyisinvest.data.entity.Block;
 import org.knulikelion.moneyisinvest.data.entity.Transaction;
 import org.knulikelion.moneyisinvest.data.repository.BlockRepository;
 import org.knulikelion.moneyisinvest.data.repository.TransactionRepository;
+import org.knulikelion.moneyisinvest.data.repository.WalletRepository;
 import org.knulikelion.moneyisinvest.service.StockCoinService;
+import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,17 +25,47 @@ import java.util.stream.Collectors;
 public class StockCoinServiceImpl implements StockCoinService {
     private List<Block> blockchain;
     private final TransactionRepository transactionRepository;
+    private final StockCoinWalletService stockCoinWalletService;
     private final BlockRepository blockRepository;
 
-    public StockCoinServiceImpl(TransactionRepository transactionRepository, BlockRepository blockRepository) {
+    public StockCoinServiceImpl(TransactionRepository transactionRepository,
+                                StockCoinWalletService stockCoinWalletService,
+                                BlockRepository blockRepository) {
         this.transactionRepository = transactionRepository;
+        this.stockCoinWalletService = stockCoinWalletService;
         this.blockRepository = blockRepository;
     }
 
     @Override
-    public void processTransaction(Transaction transaction) {
-        // Implement your transaction processing logic here
+    public String createTransaction(TransactionRequestDto transactionRequestDto) {
+//        코인 수신자
+        String from = transactionRequestDto.getFrom();
+//        코인 발신자
+        String to = transactionRequestDto.getTo();
+//        발신 할 코인 양
+        double amount = transactionRequestDto.getAmount();
 
+//        발신자가 보유한 코인의 수가 발신 할 코인 양보다 많을 때
+        if (getBalance(from) >= amount) {
+            Transaction transaction = Transaction.builder()
+                    .from(from)
+                    .to(to)
+                    .amount(amount)
+                    .build();
+
+//            거래 과정 진행
+            processTransaction(transaction);
+
+//            유저의 보유 코인 업데이트
+            stockCoinWalletService.updateUserBalances(transaction);
+            return "Transaction successfully processed.";
+        } else {
+            throw new IllegalArgumentException("Insufficient balance");
+        }
+    }
+
+    @Override
+    public void processTransaction(Transaction transaction) {
         // Check if the transaction is valid based on your criteria
         if (isValidTransaction(transaction)) {
             // Mine a new block with the transaction
