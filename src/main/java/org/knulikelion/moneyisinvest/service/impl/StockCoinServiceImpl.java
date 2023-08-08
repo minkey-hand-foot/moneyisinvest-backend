@@ -1,9 +1,14 @@
-package org.knulikelion.moneyisinvest.service;
+package org.knulikelion.moneyisinvest.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
+import org.knulikelion.moneyisinvest.data.dto.request.TransactionRequestDto;
 import org.knulikelion.moneyisinvest.data.entity.Block;
 import org.knulikelion.moneyisinvest.data.entity.Transaction;
+import org.knulikelion.moneyisinvest.data.entity.Wallet;
 import org.knulikelion.moneyisinvest.data.repository.BlockRepository;
 import org.knulikelion.moneyisinvest.data.repository.TransactionRepository;
+import org.knulikelion.moneyisinvest.service.StockCoinService;
+import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,20 +21,51 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class BlockChainService {
+@Slf4j
+public class StockCoinServiceImpl implements StockCoinService {
     private List<Block> blockchain;
     private final TransactionRepository transactionRepository;
+    private final StockCoinWalletService stockCoinWalletService;
     private final BlockRepository blockRepository;
 
-    public BlockChainService(TransactionRepository transactionRepository, BlockRepository blockRepository) {
+    public StockCoinServiceImpl(TransactionRepository transactionRepository,
+                                StockCoinWalletService stockCoinWalletService,
+                                BlockRepository blockRepository) {
         this.transactionRepository = transactionRepository;
+        this.stockCoinWalletService = stockCoinWalletService;
         this.blockRepository = blockRepository;
     }
 
+    @Override
+    public String createTransaction(TransactionRequestDto transactionRequestDto) {
+//        코인 수신자
+        String from = transactionRequestDto.getFrom();
+//        코인 발신자
+        String to = transactionRequestDto.getTo();
+//        발신 할 코인 양
+        double amount = transactionRequestDto.getAmount();
 
+//        발신자가 보유한 코인의 수가 발신 할 코인 양보다 많을 때
+        if (getBalance(from) >= amount) {
+            Transaction transaction = Transaction.builder()
+                    .from(from)
+                    .to(to)
+                    .amount(amount)
+                    .build();
+
+//            거래 과정 진행
+            processTransaction(transaction);
+
+//            유저의 보유 코인 업데이트
+            stockCoinWalletService.updateUserBalances(transaction);
+            return "Transaction successfully processed.";
+        } else {
+            throw new IllegalArgumentException("Insufficient balance");
+        }
+    }
+
+    @Override
     public void processTransaction(Transaction transaction) {
-        // Implement your transaction processing logic here
-
         // Check if the transaction is valid based on your criteria
         if (isValidTransaction(transaction)) {
             // Mine a new block with the transaction
@@ -72,7 +108,6 @@ public class BlockChainService {
         }
     }
 
-
     public static String generateTransactionId(Transaction transaction) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -95,6 +130,7 @@ public class BlockChainService {
         return sb.toString();
     }
 
+    @Override
     public Block mineBlock(List<Transaction> transactions) {
         Block newBlock = Block.builder()
                 .transactions(transactions)
@@ -113,6 +149,7 @@ public class BlockChainService {
         return newBlock;
     }
 
+    @Override
     @Transactional
     public double getBalance(String userName) {
         double balance = 0;
@@ -130,10 +167,12 @@ public class BlockChainService {
         return balance;
     }
 
-    public Block getLatestBlock() {
-        return blockchain.get(blockchain.size() - 1);
+    @Override
+    public double checkBalance(String name) {
+        return getBalance(name);
     }
 
+    @Override
     public boolean isChainValid() {
         for (int i = 1; i < blockchain.size(); i++) {
 //            해당 블럭 가져오기
@@ -155,7 +194,7 @@ public class BlockChainService {
         return true;
     }
 
-
+    @Override
     @Transactional
     public void initializeBlockchain() {
 //        데이터베이스에서 모든 블록체인 데이터 조회
@@ -191,5 +230,10 @@ public class BlockChainService {
         if (!isChainValid()) {
             throw new IllegalStateException("The blockchain in the database is invalid.");
         }
+    }
+
+    @Override
+    public Block getLatestBlock() {
+        return blockchain.get(blockchain.size() - 1);
     }
 }
