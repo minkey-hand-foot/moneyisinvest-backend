@@ -3,34 +3,34 @@ package org.knulikelion.moneyisinvest.controller;
 import org.knulikelion.moneyisinvest.data.dto.request.TransactionRequestDto;
 import org.knulikelion.moneyisinvest.data.entity.Transaction;
 import org.knulikelion.moneyisinvest.data.entity.Wallet;
-import org.knulikelion.moneyisinvest.service.BlockChainService;
-import org.knulikelion.moneyisinvest.service.WalletService;
+import org.knulikelion.moneyisinvest.service.StockCoinService;
+import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import javax.annotation.PostConstruct;
 
 @RestController
 @RequestMapping("/api/v1/coin/")
-public class BlockChainController {
-    private final BlockChainService blockChainService;
-    private final WalletService walletService;
+public class StockCoinController {
+    private final StockCoinService stockCoinService;
+    private final StockCoinWalletService stockCoinWalletService;
 
     @Autowired
-    public BlockChainController(BlockChainService blockChainService, WalletService walletService) {
-        this.blockChainService = blockChainService;
-        this.walletService = walletService;
+    public StockCoinController(StockCoinWalletService stockCoinWalletService, StockCoinService stockCoinService) {
+        this.stockCoinService = stockCoinService;
+        this.stockCoinWalletService = stockCoinWalletService;
     }
 
 //    초기 코드 실행
     @PostConstruct
     public void initialize() {
-        blockChainService.initializeBlockchain();
+        stockCoinService.initializeBlockchain();
     }
 
 //    블록체인 유효성 검증
     @GetMapping("/validity")
     public boolean isChainValid() {
-        return blockChainService.isChainValid();
+        return stockCoinService.isChainValid();
     }
 
 //    코인 거래
@@ -44,7 +44,7 @@ public class BlockChainController {
         double amount = request.getAmount();
 
 //        발신자가 보유한 코인의 수가 발신 할 코인 양보다 많을 때
-        if (blockChainService.getBalance(from) >= amount) {
+        if (stockCoinService.getBalance(from) >= amount) {
             Transaction transaction = Transaction.builder()
                     .from(from)
                     .to(to)
@@ -52,10 +52,10 @@ public class BlockChainController {
                     .build();
 
 //            거래 과정 진행
-            blockChainService.processTransaction(transaction);
+            stockCoinService.processTransaction(transaction);
 
 //            유저의 보유 코인 업데이트
-            walletService.updateUserBalances(transaction);
+            stockCoinWalletService.updateUserBalances(transaction);
             return "Transaction successfully processed.";
         } else {
             throw new IllegalArgumentException("Insufficient balance");
@@ -65,7 +65,7 @@ public class BlockChainController {
 //    가지고 있는 코인 조회
     @GetMapping("/balance")
     public String checkBalance(@RequestParam String name) {
-        Wallet wallet = walletService.findByName(name);
+        Wallet wallet = stockCoinWalletService.findByName(name);
         return name + "'s balance is: " + (wallet != null ? wallet.getBalance() : "0");
     }
 }
