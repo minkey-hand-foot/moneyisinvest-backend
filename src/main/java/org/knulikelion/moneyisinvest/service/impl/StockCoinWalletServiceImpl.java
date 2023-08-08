@@ -1,24 +1,26 @@
-package org.knulikelion.moneyisinvest.service;
+package org.knulikelion.moneyisinvest.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.knulikelion.moneyisinvest.data.entity.Transaction;
 import org.knulikelion.moneyisinvest.data.entity.Wallet;
 import org.knulikelion.moneyisinvest.data.repository.WalletRepository;
+import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class WalletService {
+public class StockCoinWalletServiceImpl implements StockCoinWalletService {
     private final WalletRepository walletRepository;
 
     @Autowired
-    public WalletService(WalletRepository walletRepository) {
+    public StockCoinWalletServiceImpl(WalletRepository walletRepository) {
         this.walletRepository = walletRepository;
     }
 
+    @Override
     public void updateUserBalances(Transaction transaction) {
-//        수, 발신자 지갑 조회
+        //        수, 발신자 지갑 조회
         Wallet senderWallet = walletRepository.findByName(transaction.getFrom());
         log.info("발신자 지갑 조회");
         Wallet recipientWallet = walletRepository.findByName(transaction.getTo());
@@ -65,7 +67,7 @@ public class WalletService {
         log.info("수신자 지갑 잔액 설정: " + recipientNewBalance);
     }
 
-//    이름으로 지갑 찾기
+    @Override
     public Wallet findByName(String name) {
         log.info("사용자 지갑 조회: " + name);
         return walletRepository.findByName(name);
