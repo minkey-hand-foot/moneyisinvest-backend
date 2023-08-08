@@ -35,31 +35,8 @@ public class StockCoinController {
 
 //    코인 거래
     @PostMapping("/trade")
-    public String createTransaction(@RequestBody TransactionRequestDto request) {
-//        코인 수신자
-        String from = request.getFrom();
-//        코인 발신자
-        String to = request.getTo();
-//        발신 할 코인 양
-        double amount = request.getAmount();
-
-//        발신자가 보유한 코인의 수가 발신 할 코인 양보다 많을 때
-        if (stockCoinService.getBalance(from) >= amount) {
-            Transaction transaction = Transaction.builder()
-                    .from(from)
-                    .to(to)
-                    .amount(amount)
-                    .build();
-
-//            거래 과정 진행
-            stockCoinService.processTransaction(transaction);
-
-//            유저의 보유 코인 업데이트
-            stockCoinWalletService.updateUserBalances(transaction);
-            return "Transaction successfully processed.";
-        } else {
-            throw new IllegalArgumentException("Insufficient balance");
-        }
+    public String createTransaction(@RequestBody TransactionRequestDto transactionRequestDto) {
+        return stockCoinService.createTransaction(transactionRequestDto);
     }
 
 //    가지고 있는 코인 조회
