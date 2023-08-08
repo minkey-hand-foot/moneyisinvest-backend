@@ -113,6 +113,7 @@ public class BlockChainService {
         return newBlock;
     }
 
+    @Transactional
     public double getBalance(String userName) {
         double balance = 0;
 
