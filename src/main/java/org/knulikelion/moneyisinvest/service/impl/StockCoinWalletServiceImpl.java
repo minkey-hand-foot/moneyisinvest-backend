@@ -1,21 +1,82 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Address;
 import org.knulikelion.moneyisinvest.data.entity.Transaction;
 import org.knulikelion.moneyisinvest.data.entity.Wallet;
+import org.knulikelion.moneyisinvest.data.entity.WalletPrivateKey;
+import org.knulikelion.moneyisinvest.data.repository.WalletPrivateKeyRepository;
 import org.knulikelion.moneyisinvest.data.repository.WalletRepository;
 import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.script.Script.ScriptType;
+
+import java.math.BigInteger;
+import java.util.Optional;
 
 @Service
 @Slf4j
 public class StockCoinWalletServiceImpl implements StockCoinWalletService {
     private final WalletRepository walletRepository;
+    private final WalletPrivateKeyRepository walletPrivateKeyRepository;
+    private final NetworkParameters networkParameters = NetworkParameters.fromID(NetworkParameters.ID_MAINNET);
 
     @Autowired
-    public StockCoinWalletServiceImpl(WalletRepository walletRepository) {
+    public StockCoinWalletServiceImpl(WalletRepository walletRepository, WalletPrivateKeyRepository walletPrivateKeyRepository) {
         this.walletRepository = walletRepository;
+        this.walletPrivateKeyRepository = walletPrivateKeyRepository;
+    }
+
+    // 비공개 키 생성 및 저장
+    @Override
+    public ECKey createPrivateKey(String username) {
+        ECKey privateKey = new ECKey();
+        String privateKeyHexString = privateKey.getPrivateKeyEncoded(networkParameters).toString();
+        WalletPrivateKey walletPrivateKey = WalletPrivateKey.builder()
+                .username(username)
+                .privateKey(privateKeyHexString)
+                .build();
+        walletPrivateKeyRepository.save(walletPrivateKey);
+        return privateKey;
+    }
+
+    // 사용자의 비공개 키 가져오기
+    @Override
+    public ECKey getPrivateKeyForUser(String username) {
+        Optional<WalletPrivateKey> userPrivateKeyOptional = walletPrivateKeyRepository.findByUsername(username);
+        if (userPrivateKeyOptional.isPresent()) {
+            return null;
+        }
+        String privateKeyHexString = userPrivateKeyOptional.get().getPrivateKey();
+        return ECKey.fromPrivate(new BigInteger(privateKeyHexString, 16));
+    }
+
+    // 비공개 키로 지갑 주소 생성
+    @Override
+    public String generateWalletAddress(ECKey privateKey) {
+        NetworkParameters networkParameters = MainNetParams.get();
+        Address walletAddress = Address.fromKey(networkParameters, privateKey, ScriptType.P2PKH);
+
+        return walletAddress.toString();
+    }
+
+    // 비공개 키로 지갑 생성 및 주소 반환하기
+    @Override
+    public String createWallet(String username) {
+        ECKey privateKey = createPrivateKey(username);
+        return generateWalletAddress(privateKey);
+    }
+
+    // 지갑 주소를 확인하고 가져옵니다.
+    @Override
+    public String getWalletAddress(String username) {
+        ECKey privateKey = getPrivateKeyForUser(username);
+        if (privateKey == null) return null;
+        return generateWalletAddress(privateKey);
     }
 
     @Override

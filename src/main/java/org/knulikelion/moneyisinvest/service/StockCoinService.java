@@ -16,6 +16,12 @@ public interface StockCoinService {
     void initializeBlockchain();
     Block getLatestBlock();
 
+    String createWallet(String username);
+
+    String getWalletAddress(String username);
+
+    String makeDeposit(String username, String amount);
+
     String createTransaction(TransactionRequestDto transactionRequestDto);
 
     void processTransaction(Transaction transaction);
