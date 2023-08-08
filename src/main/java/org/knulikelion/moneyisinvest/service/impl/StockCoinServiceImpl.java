@@ -4,9 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.knulikelion.moneyisinvest.data.dto.request.TransactionRequestDto;
 import org.knulikelion.moneyisinvest.data.entity.Block;
 import org.knulikelion.moneyisinvest.data.entity.Transaction;
+import org.knulikelion.moneyisinvest.data.entity.Wallet;
 import org.knulikelion.moneyisinvest.data.repository.BlockRepository;
 import org.knulikelion.moneyisinvest.data.repository.TransactionRepository;
-import org.knulikelion.moneyisinvest.data.repository.WalletRepository;
 import org.knulikelion.moneyisinvest.service.StockCoinService;
 import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.springframework.stereotype.Service;
@@ -165,6 +165,11 @@ public class StockCoinServiceImpl implements StockCoinService {
         }
 
         return balance;
+    }
+
+    @Override
+    public double checkBalance(String name) {
+        return getBalance(name);
     }
 
     @Override
