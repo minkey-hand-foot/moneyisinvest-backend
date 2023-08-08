@@ -44,6 +44,13 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/payment/kakao/success").permitAll()
                 .antMatchers("/api/v1/payment/kakao/cancel").permitAll()
                 .antMatchers("/api/v1/payment/kakao/fail").permitAll()
+                .antMatchers("/api/v1/favorite/add").permitAll()
+                .antMatchers("/api/v1/favorite/remove").permitAll()
+                .antMatchers("/api/v1/favorite/get").permitAll()
+                .antMatchers("/api/v1/support/post").permitAll()
+                .antMatchers("/api/v1/support/getOne").permitAll()
+                .antMatchers("/api/v1/support/getAll").permitAll()
+                .antMatchers("/api/v1/support/remove").permitAll()
 
                 .anyRequest().hasRole("ADMIN") // 나머지 요청은 인증된 ADMIN만 접근 가능
 
