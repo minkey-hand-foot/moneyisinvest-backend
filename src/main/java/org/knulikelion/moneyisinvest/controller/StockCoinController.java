@@ -41,8 +41,7 @@ public class StockCoinController {
 
 //    가지고 있는 코인 조회
     @GetMapping("/balance")
-    public String checkBalance(@RequestParam String name) {
-        Wallet wallet = stockCoinWalletService.findByName(name);
-        return name + "'s balance is: " + (wallet != null ? wallet.getBalance() : "0");
+    public double checkBalance(@RequestParam String name) {
+        return stockCoinService.checkBalance(name);
     }
 }
