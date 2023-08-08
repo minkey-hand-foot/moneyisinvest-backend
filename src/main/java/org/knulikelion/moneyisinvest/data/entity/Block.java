@@ -29,7 +29,7 @@ public class Block {
     @Column
     private long timeTolerance;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<Transaction> transactions;
 }
 
