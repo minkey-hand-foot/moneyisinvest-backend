@@ -1,5 +1,6 @@
 package org.knulikelion.moneyisinvest.service;
 
+import org.knulikelion.moneyisinvest.data.dto.request.TransactionRequestDto;
 import org.knulikelion.moneyisinvest.data.entity.Block;
 import org.knulikelion.moneyisinvest.data.entity.Transaction;
 
@@ -11,5 +12,8 @@ public interface StockCoinService {
     boolean isChainValid();
     void initializeBlockchain();
     Block getLatestBlock();
+
+    String createTransaction(TransactionRequestDto transactionRequestDto);
+
     void processTransaction(Transaction transaction);
 }
