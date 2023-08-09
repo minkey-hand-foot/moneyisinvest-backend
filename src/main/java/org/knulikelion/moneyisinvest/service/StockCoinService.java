@@ -20,7 +20,7 @@ public interface StockCoinService {
 
     String getWalletAddress(String username);
 
-    String makeDeposit(String username, String amount);
+    String makeDeposit(String sender, String recipient, String amount);
 
     String createTransaction(TransactionRequestDto transactionRequestDto);
 
