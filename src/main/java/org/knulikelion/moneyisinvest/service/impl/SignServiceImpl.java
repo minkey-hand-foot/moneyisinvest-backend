@@ -11,6 +11,7 @@ import org.knulikelion.moneyisinvest.data.entity.User;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.ProfileService;
 import org.knulikelion.moneyisinvest.service.SignService;
+import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,14 +29,17 @@ public class SignServiceImpl implements SignService {
     public ProfileService profileService;
     public JwtTokenProvider jwtTokenProvider;
     public PasswordEncoder passwordEncoder;
+    public StockCoinWalletService stockCoinWalletService;
 
     @Autowired
     public SignServiceImpl(UserRepository userRepository, JwtTokenProvider jwtTokenProvider,
-                           PasswordEncoder passwordEncoder, ProfileService profileService) {
+                           PasswordEncoder passwordEncoder, ProfileService profileService,
+                           StockCoinWalletService stockCoinWalletService) {
         this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
         this.profileService = profileService;
+        this.stockCoinWalletService = stockCoinWalletService;
     }
 
     @Override
@@ -52,6 +56,9 @@ public class SignServiceImpl implements SignService {
                     .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
                     .roles(Collections.singletonList("ROLE_ADMIN"))
                     .build();
+
+            LOGGER.info("사용자의 새 지갑 생성, UID: " + signUpRequestDto.getUid());
+            stockCoinWalletService.createWallet(signUpRequestDto.getUid());
         } else {
             user = User.builder()
                     .uid(signUpRequestDto.getUid())
@@ -61,6 +68,9 @@ public class SignServiceImpl implements SignService {
                     .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
                     .roles(Collections.singletonList("ROLE_USER"))
                     .build();
+
+            LOGGER.info("사용자의 새 지갑 생성, UID: " + signUpRequestDto.getUid());
+            stockCoinWalletService.createWallet(signUpRequestDto.getUid());
         }
 
         SignUpResultDto signUpResultDto = new SignInResultDto();
