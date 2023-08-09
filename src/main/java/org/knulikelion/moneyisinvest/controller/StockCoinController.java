@@ -44,4 +44,9 @@ public class StockCoinController {
     public double checkBalance(@RequestParam String name) {
         return stockCoinService.checkBalance(name);
     }
+
+    @GetMapping("/create/wallet")
+    public String createWallet(@RequestParam String username) {
+        return stockCoinService.createWallet(username);
+    }
 }
