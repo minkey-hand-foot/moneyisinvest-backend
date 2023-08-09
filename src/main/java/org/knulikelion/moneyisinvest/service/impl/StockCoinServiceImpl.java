@@ -46,21 +46,6 @@ public class StockCoinServiceImpl implements StockCoinService {
     }
 
     @Override
-    public String makeDeposit(String sender, String recipient, String amount) {
-        // 사용자가 지갑을 생성했는지 확인
-//        String userWalletAddress = stockCoinWalletService.getWalletAddress(username);
-//        if (userWalletAddress == null) {
-//            return "지갑이 존재하지 않습니다.";
-//        }
-
-        // 입금 과정 구현
-        // 예를 들면, 전송 진행률에 따라 결과를 반환하거나, 입금을 대기열에 추가할 수 있습니다.
-        // 입금 로직이 구현되면 amount를 사용하여 거래를 진행해주세요.
-
-        return "성공적으로 입금되었습니다.";
-    }
-
-    @Override
     public String createTransaction(TransactionRequestDto transactionRequestDto) {
 //        코인 수신자
         String from = transactionRequestDto.getFrom();
@@ -69,8 +54,7 @@ public class StockCoinServiceImpl implements StockCoinService {
 //        발신 할 코인 양
         double amount = transactionRequestDto.getAmount();
 
-//        발신자가 보유한 코인의 수가 발신 할 코인 양보다 많을 때
-        if (getBalance(from) >= amount) {
+        if(stockCoinWalletService.getWalletBalance(from) >= amount) {
             Transaction transaction = Transaction.builder()
                     .from(from)
                     .to(to)
@@ -80,11 +64,10 @@ public class StockCoinServiceImpl implements StockCoinService {
 //            거래 과정 진행
             processTransaction(transaction);
 
-//            유저의 보유 코인 업데이트
-            stockCoinWalletService.updateUserBalances(transaction);
-            return "Transaction successfully processed.";
+            stockCoinWalletService.updateWalletBalances(transaction);
+            return "코인 거래 완료";
         } else {
-            throw new IllegalArgumentException("Insufficient balance");
+            return "잔액 부족";
         }
     }
 
@@ -171,29 +154,6 @@ public class StockCoinServiceImpl implements StockCoinService {
         blockRepository.save(newBlock);
 
         return newBlock;
-    }
-
-    @Override
-    @Transactional
-    public double getBalance(String userName) {
-        double balance = 0;
-
-        for (Block block : blockchain) {
-            for (Transaction transaction : block.getTransactions()) {
-                if (userName.equals(transaction.getTo())) {
-                    balance += transaction.getAmount();
-                } else if (userName.equals(transaction.getFrom())) {
-                    balance -= transaction.getAmount();
-                }
-            }
-        }
-
-        return balance;
-    }
-
-    @Override
-    public double checkBalance(String name) {
-        return getBalance(name);
     }
 
     @Override

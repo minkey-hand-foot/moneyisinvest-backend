@@ -1,17 +1,15 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.Address;
+import org.bitcoinj.core.*;
+import org.knulikelion.moneyisinvest.data.entity.StockCoinWallet;
 import org.knulikelion.moneyisinvest.data.entity.Transaction;
-import org.knulikelion.moneyisinvest.data.entity.Wallet;
 import org.knulikelion.moneyisinvest.data.entity.WalletPrivateKey;
+import org.knulikelion.moneyisinvest.data.repository.StockCoinWalletRepository;
 import org.knulikelion.moneyisinvest.data.repository.WalletPrivateKeyRepository;
-import org.knulikelion.moneyisinvest.data.repository.WalletRepository;
 import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.script.Script.ScriptType;
 
@@ -21,13 +19,14 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class StockCoinWalletServiceImpl implements StockCoinWalletService {
-    private final WalletRepository walletRepository;
+    private final StockCoinWalletRepository stockCoinWalletRepository;
     private final WalletPrivateKeyRepository walletPrivateKeyRepository;
     private final NetworkParameters networkParameters = NetworkParameters.fromID(NetworkParameters.ID_MAINNET);
 
     @Autowired
-    public StockCoinWalletServiceImpl(WalletRepository walletRepository, WalletPrivateKeyRepository walletPrivateKeyRepository) {
-        this.walletRepository = walletRepository;
+    public StockCoinWalletServiceImpl(StockCoinWalletRepository stockCoinWalletRepository,
+                                      WalletPrivateKeyRepository walletPrivateKeyRepository) {
+        this.stockCoinWalletRepository = stockCoinWalletRepository;
         this.walletPrivateKeyRepository = walletPrivateKeyRepository;
     }
 
@@ -48,7 +47,7 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
     @Override
     public ECKey getPrivateKeyForUser(String username) {
         Optional<WalletPrivateKey> userPrivateKeyOptional = walletPrivateKeyRepository.findByUsername(username);
-        if (userPrivateKeyOptional.isPresent()) {
+        if (!userPrivateKeyOptional.isPresent()) {
             return null;
         }
         String privateKeyHexString = userPrivateKeyOptional.get().getPrivateKey();
@@ -60,6 +59,13 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
     public String generateWalletAddress(ECKey privateKey) {
         NetworkParameters networkParameters = MainNetParams.get();
         Address walletAddress = Address.fromKey(networkParameters, privateKey, ScriptType.P2PKH);
+
+        StockCoinWallet newWallet = StockCoinWallet.builder()
+                .address(walletAddress.toString())
+                .balance(0)
+                .build();
+
+        stockCoinWalletRepository.save(newWallet);
 
         return walletAddress.toString();
     }
@@ -74,63 +80,69 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
     // 지갑 주소를 확인하고 가져옵니다.
     @Override
     public String getWalletAddress(String username) {
-        ECKey privateKey = getPrivateKeyForUser(username);
-        if (privateKey == null) return null;
-        return generateWalletAddress(privateKey);
+        Optional<WalletPrivateKey> walletPrivateKeyOptional = walletPrivateKeyRepository.findByUsername(username);
+        if (walletPrivateKeyOptional.isEmpty()) {
+            return null;
+        }
+
+        String privateKeyWIF = walletPrivateKeyOptional.get().getPrivateKey();
+        NetworkParameters networkParameters = MainNetParams.get();
+
+        ECKey privateKey;
+        try {
+            privateKey = DumpedPrivateKey.fromBase58(networkParameters, privateKeyWIF).getKey();
+        } catch (Exception e) {
+            throw new RuntimeException("Error converting WIF private key to ECKey", e);
+        }
+
+        Address walletAddress = Address.fromKey(networkParameters, privateKey, ScriptType.P2PKH);
+        return walletAddress.toString();
     }
 
+
     @Override
-    public void updateUserBalances(Transaction transaction) {
-        //        수, 발신자 지갑 조회
-        Wallet senderWallet = walletRepository.findByName(transaction.getFrom());
-        log.info("발신자 지갑 조회");
-        Wallet recipientWallet = walletRepository.findByName(transaction.getTo());
-        log.info("수신자 지갑 조회");
-
-//        발신인 지갑이 존재하지 않을 때
-        if (senderWallet == null) {
-            log.info("발신자 지갑 미존재: 새로운 지갑 생성");
-//            새로운 지갑 생성
-            senderWallet = Wallet.builder()
-                    .name(transaction.getFrom())
-                    .balance(0)
-                    .build();
-
-//            새로운 지갑 저장
-            walletRepository.save(senderWallet);
-            log.info("발신자 지갑 미존재: 새로운 지갑 생성 완료");
-        }
-
-//        수신자 지갑이 존재하지 않을 때
-        if (recipientWallet == null) {
-            log.info("수신자 지갑 미존재: 새로운 지갑 생성");
-//            새로운 지갑 생성
-            recipientWallet = Wallet.builder()
-                    .name(transaction.getTo())
-                    .balance(0)
-                    .build();
-
-//            새로운 지갑 저장
-            walletRepository.save(recipientWallet);
-            log.info("발신자 지갑 미존재: 새로운 지갑 생성 완료");
-        }
+    public void updateWalletBalances(Transaction transaction) {
+        StockCoinWallet senderWallet = stockCoinWalletRepository.findByAddress(transaction.getFrom());
+        StockCoinWallet recipientWallet = stockCoinWalletRepository.findByAddress(transaction.getTo());
 
 //        발신자의 발송 후 잔액
         double senderNewBalance = senderWallet.getBalance() - transaction.getAmount();
         senderWallet.setBalance(senderNewBalance);
-        walletRepository.save(senderWallet);
+        stockCoinWalletRepository.save(senderWallet);
         log.info("발신자 지갑 잔액 설정: " + senderNewBalance);
 
 //        수신자의 수신 후 잔액
         double recipientNewBalance = recipientWallet.getBalance() + transaction.getAmount();
         recipientWallet.setBalance(recipientNewBalance);
-        walletRepository.save(recipientWallet);
+        stockCoinWalletRepository.save(recipientWallet);
         log.info("수신자 지갑 잔액 설정: " + recipientNewBalance);
     }
 
     @Override
-    public Wallet findByName(String name) {
-        log.info("사용자 지갑 조회: " + name);
-        return walletRepository.findByName(name);
+    public double getWalletBalance(String address) {
+        StockCoinWallet selectedWallet = stockCoinWalletRepository.findByAddress(address);
+        return selectedWallet.getBalance();
+    }
+
+    @Override
+    public double getWalletBalanceByUsername(String username) {
+        StockCoinWallet selectedStockCoinWallet = stockCoinWalletRepository.findByAddress(getWalletAddress(username));
+
+        if(selectedStockCoinWallet == null) {
+            return 0;
+        }
+
+        return selectedStockCoinWallet.getBalance();
+    }
+
+    @Override
+    public double getWalletBalanceByAddress(String address) {
+        StockCoinWallet selectedStockCoinWallet = stockCoinWalletRepository.findByAddress(address);
+
+        if(selectedStockCoinWallet == null) {
+            return 0;
+        }
+
+        return selectedStockCoinWallet.getBalance();
     }
 }
