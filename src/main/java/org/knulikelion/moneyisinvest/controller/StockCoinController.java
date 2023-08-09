@@ -1,8 +1,6 @@
 package org.knulikelion.moneyisinvest.controller;
 
 import org.knulikelion.moneyisinvest.data.dto.request.TransactionRequestDto;
-import org.knulikelion.moneyisinvest.data.entity.Transaction;
-import org.knulikelion.moneyisinvest.data.entity.Wallet;
 import org.knulikelion.moneyisinvest.service.StockCoinService;
 import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,10 +37,19 @@ public class StockCoinController {
         return stockCoinService.createTransaction(transactionRequestDto);
     }
 
-//    가지고 있는 코인 조회
-    @GetMapping("/balance")
-    public double checkBalance(@RequestParam String name) {
-        return stockCoinService.checkBalance(name);
+    @GetMapping("/get/address")
+    public String getWalletAddress(String username) {
+        return stockCoinWalletService.getWalletAddress(username);
+    }
+
+    @GetMapping("/get/balance/username")
+    public double checkWalletBalanceByUsername(@RequestParam String username) {
+        return stockCoinWalletService.getWalletBalanceByUsername(username);
+    }
+
+    @GetMapping("/get/balance/address")
+    public double checkWalletBalanceByAddress(@RequestParam String address) {
+        return stockCoinWalletService.getWalletBalanceByAddress(address);
     }
 
     @GetMapping("/create/wallet")

@@ -10,14 +10,14 @@ import javax.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(callSuper = true)
-@Table(name = "wallet")
-public class Wallet {
+@Table(name = "stock_coin_wallet")
+public class StockCoinWallet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column
-    private String name;
+    private String address;
 
     @Column
     private double balance;
