@@ -46,12 +46,12 @@ public class StockCoinServiceImpl implements StockCoinService {
     }
 
     @Override
-    public String makeDeposit(String username, String amount) {
+    public String makeDeposit(String sender, String recipient, String amount) {
         // 사용자가 지갑을 생성했는지 확인
-        String userWalletAddress = stockCoinWalletService.getWalletAddress(username);
-        if (userWalletAddress == null) {
-            return "지갑이 존재하지 않습니다.";
-        }
+//        String userWalletAddress = stockCoinWalletService.getWalletAddress(username);
+//        if (userWalletAddress == null) {
+//            return "지갑이 존재하지 않습니다.";
+//        }
 
         // 입금 과정 구현
         // 예를 들면, 전송 진행률에 따라 결과를 반환하거나, 입금을 대기열에 추가할 수 있습니다.
