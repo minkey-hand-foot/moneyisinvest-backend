@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.knulikelion.moneyisinvest.data.dto.request.TransactionRequestDto;
 import org.knulikelion.moneyisinvest.data.entity.Block;
 import org.knulikelion.moneyisinvest.data.entity.Transaction;
-import org.knulikelion.moneyisinvest.data.entity.Wallet;
 import org.knulikelion.moneyisinvest.data.repository.BlockRepository;
 import org.knulikelion.moneyisinvest.data.repository.TransactionRepository;
 import org.knulikelion.moneyisinvest.service.StockCoinService;
@@ -34,6 +33,31 @@ public class StockCoinServiceImpl implements StockCoinService {
         this.transactionRepository = transactionRepository;
         this.stockCoinWalletService = stockCoinWalletService;
         this.blockRepository = blockRepository;
+    }
+
+    @Override
+    public String createWallet(String username) {
+        return stockCoinWalletService.createWallet(username);
+    }
+
+    @Override
+    public String getWalletAddress(String username) {
+        return stockCoinWalletService.getWalletAddress(username);
+    }
+
+    @Override
+    public String makeDeposit(String sender, String recipient, String amount) {
+        // 사용자가 지갑을 생성했는지 확인
+//        String userWalletAddress = stockCoinWalletService.getWalletAddress(username);
+//        if (userWalletAddress == null) {
+//            return "지갑이 존재하지 않습니다.";
+//        }
+
+        // 입금 과정 구현
+        // 예를 들면, 전송 진행률에 따라 결과를 반환하거나, 입금을 대기열에 추가할 수 있습니다.
+        // 입금 로직이 구현되면 amount를 사용하여 거래를 진행해주세요.
+
+        return "성공적으로 입금되었습니다.";
     }
 
     @Override
