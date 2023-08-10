@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -62,17 +63,21 @@ public class StockCoinServiceImpl implements StockCoinService {
 
     @Override
     public String createSystemTransaction(String username, double amount) {
-        Transaction transaction = Transaction.builder()
-                .from(stockCoinWalletService.getWalletAddress("SYSTEM"))
-                .to(stockCoinWalletService.getWalletAddress(username))
-                .amount(amount)
-                .build();
+        if(stockCoinWalletService.getWalletAddress(username) != null) {
+            Transaction transaction = Transaction.builder()
+                    .from(stockCoinWalletService.getWalletAddress("SYSTEM"))
+                    .to(stockCoinWalletService.getWalletAddress(username))
+                    .amount(amount)
+                    .build();
 
-        processTransaction(transaction);
+            processTransaction(transaction);
 
-        stockCoinWalletService.updateWalletBalances(transaction);
+            stockCoinWalletService.updateWalletBalances(transaction);
 
-        return "코인 지급이 완료되었습니다.";
+            return "코인 지급이 완료됨.";
+        } else {
+            return "지급 대상 사용자를 찾을 수 없음";
+        }
     }
 
     @Override
@@ -152,9 +157,7 @@ public class StockCoinServiceImpl implements StockCoinService {
 
         newBlock.setHash(calculateHash(newBlock));
         blockchain.add(newBlock);
-
         transactionRepository.saveAll(transactions);
-
         blockRepository.save(newBlock);
 
         return newBlock;
@@ -185,31 +188,31 @@ public class StockCoinServiceImpl implements StockCoinService {
     @Override
     @Transactional
     public void initializeBlockchain() {
-////        데이터베이스에서 모든 블록체인 데이터 조회
-//        List<Block> blocksFromDatabase = blockRepository.findAll();
-//
-////        블록체인 데이터베이스가 존재하지 않으면 초기 코드를 실행함
-//        if (blocksFromDatabase.isEmpty()) {
-////            새로운 거래 내역 생성 Genesis -> User
-//            Transaction genesisTransaction = Transaction.builder()
-//                    .from("Genesis")
-//                    .to("User")
-//                    .amount(1000)
-//                    .build();
-//
-////            새로운 거래 transaction 생성
-//            Block genesisBlock = Block.builder()
-//                    .transactions(Arrays.asList(genesisTransaction))
-//                    .timeStamp(System.currentTimeMillis())
-//                    .timeTolerance(1000)
-//                    .build();
-//
-////            해시 저장
-//            genesisBlock.setHash(calculateHash(genesisBlock));
-//
-////            새로운 거래 내역 저장
-//            blockRepository.save(genesisBlock);
-//        }
+//        데이터베이스에서 모든 블록체인 데이터 조회
+        List<Block> blocksFromDatabase = blockRepository.findAll();
+
+//        블록체인 데이터베이스가 존재하지 않으면 초기 코드를 실행함
+        if (blocksFromDatabase.isEmpty()) {
+//            새로운 거래 내역 생성 Genesis -> User
+            Transaction genesisTransaction = Transaction.builder()
+                    .from("Genesis")
+                    .to("SYSTEM")
+                    .amount(1000)
+                    .build();
+
+//            새로운 거래 transaction 생성
+            Block genesisBlock = Block.builder()
+                    .transactions(Arrays.asList(genesisTransaction))
+                    .timeStamp(System.currentTimeMillis())
+                    .timeTolerance(1000)
+                    .build();
+
+//            해시 저장
+            genesisBlock.setHash(calculateHash(genesisBlock));
+
+//            새로운 거래 내역 저장
+            blockRepository.save(genesisBlock);
+        }
 
 //        데이터베이스에서 블록체인을 모두 불러옴
         blockchain = blockRepository.findAll();
@@ -222,6 +225,11 @@ public class StockCoinServiceImpl implements StockCoinService {
 
     @Override
     public Block getLatestBlock() {
-        return blockchain.get(blockchain.size() - 1);
+//      블록체인의 리스트가 비어있지 않은 지 체크
+        if (blockchain.size() > 0) {
+            return blockchain.get(blockchain.size() - 1);
+        } else {
+            return null;
+        }
     }
 }

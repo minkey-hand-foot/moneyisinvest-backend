@@ -2,6 +2,7 @@ package org.knulikelion.moneyisinvest.service;
 
 import org.bitcoinj.core.ECKey;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.TransactionHistoryResponseDto;
 import org.knulikelion.moneyisinvest.data.entity.Transaction;
 
 public interface StockCoinWalletService {
@@ -11,6 +12,9 @@ public interface StockCoinWalletService {
     double getWalletBalanceByUsername(String username);
     double getWalletBalanceByAddress(String address);
     ECKey createPrivateKey(String username);
+
+    TransactionHistoryResponseDto getTransactionHistoryByUsername(String username);
+
     ECKey getPrivateKeyForUser(String username);
     String generateWalletAddress(ECKey privateKey);
     BaseResponseDto createWallet(String username);
