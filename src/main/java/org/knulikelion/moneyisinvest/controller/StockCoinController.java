@@ -1,6 +1,7 @@
 package org.knulikelion.moneyisinvest.controller;
 
 import org.knulikelion.moneyisinvest.data.dto.request.TransactionRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.service.StockCoinService;
 import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,13 @@ public class StockCoinController {
         this.stockCoinWalletService = stockCoinWalletService;
     }
 
-//    초기 코드 실행
     @PostConstruct
     public void initialize() {
+//        블록체인 초기 코드 실행
         stockCoinService.initializeBlockchain();
+
+//        지갑 초기 코드 실행
+        stockCoinWalletService.initializeSystemWallet();
     }
 
 //    블록체인 유효성 검증
@@ -37,23 +41,33 @@ public class StockCoinController {
         return stockCoinService.createTransaction(transactionRequestDto);
     }
 
+//    아이디로 지갑 주소 조회
     @GetMapping("/get/address")
     public String getWalletAddress(String username) {
         return stockCoinWalletService.getWalletAddress(username);
     }
 
+//    아이디로 지갑 잔액 조회
     @GetMapping("/get/balance/username")
     public double checkWalletBalanceByUsername(@RequestParam String username) {
         return stockCoinWalletService.getWalletBalanceByUsername(username);
     }
 
+//    지갑 주소로 지갑 잔액 조회
     @GetMapping("/get/balance/address")
     public double checkWalletBalanceByAddress(@RequestParam String address) {
         return stockCoinWalletService.getWalletBalanceByAddress(address);
     }
 
+//    아이디로 지갑 생성
     @GetMapping("/create/wallet")
-    public String createWallet(@RequestParam String username) {
-        return stockCoinService.createWallet(username);
+    public BaseResponseDto createWallet(@RequestParam String username) {
+        return stockCoinWalletService.createWallet(username);
+    }
+
+//    사용자에게 코인 지급
+    @GetMapping("/system/give")
+    public String giveCoinToUser(@RequestParam String username, double amount) {
+        return stockCoinService.createSystemTransaction(username, amount);
     }
 }
