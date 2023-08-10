@@ -1,6 +1,7 @@
 package org.knulikelion.moneyisinvest.controller;
 
 import org.knulikelion.moneyisinvest.data.dto.request.TransactionRequestDto;
+
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.TransactionHistoryResponseDto;
 import org.knulikelion.moneyisinvest.service.StockCoinService;
@@ -8,6 +9,7 @@ import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import javax.annotation.PostConstruct;
+
 import java.util.List;
 
 @RestController
@@ -21,6 +23,7 @@ public class StockCoinController {
         this.stockCoinService = stockCoinService;
         this.stockCoinWalletService = stockCoinWalletService;
     }
+
 
     @PostConstruct
     public void initialize() {

@@ -14,9 +14,7 @@ public interface StockCoinWalletService {
     double getWalletBalanceByUsername(String username);
     double getWalletBalanceByAddress(String address);
     ECKey createPrivateKey(String username);
-
     List<TransactionHistoryResponseDto> getTransactionHistoryByUsername(String username);
-
     ECKey getPrivateKeyForUser(String username);
     String generateWalletAddress(ECKey privateKey);
     BaseResponseDto createWallet(String username);
