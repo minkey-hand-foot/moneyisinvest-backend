@@ -4,11 +4,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.TransactionHistoryResponseDto;
+import org.knulikelion.moneyisinvest.data.entity.Block;
 import org.knulikelion.moneyisinvest.data.entity.StockCoinWallet;
 import org.knulikelion.moneyisinvest.data.entity.Transaction;
 import org.knulikelion.moneyisinvest.data.entity.StockCoinWalletPrivateKey;
+import org.knulikelion.moneyisinvest.data.repository.BlockRepository;
 import org.knulikelion.moneyisinvest.data.repository.StockCoinWalletRepository;
 import org.knulikelion.moneyisinvest.data.repository.StockCoinWalletPrivateKeyRepository;
+import org.knulikelion.moneyisinvest.data.repository.TransactionRepository;
 import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,19 +20,31 @@ import org.bitcoinj.script.Script.ScriptType;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class StockCoinWalletServiceImpl implements StockCoinWalletService {
     private final StockCoinWalletRepository stockCoinWalletRepository;
+    private final TransactionRepository transactionRepository;
+    private final BlockRepository blockRepository;
     private final StockCoinWalletPrivateKeyRepository stockCoinWalletPrivateKeyRepository;
     private final NetworkParameters networkParameters = NetworkParameters.fromID(NetworkParameters.ID_MAINNET);
 
     @Autowired
     public StockCoinWalletServiceImpl(StockCoinWalletRepository stockCoinWalletRepository,
-                                      StockCoinWalletPrivateKeyRepository stockCoinWalletPrivateKeyRepository) {
+                                      TransactionRepository transactionRepository,
+                                      BlockRepository blockRepository, StockCoinWalletPrivateKeyRepository stockCoinWalletPrivateKeyRepository) {
         this.stockCoinWalletRepository = stockCoinWalletRepository;
+        this.transactionRepository = transactionRepository;
+        this.blockRepository = blockRepository;
         this.stockCoinWalletPrivateKeyRepository = stockCoinWalletPrivateKeyRepository;
     }
 
@@ -47,16 +62,53 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
     }
 
     @Override
-    public TransactionHistoryResponseDto getTransactionHistoryByUsername(String username) {
-        TransactionHistoryResponseDto transactionHistoryResponseDto = new TransactionHistoryResponseDto();
-//         타입은 나중에 설정
-        transactionHistoryResponseDto.setType("테스트");
+    public List<TransactionHistoryResponseDto> getTransactionHistoryByUsername(String username) {
+        List<TransactionHistoryResponseDto> transactionHistoryResponseDtoList = new ArrayList<>();
 
         String UserWalletAddress = getWalletAddress(username);
 
-//        Transaction transaction =
+//        Transaction에서 출금 내역 조회
+        List<Transaction> transactionWithdraw = transactionRepository.getTransactionByFrom(UserWalletAddress);
 
-        return null;
+//        Transaction에서 입금 내역 조회
+        List<Transaction> transactionDeposit = transactionRepository.getTransactionByTo(UserWalletAddress);
+
+//        모든 출금, 입금 내역을 한 리스트로 합침
+        List<Transaction> allTransactions = new ArrayList<>(transactionWithdraw);
+        allTransactions.addAll(transactionDeposit);
+
+        for(Transaction allTransaction : allTransactions) {
+            TransactionHistoryResponseDto transactionHistoryResponseDto = new TransactionHistoryResponseDto();
+
+//            발신자 지정
+            transactionHistoryResponseDto.setSender(allTransaction.getFrom());
+//            수신자 지정
+            transactionHistoryResponseDto.setRecipient(allTransaction.getTo());
+//            해당 블럭 가져오기
+            Block block = blockRepository.getById(allTransaction.getId());
+//            해시코드 지정
+            transactionHistoryResponseDto.setHashCode(block.getHash());
+//            입금, 출금 여부 지정
+            if(getWalletAddress(username) == allTransaction.getFrom()) {
+                transactionHistoryResponseDto.setType("출금");
+            } else {
+                transactionHistoryResponseDto.setType("입금");
+            }
+//            수수료 지정
+            transactionHistoryResponseDto.setFee(0);
+//            거래 금액 지정
+            transactionHistoryResponseDto.setAmount(allTransaction.getAmount());
+//            거래 시간 지정
+            LocalDateTime currentDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(block.getTimeStamp()), ZoneId.systemDefault());
+            transactionHistoryResponseDto.setDatetime(String.valueOf(currentDateTime));
+
+//            리스트 삽입
+            transactionHistoryResponseDtoList.add(transactionHistoryResponseDto);
+        }
+
+        return transactionHistoryResponseDtoList.stream()
+                .sorted(Comparator.comparing(TransactionHistoryResponseDto::getDatetime))
+                .collect(Collectors.toList());
     }
 
 // 사용자의 비공개 키 가져오기

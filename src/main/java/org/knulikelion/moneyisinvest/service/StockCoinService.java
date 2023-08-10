@@ -12,8 +12,6 @@ public interface StockCoinService {
     void initializeBlockchain();
     Block getLatestBlock();
     String createTransaction(TransactionRequestDto transactionRequestDto);
-
     String createSystemTransaction(String username, double amount);
-
     void processTransaction(Transaction transaction);
 }
