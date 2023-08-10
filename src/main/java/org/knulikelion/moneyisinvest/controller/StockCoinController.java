@@ -2,11 +2,13 @@ package org.knulikelion.moneyisinvest.controller;
 
 import org.knulikelion.moneyisinvest.data.dto.request.TransactionRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.TransactionHistoryResponseDto;
 import org.knulikelion.moneyisinvest.service.StockCoinService;
 import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import javax.annotation.PostConstruct;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/coin/")
@@ -38,6 +40,12 @@ public class StockCoinController {
     @PostMapping("/trade")
     public String createTransaction(@RequestBody TransactionRequestDto transactionRequestDto) {
         return stockCoinService.createTransaction(transactionRequestDto);
+    }
+
+//    유저 거래내역 조회
+    @GetMapping("/get/history")
+    public List<TransactionHistoryResponseDto> getWalletHistory(String username) {
+        return stockCoinWalletService.getTransactionHistoryByUsername(username);
     }
 
 //    아이디로 지갑 주소 조회
