@@ -2,6 +2,8 @@ package org.knulikelion.moneyisinvest.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.knulikelion.moneyisinvest.data.dto.request.TransactionRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.request.TransactionToSystemRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.entity.Block;
 import org.knulikelion.moneyisinvest.data.entity.Transaction;
 import org.knulikelion.moneyisinvest.data.repository.BlockRepository;
@@ -41,6 +43,8 @@ public class StockCoinServiceImpl implements StockCoinService {
         String from = transactionRequestDto.getFrom();
 //        코인 발신자
         String to = transactionRequestDto.getTo();
+//        수수료
+        double fee = transactionRequestDto.getFee();
 //        발신 할 코인 양
         double amount = transactionRequestDto.getAmount();
 
@@ -49,6 +53,7 @@ public class StockCoinServiceImpl implements StockCoinService {
                     .from(from)
                     .to(to)
                     .amount(amount)
+                    .fee(fee)
                     .build();
 
 //            거래 과정 진행
@@ -62,12 +67,44 @@ public class StockCoinServiceImpl implements StockCoinService {
     }
 
     @Override
+    public BaseResponseDto withdrawStockCoinToSystem(TransactionToSystemRequestDto transactionToSystemRequestDto) {
+        BaseResponseDto baseResponseDto = new BaseResponseDto();
+
+        if(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getFrom()) != null) {
+            Transaction transaction = Transaction.builder()
+                    .from(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getFrom()))
+                    .to(stockCoinWalletService.getWalletAddress("SYSTEM"))
+                    .fee(0)
+                    .amount(transactionToSystemRequestDto.getAmount())
+                    .build();
+
+            processTransaction(transaction);
+
+            if(stockCoinWalletService.getWalletBalanceByUsername(transactionToSystemRequestDto.getFrom()) >= (transaction.getFee() + transaction.getAmount())) {
+                stockCoinWalletService.updateWalletBalances(transaction);
+
+                baseResponseDto.setSuccess(true);
+                baseResponseDto.setMsg("스톡 코인 출금이 완료되었습니다.");
+            } else {
+                baseResponseDto.setSuccess(false);
+                baseResponseDto.setMsg("보유한 스톡 코인이 부족합니다.");
+            }
+        } else {
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("보유한 지갑이 없습니다.");
+        }
+
+        return baseResponseDto;
+    }
+
+    @Override
     public String createSystemTransaction(String username, double amount) {
         if(stockCoinWalletService.getWalletAddress(username) != null) {
             Transaction transaction = Transaction.builder()
                     .from(stockCoinWalletService.getWalletAddress("SYSTEM"))
                     .to(stockCoinWalletService.getWalletAddress(username))
                     .amount(amount)
+                    .fee(0)
                     .build();
 
             processTransaction(transaction);
@@ -198,6 +235,7 @@ public class StockCoinServiceImpl implements StockCoinService {
                     .from("Genesis")
                     .to("SYSTEM")
                     .amount(1000)
+                    .fee(0)
                     .build();
 
 //            새로운 거래 transaction 생성

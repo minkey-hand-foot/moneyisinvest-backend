@@ -2,6 +2,7 @@ package org.knulikelion.moneyisinvest.controller;
 
 import org.knulikelion.moneyisinvest.data.dto.request.TransactionRequestDto;
 
+import org.knulikelion.moneyisinvest.data.dto.request.TransactionToSystemRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.TransactionHistoryResponseDto;
 import org.knulikelion.moneyisinvest.service.StockCoinService;
@@ -61,6 +62,11 @@ public class StockCoinController {
     @GetMapping("/get/balance/username")
     public double checkWalletBalanceByUsername(@RequestParam String username) {
         return stockCoinWalletService.getWalletBalanceByUsername(username);
+    }
+
+    @GetMapping("/deposit/system")
+    public BaseResponseDto withdrawStockCoinToSystem(TransactionToSystemRequestDto transactionToSystemRequestDto) {
+        return stockCoinService.withdrawStockCoinToSystem(transactionToSystemRequestDto);
     }
 
 //    지갑 주소로 지갑 잔액 조회

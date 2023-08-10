@@ -95,9 +95,11 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
                 transactionHistoryResponseDto.setType("입금");
             }
 //            수수료 지정
-            transactionHistoryResponseDto.setFee(0);
+            transactionHistoryResponseDto.setFee(allTransaction.getFee());
 //            거래 금액 지정
             transactionHistoryResponseDto.setAmount(allTransaction.getAmount());
+//            거래 총 금액 지정
+            transactionHistoryResponseDto.setTotal(allTransaction.getAmount() - allTransaction.getFee());
 //            거래 시간 지정
             LocalDateTime currentDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(block.getTimeStamp()), ZoneId.systemDefault());
             transactionHistoryResponseDto.setDatetime(String.valueOf(currentDateTime));
@@ -195,7 +197,7 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
         } else {
 //          발신자의 발송 후 잔액
 
-            double senderNewBalance = senderWallet.getBalance() - transaction.getAmount();
+            double senderNewBalance = senderWallet.getBalance() - (transaction.getAmount() - transaction.getFee());
             senderWallet.setBalance(senderNewBalance);
             stockCoinWalletRepository.save(senderWallet);
             log.info("발신자 지갑 잔액 설정: " + senderNewBalance);
