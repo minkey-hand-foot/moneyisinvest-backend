@@ -11,8 +11,9 @@ public interface StockCoinService {
     boolean isChainValid();
     void initializeBlockchain();
     Block getLatestBlock();
-    String createWallet(String username);
-    String getWalletAddress(String username);
     String createTransaction(TransactionRequestDto transactionRequestDto);
+
+    String createSystemTransaction(String username, double amount);
+
     void processTransaction(Transaction transaction);
 }
