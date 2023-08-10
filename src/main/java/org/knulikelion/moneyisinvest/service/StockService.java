@@ -11,4 +11,6 @@ public interface StockService {
     List<StockSearchResponseDto> searchStockByKeyword(String keyword) throws UnsupportedEncodingException;
     CheckHolidayResponseDto checkIsHolidayNow();
     List<HolidayResponseDto> getAllHoliday();
+
+    StockCompanyFavResponseDto getCompanyFavByStockId(String stockId);
 }
