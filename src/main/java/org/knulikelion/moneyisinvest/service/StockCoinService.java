@@ -8,21 +8,10 @@ import java.util.List;
 
 public interface StockCoinService {
     Block mineBlock(List<Transaction> transactions);
-    double getBalance(String userName);
-
-    double checkBalance(String name);
-
     boolean isChainValid();
     void initializeBlockchain();
     Block getLatestBlock();
-
-    String createWallet(String username);
-
-    String getWalletAddress(String username);
-
-    String makeDeposit(String sender, String recipient, String amount);
-
     String createTransaction(TransactionRequestDto transactionRequestDto);
-
+    String createSystemTransaction(String username, double amount);
     void processTransaction(Transaction transaction);
 }
