@@ -37,6 +37,7 @@ public class SupportServiceImpl implements SupportService {
             support.setUser(getUser);
             support.setId(support.getId());
             support.setTitle(support.getTitle());
+            support.setStatus("답변 대기중");
             support.setContents(support.getContents());
             support.setCreatedAt(LocalDateTime.now());
             support.setUpdatedAt(LocalDateTime.now());
@@ -59,6 +60,7 @@ public class SupportServiceImpl implements SupportService {
         responseDto.setId(support.get().getId());
         responseDto.setUid(support.get().getUser().getUid());
         responseDto.setTitle(support.get().getTitle());
+        responseDto.setStatus(support.get().getStatus());
         responseDto.setContents(support.get().getContents());
         responseDto.setCreatedAt(support.get().getCreatedAt().toString());
         responseDto.setUpdatedAt(support.get().getUpdatedAt().toString());
@@ -78,6 +80,7 @@ public class SupportServiceImpl implements SupportService {
             supportResponseDto.setUid(getSupport.getUser().getUid());
             supportResponseDto.setTitle(getSupport.getTitle());
             supportResponseDto.setContents(getSupport.getContents());
+            supportResponseDto.setStatus(getSupport.getStatus());
             supportResponseDto.setCreatedAt(getSupport.getCreatedAt().toString());
             supportResponseDto.setUpdatedAt(getSupport.getUpdatedAt().toString());
 

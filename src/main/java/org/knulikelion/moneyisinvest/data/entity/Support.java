@@ -28,6 +28,9 @@ public class Support {
     @Column(nullable = false)
     private String contents;
 
+    @Column(nullable = false)
+    private String status;
+
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
     private User user;
