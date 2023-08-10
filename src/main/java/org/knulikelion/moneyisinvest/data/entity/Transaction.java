@@ -24,5 +24,8 @@ public class Transaction {
     private String to;
 
     @Column
+    private double fee;
+
+    @Column
     private double amount;
 }
