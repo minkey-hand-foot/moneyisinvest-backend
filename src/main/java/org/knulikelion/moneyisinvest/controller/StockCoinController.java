@@ -22,11 +22,10 @@ public class StockCoinController {
 
     @PostConstruct
     public void initialize() {
-//        블록체인 초기 코드 실행
-        stockCoinService.initializeBlockchain();
-
 //        지갑 초기 코드 실행
         stockCoinWalletService.initializeSystemWallet();
+//        블록체인 초기 코드 실행
+        stockCoinService.initializeBlockchain();
     }
 
 //    블록체인 유효성 검증

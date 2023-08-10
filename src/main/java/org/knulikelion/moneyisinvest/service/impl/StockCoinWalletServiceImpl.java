@@ -3,12 +3,12 @@ package org.knulikelion.moneyisinvest.service.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
-import org.knulikelion.moneyisinvest.data.entity.Block;
+import org.knulikelion.moneyisinvest.data.dto.response.TransactionHistoryResponseDto;
 import org.knulikelion.moneyisinvest.data.entity.StockCoinWallet;
 import org.knulikelion.moneyisinvest.data.entity.Transaction;
-import org.knulikelion.moneyisinvest.data.entity.WalletPrivateKey;
+import org.knulikelion.moneyisinvest.data.entity.StockCoinWalletPrivateKey;
 import org.knulikelion.moneyisinvest.data.repository.StockCoinWalletRepository;
-import org.knulikelion.moneyisinvest.data.repository.WalletPrivateKeyRepository;
+import org.knulikelion.moneyisinvest.data.repository.StockCoinWalletPrivateKeyRepository;
 import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,22 +17,20 @@ import org.bitcoinj.script.Script.ScriptType;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 @Service
 @Slf4j
 public class StockCoinWalletServiceImpl implements StockCoinWalletService {
     private final StockCoinWalletRepository stockCoinWalletRepository;
-    private final WalletPrivateKeyRepository walletPrivateKeyRepository;
+    private final StockCoinWalletPrivateKeyRepository stockCoinWalletPrivateKeyRepository;
     private final NetworkParameters networkParameters = NetworkParameters.fromID(NetworkParameters.ID_MAINNET);
 
     @Autowired
     public StockCoinWalletServiceImpl(StockCoinWalletRepository stockCoinWalletRepository,
-                                      WalletPrivateKeyRepository walletPrivateKeyRepository) {
+                                      StockCoinWalletPrivateKeyRepository stockCoinWalletPrivateKeyRepository) {
         this.stockCoinWalletRepository = stockCoinWalletRepository;
-        this.walletPrivateKeyRepository = walletPrivateKeyRepository;
+        this.stockCoinWalletPrivateKeyRepository = stockCoinWalletPrivateKeyRepository;
     }
 
 // 비공개 키 생성 및 저장
@@ -40,18 +38,31 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
     public ECKey createPrivateKey(String username) {
         ECKey privateKey = new ECKey();
         String privateKeyHexString = privateKey.getPrivateKeyEncoded(networkParameters).toString();
-        WalletPrivateKey walletPrivateKey = WalletPrivateKey.builder()
+        StockCoinWalletPrivateKey stockCoinWalletPrivateKey = StockCoinWalletPrivateKey.builder()
                 .username(username)
                 .privateKey(privateKeyHexString)
                 .build();
-        walletPrivateKeyRepository.save(walletPrivateKey);
+        stockCoinWalletPrivateKeyRepository.save(stockCoinWalletPrivateKey);
         return privateKey;
+    }
+
+    @Override
+    public TransactionHistoryResponseDto getTransactionHistoryByUsername(String username) {
+        TransactionHistoryResponseDto transactionHistoryResponseDto = new TransactionHistoryResponseDto();
+//         타입은 나중에 설정
+        transactionHistoryResponseDto.setType("테스트");
+
+        String UserWalletAddress = getWalletAddress(username);
+
+//        Transaction transaction =
+
+        return null;
     }
 
 // 사용자의 비공개 키 가져오기
     @Override
     public ECKey getPrivateKeyForUser(String username) {
-        Optional<WalletPrivateKey> userPrivateKeyOptional = walletPrivateKeyRepository.findByUsername(username);
+        Optional<StockCoinWalletPrivateKey> userPrivateKeyOptional = stockCoinWalletPrivateKeyRepository.findByUsername(username);
         if (!userPrivateKeyOptional.isPresent()) {
             return null;
         }
@@ -80,7 +91,7 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
     public BaseResponseDto createWallet(String username) {
         BaseResponseDto baseResponseDto = new BaseResponseDto();
 
-        if(walletPrivateKeyRepository.findByUsername(username).isPresent()) {
+        if(stockCoinWalletPrivateKeyRepository.findByUsername(username).isPresent()) {
             baseResponseDto.setSuccess(false);
             baseResponseDto.setMsg("이미 지갑이 생성된 사용자");
 
@@ -98,7 +109,7 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
 //  유저 아이디로 지갑 주소 조회
     @Override
     public String getWalletAddress(String username) {
-        Optional<WalletPrivateKey> walletPrivateKeyOptional = walletPrivateKeyRepository.findByUsername(username);
+        Optional<StockCoinWalletPrivateKey> walletPrivateKeyOptional = stockCoinWalletPrivateKeyRepository.findByUsername(username);
         if (walletPrivateKeyOptional.isEmpty()) {
             return null;
         }

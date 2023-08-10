@@ -10,8 +10,8 @@ import javax.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(callSuper = true)
-@Table(name = "wallet_private_key")
-public class WalletPrivateKey {
+@Table(name = "stock_coin_wallet_private_key")
+public class StockCoinWalletPrivateKey {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
