@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import lombok.RequiredArgsConstructor;
 import org.knulikelion.moneyisinvest.data.dto.request.FavoriteRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.StockCompanyFavResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.StockCompanyInfoResponseDto;
 import org.knulikelion.moneyisinvest.service.FavoriteService;
 import org.knulikelion.moneyisinvest.service.StockService;
@@ -27,7 +28,7 @@ public class FavoriteController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
-    @PostMapping("/add")
+    @PostMapping("/post")
     public BaseResponseDto addFavorite(@RequestBody FavoriteRequestDto request) {
         return favoriteService.addFavorite(request.getUid(),request.getStockId());
     }
@@ -44,11 +45,11 @@ public class FavoriteController {
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @GetMapping("/get")
-    public ResponseEntity<List<StockCompanyInfoResponseDto>> getUserFavoriteStock(@RequestBody FavoriteRequestDto request) {
+    public ResponseEntity<List<StockCompanyFavResponseDto>> getUserFavoriteStock(@RequestBody FavoriteRequestDto request) {
         List<String> favoriteStockIds = favoriteService.findUserFavoriteStockIds(request.getUid());
 
-        List<StockCompanyInfoResponseDto> favoriteStocks = favoriteStockIds.stream()
-                .map(stockService::getCompanyInfoByStockId)
+        List<StockCompanyFavResponseDto> favoriteStocks = favoriteStockIds.stream()
+                .map(stockService::getCompanyFavByStockId)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(favoriteStocks);
