@@ -13,6 +13,7 @@ public class TransactionHistoryResponseDto {
     private String sender;
     private String recipient;
     private String hashCode;
+    private double total;
     private double fee;
     private double amount;
 }

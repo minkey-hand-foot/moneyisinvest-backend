@@ -7,9 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 @Builder
-public class TransactionRequestDto {
-    private String from;
-    private String to;
+public class TransactionToSystemRequestDto {
+    private String targetUid;
     private double amount;
-    private double fee;
 }

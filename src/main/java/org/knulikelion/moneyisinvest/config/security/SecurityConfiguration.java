@@ -43,6 +43,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/kospi").permitAll()
                 .antMatchers("/kosdaq").permitAll()
                 .antMatchers("/api/v1/coin/**").permitAll()
+                .antMatchers("/api/v1/coin/get/**").hasRole("USER")
                 .antMatchers("/api/v1/profile/**").hasRole("USER")
                 .antMatchers("/api/v1/user/detail").hasRole("USER")
                 .antMatchers("/api/v1/payment/kakao/pay").hasRole("USER")
