@@ -8,6 +8,6 @@ import lombok.*;
 @ToString
 @Builder
 public class TransactionToSystemRequestDto {
-    private String from;
+    private String targetUid;
     private double amount;
 }

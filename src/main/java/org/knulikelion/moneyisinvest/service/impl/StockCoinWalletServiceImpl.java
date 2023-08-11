@@ -99,7 +99,7 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
 //            거래 금액 지정
             transactionHistoryResponseDto.setAmount(allTransaction.getAmount());
 //            거래 총 금액 지정
-            transactionHistoryResponseDto.setTotal(allTransaction.getAmount() - allTransaction.getFee());
+            transactionHistoryResponseDto.setTotal(allTransaction.getAmount() + allTransaction.getFee());
 //            거래 시간 지정
             LocalDateTime currentDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(block.getTimeStamp()), ZoneId.systemDefault());
             transactionHistoryResponseDto.setDatetime(String.valueOf(currentDateTime));

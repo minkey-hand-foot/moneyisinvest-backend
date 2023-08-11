@@ -6,8 +6,10 @@ import org.knulikelion.moneyisinvest.data.dto.request.TransactionToSystemRequest
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.entity.Block;
 import org.knulikelion.moneyisinvest.data.entity.Transaction;
+import org.knulikelion.moneyisinvest.data.entity.User;
 import org.knulikelion.moneyisinvest.data.repository.BlockRepository;
 import org.knulikelion.moneyisinvest.data.repository.TransactionRepository;
+import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.StockCoinService;
 import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.springframework.stereotype.Service;
@@ -26,13 +28,15 @@ import java.util.stream.Collectors;
 public class StockCoinServiceImpl implements StockCoinService {
     private List<Block> blockchain;
     private final TransactionRepository transactionRepository;
+    private final UserRepository userRepository;
     private final StockCoinWalletService stockCoinWalletService;
     private final BlockRepository blockRepository;
 
     public StockCoinServiceImpl(TransactionRepository transactionRepository,
-                                StockCoinWalletService stockCoinWalletService,
+                                UserRepository userRepository, StockCoinWalletService stockCoinWalletService,
                                 BlockRepository blockRepository) {
         this.transactionRepository = transactionRepository;
+        this.userRepository = userRepository;
         this.stockCoinWalletService = stockCoinWalletService;
         this.blockRepository = blockRepository;
     }
@@ -70,17 +74,16 @@ public class StockCoinServiceImpl implements StockCoinService {
     public BaseResponseDto withdrawStockCoinToSystem(TransactionToSystemRequestDto transactionToSystemRequestDto) {
         BaseResponseDto baseResponseDto = new BaseResponseDto();
 
-        if(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getFrom()) != null) {
+        if(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()) != null) {
             Transaction transaction = Transaction.builder()
-                    .from(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getFrom()))
+                    .from(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()))
                     .to(stockCoinWalletService.getWalletAddress("SYSTEM"))
                     .fee(0)
                     .amount(transactionToSystemRequestDto.getAmount())
                     .build();
 
-            processTransaction(transaction);
-
-            if(stockCoinWalletService.getWalletBalanceByUsername(transactionToSystemRequestDto.getFrom()) >= (transaction.getFee() + transaction.getAmount())) {
+            if(stockCoinWalletService.getWalletBalanceByUsername(transactionToSystemRequestDto.getTargetUid()) >= (transaction.getFee() + transaction.getAmount())) {
+                processTransaction(transaction);
                 stockCoinWalletService.updateWalletBalances(transaction);
 
                 baseResponseDto.setSuccess(true);
@@ -89,6 +92,106 @@ public class StockCoinServiceImpl implements StockCoinService {
                 baseResponseDto.setSuccess(false);
                 baseResponseDto.setMsg("보유한 스톡 코인이 부족합니다.");
             }
+        } else {
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("보유한 지갑이 없습니다.");
+        }
+
+        return baseResponseDto;
+    }
+
+    @Override
+    public BaseResponseDto buyStock(TransactionToSystemRequestDto transactionToSystemRequestDto) {
+        BaseResponseDto baseResponseDto = new BaseResponseDto();
+
+        User foundUser = userRepository.getByUid(transactionToSystemRequestDto.getTargetUid());
+
+        if(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()) != null) {
+            if(foundUser == null) {
+                baseResponseDto.setSuccess(false);
+                baseResponseDto.setMsg("사용자를 찾을 수 없습니다.");
+            } else {
+                Transaction transaction = Transaction.builder()
+                        .to(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()))
+                        .from(stockCoinWalletService.getWalletAddress("SYSTEM"))
+//                        주식 매수 시 수수료 적용 X
+                        .fee(0)
+                        .amount(transactionToSystemRequestDto.getAmount())
+                        .build();
+
+                if(stockCoinWalletService.getWalletBalanceByUsername(transactionToSystemRequestDto.getTargetUid()) >= (transaction.getFee() + transaction.getAmount())) {
+                    processTransaction(transaction);
+                    stockCoinWalletService.updateWalletBalances(transaction);
+
+                    baseResponseDto.setSuccess(true);
+                    baseResponseDto.setMsg(transaction.getAmount() + " 스톡 코인을 사용하여 매수가 완료되었습니다.");
+                } else {
+                    baseResponseDto.setSuccess(false);
+                    baseResponseDto.setMsg("보유한 스톡 코인이 부족합니다.");
+                }
+            }
+        } else {
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("보유한 지갑이 없습니다.");
+        }
+
+        return baseResponseDto;
+    }
+
+    @Override
+    public BaseResponseDto sellStock(TransactionToSystemRequestDto transactionToSystemRequestDto) {
+        BaseResponseDto baseResponseDto = new BaseResponseDto();
+
+        User foundUser = userRepository.getByUid(transactionToSystemRequestDto.getTargetUid());
+
+//        스톡 코인 거래
+        if(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()) != null) {
+            if(foundUser == null) {
+                baseResponseDto.setSuccess(false);
+                baseResponseDto.setMsg("사용자를 찾을 수 없습니다.");
+            } else {
+                if(foundUser.getPlan().equals("basic")) {
+                    Transaction transaction = Transaction.builder()
+                            .to(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()))
+                            .from(stockCoinWalletService.getWalletAddress("SYSTEM"))
+                            .fee(transactionToSystemRequestDto.getAmount() * 0.015)
+//                        베이직 플랜 수수료 적용
+                            .amount(transactionToSystemRequestDto.getAmount() - transactionToSystemRequestDto.getAmount() * 0.015)
+                            .build();
+
+                    if(stockCoinWalletService.getWalletBalanceByUsername(transactionToSystemRequestDto.getTargetUid()) >= (transaction.getFee() + transaction.getAmount())) {
+                        processTransaction(transaction);
+                        stockCoinWalletService.updateWalletBalances(transaction);
+
+                        baseResponseDto.setSuccess(true);
+                        baseResponseDto.setMsg("스톡 코인 출금이 완료되었습니다.");
+                        baseResponseDto.setMsg("보유 주식을 매도하여 " + transaction.getAmount() + " 스톡 코인을 얻었습니다.");
+                    } else {
+                        baseResponseDto.setSuccess(false);
+                        baseResponseDto.setMsg("보유한 스톡 코인이 부족합니다.");
+                    }
+                } else {
+                    Transaction transaction = Transaction.builder()
+                            .to(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()))
+                            .from(stockCoinWalletService.getWalletAddress("SYSTEM"))
+                            .fee(0)
+//                        프리미엄 플랜 수수료 미적용
+                            .amount(transactionToSystemRequestDto.getAmount())
+                            .build();
+
+                    if(stockCoinWalletService.getWalletBalanceByUsername(transactionToSystemRequestDto.getTargetUid()) >= (transaction.getFee() + transaction.getAmount())) {
+                        processTransaction(transaction);
+                        stockCoinWalletService.updateWalletBalances(transaction);
+
+                        baseResponseDto.setSuccess(true);
+                        baseResponseDto.setMsg("스톡 코인 출금이 완료되었습니다.");
+                    } else {
+                        baseResponseDto.setSuccess(false);
+                        baseResponseDto.setMsg("보유한 스톡 코인이 부족합니다.");
+                    }
+                }
+            }
+
         } else {
             baseResponseDto.setSuccess(false);
             baseResponseDto.setMsg("보유한 지갑이 없습니다.");

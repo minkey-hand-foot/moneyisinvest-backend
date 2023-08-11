@@ -46,6 +46,17 @@ public class StockCoinController {
         return stockCoinService.createTransaction(transactionRequestDto);
     }
 
+//    주식 매도
+    @PostMapping("/stock/sell")
+    public BaseResponseDto sellStock(@RequestBody TransactionToSystemRequestDto transactionToSystemRequestDto) {
+        return stockCoinService.sellStock(transactionToSystemRequestDto);
+    }
+
+    @PostMapping("/stock/buy")
+    public BaseResponseDto buyStock(@RequestBody TransactionToSystemRequestDto transactionToSystemRequestDto) {
+        return stockCoinService.buyStock(transactionToSystemRequestDto);
+    }
+
 //    유저 거래내역 조회
     @GetMapping("/get/history")
     public List<TransactionHistoryResponseDto> getWalletHistory(String username) {
