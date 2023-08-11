@@ -3,6 +3,7 @@ package org.knulikelion.moneyisinvest.data.entity;
 import lombok.*;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -21,4 +22,7 @@ public class StockCoinWallet {
 
     @Column
     private double balance;
+
+    @Column
+    private LocalDateTime createdAt;
 }
