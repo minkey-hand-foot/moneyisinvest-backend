@@ -9,12 +9,12 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.knulikelion.moneyisinvest.data.dto.response.KosdaqResponseDto;
-import org.knulikelion.moneyisinvest.data.dto.response.KospiResponseDto;
-import org.knulikelion.moneyisinvest.data.dto.response.StockPriceResponseDto;
-import org.knulikelion.moneyisinvest.data.dto.response.StockRankResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.*;
+import org.knulikelion.moneyisinvest.service.StockService;
 import org.knulikelion.moneyisinvest.service.StockWebSocketService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.configurationprocessor.json.JSONArray;
 import org.springframework.boot.configurationprocessor.json.JSONException;
@@ -40,6 +40,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
 
     @Value("${KIS.APP.SECRET}")
     private String app_Secret;
+
 
     @PostConstruct
     protected void init() {
@@ -194,19 +195,142 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
                 for (int i = 0; i < limit; i++) { /*5등 까지만*/
                     JSONObject obj = outputs.getJSONObject(i);
 
-                    StockRankResponseDto stockRank = StockRankResponseDto.builder()
-                            .stockName(obj.getString("hts_kor_isnm"))
-                            .rank(obj.getString("data_rank"))
-                            .stockPrice(obj.getString("stck_prpr"))
-                            .preparation_day_before_rate(obj.getString("prdy_ctrt"))
-                            .build();
-
+                    StockRankResponseDto stockRank = new StockRankResponseDto();
+                    stockRank.setStockName(obj.getString("hts_kor_isnm"));
+                    stockRank.setStockUrl(getCompanyInfoByStockId(obj.getString("mksc_shrn_iscd")).getStockLogoUrl());
+                    stockRank.setStockCode(obj.getString("mksc_shrn_iscd"));
+                    double prdyCtrtDouble = Double.parseDouble(obj.getString("prdy_ctrt"));
+                    long prdyCtrt = Math.round(prdyCtrtDouble);
+                    if(prdyCtrt<0){
+                        stockRank.setDay_before_status(false);
+                    }else {
+                        stockRank.setDay_before_status(true);
+                    }
+                    double stckPrprDouble = Double.parseDouble(obj.getString("stck_prpr"));
+                    int coinPrice = (int) (stckPrprDouble / 100);
+                    stockRank.setCoinPrice(String.valueOf(coinPrice));
+                    stockRank.setRank(obj.getString("data_rank"));
+                    stockRank.setStockPrice(obj.getString("stck_prpr"));
+                    stockRank.setPreparation_day_before_rate(obj.getString("prdy_ctrt"));
                     outputList.add(stockRank);
                 }
                 return outputList;
             }
             return null;
         }
+    }
+    public StockCompanyInfoResponseDto getCompanyInfoByStockId(String stockId) {
+        StockCompanyInfoResponseDto stockCompanyInfoResponseDto = new StockCompanyInfoResponseDto();
+        String url = "https://comp.kisline.com/co/CO0100M010GE.nice?stockcd=" + stockId + "&nav=2&header=N";
+
+        String logoUrl = "https://file.alphasquare.co.kr/media/images/stock_logo/kr/" + stockId + ".png";
+        stockCompanyInfoResponseDto.setStockLogoUrl(logoUrl);
+
+        try {
+            Document document = Jsoup.connect(url).get();
+
+            Element biztopDiv = document.select("div.biztop").first();
+            if (biztopDiv != null) {
+                Element h2Element = biztopDiv.select("h2").first();
+                if (h2Element != null) {
+                    h2Element.select("small").remove();
+                    stockCompanyInfoResponseDto.setStockName(h2Element.text());
+                }
+            }
+            Element sectionElement = document.select("section.con[data-top=1]").first();
+            stockCompanyInfoResponseDto.setStockId(stockId);
+            if (sectionElement != null) {
+                Element tblDiv = sectionElement.select("div.tbl").first();
+                if (tblDiv != null) {
+                    Element tbody = tblDiv.select("tbody").first();
+                    if (tbody != null) {
+                        Elements trElements = tbody.select("tr");
+
+                        for (Element trElement : trElements) {
+                            Elements thElements = trElement.select("th[scope=row]");
+                            Elements tdElements = trElement.select("td");
+
+                            for (int i = 0; i < thElements.size(); i++) {
+                                Element thElement = thElements.get(i);
+                                if (thElement != null) {
+                                    String headerText = thElement.text();
+                                    if (headerText.equals("상장일") || headerText.equals("설립일")) {
+                                        Element tdElement = tdElements.get(i);
+                                        if (headerText.equals("상장일")) {
+                                            stockCompanyInfoResponseDto.setGoPublicDate(tdElement.text());
+                                        } else {
+                                            stockCompanyInfoResponseDto.setEstablishmentDate(tdElement.text());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        for (Element trElement : trElements) {
+                            Elements thElements = trElement.select("th[scope=row]");
+                            Elements tdElements = trElement.select("td");
+
+                            for (int i = 0; i < thElements.size(); i++) {
+                                Element thElement = thElements.get(i);
+                                if (thElement != null) {
+                                    String headerText = thElement.text();
+
+                                    if (headerText.equals("기업영문명") || headerText.equals("기업명")) {
+                                        Element tdElement = tdElements.get(i);
+                                        if (headerText.equals("기업영문명")) {
+                                            stockCompanyInfoResponseDto.setCompanyEnName(tdElement.text());
+                                        } else {
+                                            stockCompanyInfoResponseDto.setCompanyName(tdElement.text());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        for (Element trElement : trElements) {
+                            Element thElement = trElement.select("th[scope=row]").first();
+
+                            // 대표자 가져오기
+                            if (thElement != null && thElement.text().equals("대표자")) {
+                                Element tdElement = trElement.select("td").first();
+                                if (tdElement != null) {
+                                    String representativeName = tdElement.text();
+                                    stockCompanyInfoResponseDto.setRepresentativeName(representativeName);
+                                }
+                            }
+
+                            // 주요품목 항목 가져오기
+                            if (thElement != null && thElement.text().equals("주요품목 항목")) {
+                                Element tdElement = trElement.select("td").first();
+                                if (tdElement != null) {
+                                    String mainItems = tdElement.text();
+                                    stockCompanyInfoResponseDto.setMainItems(mainItems);
+                                }
+                            }
+
+                            // 회사 대표 홈페이지 주소 가져오기
+                            if (thElement != null && thElement.text().equals("홈페이지")) {
+                                Element tdElement = trElement.select("td").first();
+                                if (tdElement != null) {
+                                    String originalUrl = tdElement.text();
+
+                                    // URL이 http:// 또는 https://로 시작하지 않으면, 프로토콜(http://)추가
+                                    if (!originalUrl.startsWith("http://") && !originalUrl.startsWith("https://")) {
+                                        originalUrl = "http://" + originalUrl;
+                                    }
+                                    stockCompanyInfoResponseDto.setCompanyUrl(originalUrl);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+        } catch (IOException e) {
+            System.out.println("Error fetching data: " + e.getMessage());
+        }
+
+        return stockCompanyInfoResponseDto;
     }
 
 
