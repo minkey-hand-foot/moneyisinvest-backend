@@ -2,8 +2,10 @@ package org.knulikelion.moneyisinvest.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
+import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.TransactionHistoryResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.WalletDetailResponseDto;
 import org.knulikelion.moneyisinvest.data.entity.Block;
 import org.knulikelion.moneyisinvest.data.entity.StockCoinWallet;
 import org.knulikelion.moneyisinvest.data.entity.Transaction;
@@ -35,16 +37,20 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
     private final StockCoinWalletRepository stockCoinWalletRepository;
     private final TransactionRepository transactionRepository;
     private final BlockRepository blockRepository;
+    private final JwtTokenProvider jwtTokenProvider;
     private final StockCoinWalletPrivateKeyRepository stockCoinWalletPrivateKeyRepository;
     private final NetworkParameters networkParameters = NetworkParameters.fromID(NetworkParameters.ID_MAINNET);
 
     @Autowired
     public StockCoinWalletServiceImpl(StockCoinWalletRepository stockCoinWalletRepository,
                                       TransactionRepository transactionRepository,
-                                      BlockRepository blockRepository, StockCoinWalletPrivateKeyRepository stockCoinWalletPrivateKeyRepository) {
+                                      BlockRepository blockRepository,
+                                      JwtTokenProvider jwtTokenProvider,
+                                      StockCoinWalletPrivateKeyRepository stockCoinWalletPrivateKeyRepository) {
         this.stockCoinWalletRepository = stockCoinWalletRepository;
         this.transactionRepository = transactionRepository;
         this.blockRepository = blockRepository;
+        this.jwtTokenProvider = jwtTokenProvider;
         this.stockCoinWalletPrivateKeyRepository = stockCoinWalletPrivateKeyRepository;
     }
 
@@ -62,7 +68,7 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
     }
 
     @Override
-    public List<TransactionHistoryResponseDto> getTransactionHistoryByUsername(String username) {
+    public List<TransactionHistoryResponseDto> getTransactionHistory(String username) {
         List<TransactionHistoryResponseDto> transactionHistoryResponseDtoList = new ArrayList<>();
 
         String UserWalletAddress = getWalletAddress(username);
@@ -95,9 +101,11 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
                 transactionHistoryResponseDto.setType("입금");
             }
 //            수수료 지정
-            transactionHistoryResponseDto.setFee(0);
+            transactionHistoryResponseDto.setFee(allTransaction.getFee());
 //            거래 금액 지정
             transactionHistoryResponseDto.setAmount(allTransaction.getAmount());
+//            거래 총 금액 지정
+            transactionHistoryResponseDto.setTotal(allTransaction.getAmount() + allTransaction.getFee());
 //            거래 시간 지정
             LocalDateTime currentDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(block.getTimeStamp()), ZoneId.systemDefault());
             transactionHistoryResponseDto.setDatetime(String.valueOf(currentDateTime));
@@ -122,6 +130,19 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
         return ECKey.fromPrivate(new BigInteger(privateKeyHexString, 16));
     }
 
+    @Override
+    public WalletDetailResponseDto getWalletDetail(String username) {
+        WalletDetailResponseDto walletDetailResponseDto = new WalletDetailResponseDto();
+
+        walletDetailResponseDto.setAddress(getWalletAddress(username));
+        walletDetailResponseDto.setBalance(getWalletBalanceByUsername(username));
+        walletDetailResponseDto.setWon(getWalletBalanceByUsername(username) * 100);
+        walletDetailResponseDto.setType("스톡");
+        walletDetailResponseDto.setCreatedAt(stockCoinWalletRepository.findByAddress(getWalletAddress(username)).getCreatedAt().toString());
+
+        return walletDetailResponseDto;
+    }
+
 //  비공개 키로 지갑 주소 생성
     @Override
     public String generateWalletAddress(ECKey privateKey) {
@@ -130,6 +151,7 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
 
         StockCoinWallet newWallet = StockCoinWallet.builder()
                 .address(walletAddress.toString())
+                .createdAt(LocalDateTime.now())
                 .balance(0)
                 .build();
 
@@ -158,7 +180,6 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
         }
     }
 
-//  유저 아이디로 지갑 주소 조회
     @Override
     public String getWalletAddress(String username) {
         Optional<StockCoinWalletPrivateKey> walletPrivateKeyOptional = stockCoinWalletPrivateKeyRepository.findByUsername(username);
@@ -181,7 +202,7 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
         return walletAddress.toString();
     }
 
-//    지갑 잔액 업데이트
+    //    지갑 잔액 업데이트
     @Override
     public void updateWalletBalances(Transaction transaction) {
         StockCoinWallet senderWallet = stockCoinWalletRepository.findByAddress(transaction.getFrom());
@@ -195,7 +216,7 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
         } else {
 //          발신자의 발송 후 잔액
 
-            double senderNewBalance = senderWallet.getBalance() - transaction.getAmount();
+            double senderNewBalance = senderWallet.getBalance() - (transaction.getAmount() - transaction.getFee());
             senderWallet.setBalance(senderNewBalance);
             stockCoinWalletRepository.save(senderWallet);
             log.info("발신자 지갑 잔액 설정: " + senderNewBalance);
