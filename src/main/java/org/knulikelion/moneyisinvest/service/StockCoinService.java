@@ -15,6 +15,11 @@ public interface StockCoinService {
     Block getLatestBlock();
     String createTransaction(TransactionRequestDto transactionRequestDto);
     BaseResponseDto withdrawStockCoinToSystem(TransactionToSystemRequestDto transactionToSystemRequestDto);
+
+    BaseResponseDto buyStock(TransactionToSystemRequestDto transactionToSystemRequestDto);
+
+    BaseResponseDto sellStock(TransactionToSystemRequestDto transactionToSystemRequestDto);
+
     String createSystemTransaction(String username, double amount);
     void processTransaction(Transaction transaction);
 }
