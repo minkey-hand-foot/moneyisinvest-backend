@@ -164,7 +164,6 @@ public class StockCoinServiceImpl implements StockCoinService {
                         stockCoinWalletService.updateWalletBalances(transaction);
 
                         baseResponseDto.setSuccess(true);
-                        baseResponseDto.setMsg("스톡 코인 출금이 완료되었습니다.");
                         baseResponseDto.setMsg("보유 주식을 매도하여 " + transaction.getAmount() + " 스톡 코인을 얻었습니다.");
                     } else {
                         baseResponseDto.setSuccess(false);
@@ -175,20 +174,28 @@ public class StockCoinServiceImpl implements StockCoinService {
                             .to(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()))
                             .from(stockCoinWalletService.getWalletAddress("SYSTEM"))
                             .fee(0)
-//                        프리미엄 플랜 수수료 미적용
+//                        프리미엄 플랜 수수료 미적용, 1.5% 보너스 스톡 지급
                             .amount(transactionToSystemRequestDto.getAmount())
                             .build();
 
-                    if(stockCoinWalletService.getWalletBalanceByUsername(transactionToSystemRequestDto.getTargetUid()) >= (transaction.getFee() + transaction.getAmount())) {
-                        processTransaction(transaction);
-                        stockCoinWalletService.updateWalletBalances(transaction);
+                    Transaction bonusTransaction = Transaction.builder()
+                            .to(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()))
+                            .from(stockCoinWalletService.getWalletAddress("SYSTEM"))
+                            .fee(0)
+//                        프리미엄 플랜 수수료 미적용, 1.5% 보너스 스톡 지급
+                            .amount(transactionToSystemRequestDto.getAmount() * 0.015)
+                            .build();
 
-                        baseResponseDto.setSuccess(true);
-                        baseResponseDto.setMsg("스톡 코인 출금이 완료되었습니다.");
-                    } else {
-                        baseResponseDto.setSuccess(false);
-                        baseResponseDto.setMsg("보유한 스톡 코인이 부족합니다.");
-                    }
+//                    주식 매도 Transaction
+                    processTransaction(transaction);
+                    stockCoinWalletService.updateWalletBalances(transaction);
+
+//                    주식 매도 프리미엄 보너스 스톡 코인 Transaction
+                    processTransaction(bonusTransaction);
+                    stockCoinWalletService.updateWalletBalances(bonusTransaction);
+
+                    baseResponseDto.setSuccess(true);
+                    baseResponseDto.setMsg("[프리미엄] 보유 주식을 매도하여 " + (transaction.getAmount() + bonusTransaction.getAmount())  + " 스톡 코인을 얻었습니다.");
                 }
             }
 
