@@ -18,6 +18,6 @@ public class StockRankWebSocketConfig implements WebSocketConfigurer {
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry){
         /*webSocketHandler 를 추가*/
-        registry.addHandler(stockRankWebSocketHandler, "/stockRank");
+        registry.addHandler(stockRankWebSocketHandler, "/stockRank").setAllowedOrigins("*");
     }
 }
