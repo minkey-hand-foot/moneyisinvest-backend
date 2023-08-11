@@ -18,7 +18,7 @@ public class KosdaqWebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(kosdaqWebSocketHandler,"/kosdaq");
+        registry.addHandler(kosdaqWebSocketHandler,"/kosdaq").setAllowedOrigins("*");
     }
 }
 

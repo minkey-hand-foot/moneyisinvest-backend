@@ -18,6 +18,6 @@ public class KospiWebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(kospiWebSocketHandler,"/kospi");
+        registry.addHandler(kospiWebSocketHandler,"/kospi").setAllowedOrigins("*");
     }
 }
