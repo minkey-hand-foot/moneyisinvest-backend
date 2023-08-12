@@ -8,7 +8,7 @@ import lombok.*;
 @Builder
 @ToString
 public class KosdaqResponseDto {
-    private String title;
+    private String date;
     private String price;
     private String rate;
 }
