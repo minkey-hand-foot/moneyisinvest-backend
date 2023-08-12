@@ -12,6 +12,7 @@ import lombok.ToString;
 public class StockCompanyNewsResponseDto {
     private String newsTitle;
     private String newsCompany;
+    private String newsPreview;
     private String newsThumbnail;
     private String newsCreatedAt;
     private String newsUrl;
