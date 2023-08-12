@@ -14,6 +14,8 @@ import org.knulikelion.moneyisinvest.service.SignService;
 import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -42,10 +44,18 @@ public class SignServiceImpl implements SignService {
         this.stockCoinWalletService = stockCoinWalletService;
     }
 
+    private static final String EMAIL_REGEX = "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$";
+
+    // 주어진 이메일 주소가 유효한지 검증하는 메서드
+    public static boolean validateUid(String email) {
+        Pattern pattern = Pattern.compile(EMAIL_REGEX);
+        Matcher matcher = pattern.matcher(email);
+        return matcher.matches();
+    }
+
     @Override
     public SignUpResultDto signUp(SignUpRequestDto signUpRequestDto) {
         LOGGER.info("[getSignUpResult] 회원 가입 정보 전달");
-
 //      회원가입 시 기본적으로 일반 유저 권한으로 가입 처리
         User user = User.builder()
                     .uid(signUpRequestDto.getUid())
@@ -61,7 +71,12 @@ public class SignServiceImpl implements SignService {
 
         SignUpResultDto signUpResultDto = new SignInResultDto();
 
-        if(userRepository.findByUid(user.getUid()) != null) {
+//      signUpRequestDto에서 입력받는 uid가 이메일 주소인지 확인
+        if(!validateUid(signUpRequestDto.getUid())) {
+            signUpResultDto.setSuccess(false);
+            signUpResultDto.setMsg("아이디는 이메일 주소 형식입니다.");
+            signUpResultDto.setCode(1);
+        } else if(userRepository.findByUid(user.getUid()) != null) {
             signUpResultDto.setSuccess(false);
             signUpResultDto.setMsg("이미 가입된 회원");
             signUpResultDto.setCode(1);
