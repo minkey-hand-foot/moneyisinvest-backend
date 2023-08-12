@@ -40,8 +40,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/stock/**").permitAll()
                 .antMatchers("/stock").permitAll()
                 .antMatchers("/stockRank").permitAll()
-                .antMatchers("/kospi").permitAll()
-                .antMatchers("/kosdaq").permitAll()
                 .antMatchers("/api/v1/coin/**").permitAll()
                 .antMatchers("/api/v1/coin/get/**").hasRole("USER")
                 .antMatchers("/api/v1/profile/**").hasRole("USER")
