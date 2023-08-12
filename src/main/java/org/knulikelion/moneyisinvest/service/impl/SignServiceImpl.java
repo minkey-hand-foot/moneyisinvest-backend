@@ -45,22 +45,9 @@ public class SignServiceImpl implements SignService {
     @Override
     public SignUpResultDto signUp(SignUpRequestDto signUpRequestDto) {
         LOGGER.info("[getSignUpResult] 회원 가입 정보 전달");
-        User user;
 
-        if (signUpRequestDto.getRole().equalsIgnoreCase("admin")) {
-            user = User.builder()
-                    .uid(signUpRequestDto.getUid())
-                    .name(signUpRequestDto.getName())
-                    .plan("basic")
-                    .profileUrl("default-profile.png")
-                    .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
-                    .roles(Collections.singletonList("ROLE_ADMIN"))
-                    .build();
-
-            LOGGER.info("사용자의 새 지갑 생성, UID: " + signUpRequestDto.getUid());
-            stockCoinWalletService.createWallet(signUpRequestDto.getUid());
-        } else {
-            user = User.builder()
+//      회원가입 시 기본적으로 일반 유저 권한으로 가입 처리
+        User user = User.builder()
                     .uid(signUpRequestDto.getUid())
                     .name(signUpRequestDto.getName())
                     .plan("basic")
@@ -71,7 +58,6 @@ public class SignServiceImpl implements SignService {
 
             LOGGER.info("사용자의 새 지갑 생성, UID: " + signUpRequestDto.getUid());
             stockCoinWalletService.createWallet(signUpRequestDto.getUid());
-        }
 
         SignUpResultDto signUpResultDto = new SignInResultDto();
 

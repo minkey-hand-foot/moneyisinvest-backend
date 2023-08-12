@@ -45,8 +45,8 @@ public class SignController {
 
     @PostMapping(value = "/sign-up")
     public SignUpResultDto signUp(@RequestBody SignUpRequestDto signUpRequestDto) {
-        LOGGER.info("[signUp] 회원가입을 수행합니다. id : {}, password : ****, name : {}, role : {}", signUpRequestDto.getUid(),
-                signUpRequestDto.getName(), signUpRequestDto.getRole());
+        LOGGER.info("[signUp] 회원가입을 수행합니다. id : {}, password : ****, name : {}", signUpRequestDto.getUid(),
+                signUpRequestDto.getName());
         SignUpResultDto signUpResultDto = signService.signUp(signUpRequestDto);
 
         if(signUpResultDto.getCode() == 1) {
