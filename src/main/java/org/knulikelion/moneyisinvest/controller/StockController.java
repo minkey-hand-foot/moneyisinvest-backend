@@ -2,6 +2,7 @@ package org.knulikelion.moneyisinvest.controller;
 
 import org.knulikelion.moneyisinvest.data.dto.response.*;
 import org.knulikelion.moneyisinvest.service.StockService;
+import org.knulikelion.moneyisinvest.service.StockWebSocketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,9 +16,11 @@ import java.util.List;
 @RequestMapping("/api/v1/stock")
 public class StockController {
     private final StockService stockService;
+    private final StockWebSocketService stockWebSocketService;
     @Autowired
-    public StockController(StockService stockService) {
+    public StockController(StockService stockService, StockWebSocketService stockWebSocketService) {
         this.stockService = stockService;
+        this.stockWebSocketService = stockWebSocketService;
     }
     @GetMapping("/get/info")
     public StockCompanyInfoResponseDto getCompanyInfoByStockId(String stockId) throws IOException {
@@ -45,5 +48,13 @@ public class StockController {
     @GetMapping("/holiday/year")
     public List<HolidayResponseDto> checkHolidaySchedules() {
         return stockService.getAllHoliday();
+    }
+    @GetMapping("/get/kospi")
+    public List<KospiResponseDto> getKospi() throws IOException {
+        return stockWebSocketService.getKospi();
+    }
+    @GetMapping("/get/kosdaq")
+    public List<KosdaqResponseDto> getKosdaq()throws IOException{
+        return stockWebSocketService.getKosdaq();
     }
 }
