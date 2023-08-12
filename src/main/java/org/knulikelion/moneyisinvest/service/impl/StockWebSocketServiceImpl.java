@@ -1,6 +1,5 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
-
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.HttpUrl;
@@ -9,7 +8,6 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.knulikelion.moneyisinvest.data.dto.response.*;
 import org.knulikelion.moneyisinvest.service.StockService;
@@ -28,7 +26,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 @Slf4j
 @Service
@@ -41,6 +41,11 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
     @Value("${KIS.APP.SECRET}")
     private String app_Secret;
 
+    private final StockService stockService;
+    @Autowired
+    public StockWebSocketServiceImpl(StockService stockService) {
+        this.stockService = stockService;
+    }
 
     @PostConstruct
     protected void init() {
@@ -197,7 +202,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
 
                     StockRankResponseDto stockRank = new StockRankResponseDto();
                     stockRank.setStockName(obj.getString("hts_kor_isnm"));
-                    stockRank.setStockUrl(getCompanyInfoByStockId(obj.getString("mksc_shrn_iscd")).getStockLogoUrl());
+                    stockRank.setStockUrl(stockService.getCompanyInfoByStockId(obj.getString("mksc_shrn_iscd")).getStockLogoUrl());
                     stockRank.setStockCode(obj.getString("mksc_shrn_iscd"));
                     double prdyCtrtDouble = Double.parseDouble(obj.getString("prdy_ctrt"));
                     long prdyCtrt = Math.round(prdyCtrtDouble);
@@ -219,168 +224,239 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
             return null;
         }
     }
-    public StockCompanyInfoResponseDto getCompanyInfoByStockId(String stockId) {
-        StockCompanyInfoResponseDto stockCompanyInfoResponseDto = new StockCompanyInfoResponseDto();
-        String url = "https://comp.kisline.com/co/CO0100M010GE.nice?stockcd=" + stockId + "&nav=2&header=N";
-
-        String logoUrl = "https://file.alphasquare.co.kr/media/images/stock_logo/kr/" + stockId + ".png";
-        stockCompanyInfoResponseDto.setStockLogoUrl(logoUrl);
-
-        try {
-            Document document = Jsoup.connect(url).get();
-
-            Element biztopDiv = document.select("div.biztop").first();
-            if (biztopDiv != null) {
-                Element h2Element = biztopDiv.select("h2").first();
-                if (h2Element != null) {
-                    h2Element.select("small").remove();
-                    stockCompanyInfoResponseDto.setStockName(h2Element.text());
-                }
-            }
-            Element sectionElement = document.select("section.con[data-top=1]").first();
-            stockCompanyInfoResponseDto.setStockId(stockId);
-            if (sectionElement != null) {
-                Element tblDiv = sectionElement.select("div.tbl").first();
-                if (tblDiv != null) {
-                    Element tbody = tblDiv.select("tbody").first();
-                    if (tbody != null) {
-                        Elements trElements = tbody.select("tr");
-
-                        for (Element trElement : trElements) {
-                            Elements thElements = trElement.select("th[scope=row]");
-                            Elements tdElements = trElement.select("td");
-
-                            for (int i = 0; i < thElements.size(); i++) {
-                                Element thElement = thElements.get(i);
-                                if (thElement != null) {
-                                    String headerText = thElement.text();
-                                    if (headerText.equals("상장일") || headerText.equals("설립일")) {
-                                        Element tdElement = tdElements.get(i);
-                                        if (headerText.equals("상장일")) {
-                                            stockCompanyInfoResponseDto.setGoPublicDate(tdElement.text());
-                                        } else {
-                                            stockCompanyInfoResponseDto.setEstablishmentDate(tdElement.text());
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        for (Element trElement : trElements) {
-                            Elements thElements = trElement.select("th[scope=row]");
-                            Elements tdElements = trElement.select("td");
-
-                            for (int i = 0; i < thElements.size(); i++) {
-                                Element thElement = thElements.get(i);
-                                if (thElement != null) {
-                                    String headerText = thElement.text();
-
-                                    if (headerText.equals("기업영문명") || headerText.equals("기업명")) {
-                                        Element tdElement = tdElements.get(i);
-                                        if (headerText.equals("기업영문명")) {
-                                            stockCompanyInfoResponseDto.setCompanyEnName(tdElement.text());
-                                        } else {
-                                            stockCompanyInfoResponseDto.setCompanyName(tdElement.text());
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        for (Element trElement : trElements) {
-                            Element thElement = trElement.select("th[scope=row]").first();
-
-                            // 대표자 가져오기
-                            if (thElement != null && thElement.text().equals("대표자")) {
-                                Element tdElement = trElement.select("td").first();
-                                if (tdElement != null) {
-                                    String representativeName = tdElement.text();
-                                    stockCompanyInfoResponseDto.setRepresentativeName(representativeName);
-                                }
-                            }
-
-                            // 주요품목 항목 가져오기
-                            if (thElement != null && thElement.text().equals("주요품목 항목")) {
-                                Element tdElement = trElement.select("td").first();
-                                if (tdElement != null) {
-                                    String mainItems = tdElement.text();
-                                    stockCompanyInfoResponseDto.setMainItems(mainItems);
-                                }
-                            }
-
-                            // 회사 대표 홈페이지 주소 가져오기
-                            if (thElement != null && thElement.text().equals("홈페이지")) {
-                                Element tdElement = trElement.select("td").first();
-                                if (tdElement != null) {
-                                    String originalUrl = tdElement.text();
-
-                                    // URL이 http:// 또는 https://로 시작하지 않으면, 프로토콜(http://)추가
-                                    if (!originalUrl.startsWith("http://") && !originalUrl.startsWith("https://")) {
-                                        originalUrl = "http://" + originalUrl;
-                                    }
-                                    stockCompanyInfoResponseDto.setCompanyUrl(originalUrl);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-        } catch (IOException e) {
-            System.out.println("Error fetching data: " + e.getMessage());
-        }
-
-        return stockCompanyInfoResponseDto;
-    }
-
 
     @Override /*Kospi 데이터를 가져오는 코드 입니다.*/
-    public KospiResponseDto getKospi() throws IOException {
-        String url = "https://finance.naver.com/sise/";
-        Document doc = Jsoup.connect(url).get();
+    public List<KospiResponseDto> getKospi() throws IOException {
+        List<KospiResponseDto> outputList = new ArrayList<>();
+//
+        String google_url = "https://www.google.com/search?q=%EC%9D%BC%EB%B3%84+%EC%BD%94%EC%8A%A4%ED%94%BC+%EC%A7%80%EC%88%98&rlz=1C5CHFA_enKR1023KR1023&oq=%EC%9D%BC%EB%B3%84+%EC%BD%94%EC%8A%A4%ED%94%BC+%EC%A7%80%EC%88%98&aqs=chrome..69i57j69i59.57086694j0j15&sourceid=chrome&ie=UTF-8";
+        Document doc = Jsoup.connect(google_url).get();
 
-        String kospiSelector = "#contentarea > div.box_top_submain2 > div.lft > ul > li:nth-child(1) > a > span.blind";
-        Elements kospiElement = doc.select(kospiSelector);
-        String kospi_title = kospiElement.text(); /*코스피 크롤링*/
+        // 4
+        String kospi_date_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(5) > td:nth-child(1)";
+        Elements kospi_date_element = doc.select(kospi_date_selector);
+        String kospi_date = kospi_date_element.text();
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        LocalDate date = LocalDate.parse(kospi_date, inputFormatter);
+        String formattedDate = date.format(outputFormatter);
 
-        String kospi_price_selector = "#KOSPI_now";
+
+        String kospi_price_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(5) > td:nth-child(2)";
         Elements kospi_price_element = doc.select(kospi_price_selector);
         String kospi_price = kospi_price_element.text();
 
-        String kospi_rate_selector = "#KOSPI_change";
+        String kospi_rate_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(5) > td:nth-child(3)";
         Elements kospi_rate_element = doc.select(kospi_rate_selector);
         String kospi_rate = kospi_rate_element.text();
-        kospi_rate = kospi_rate.replace("상승","").trim();
 
-        KospiResponseDto kospiResponseDto = new KospiResponseDto();
-        kospiResponseDto.setTitle(kospi_title);
-        kospiResponseDto.setPrice(kospi_price);
-        kospiResponseDto.setRate(kospi_rate);
-        return kospiResponseDto;
+        KospiResponseDto kospiResponseDto1 = new KospiResponseDto();
+        kospiResponseDto1.setDate(formattedDate);
+        kospiResponseDto1.setPrice(kospi_price);
+        kospiResponseDto1.setRate(kospi_rate);
+
+        outputList.add(kospiResponseDto1);
+
+        // 3
+        kospi_date_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(4) > td:nth-child(1)";
+        kospi_date_element = doc.select(kospi_date_selector);
+        kospi_date = kospi_date_element.text();
+        inputFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+        outputFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        date = LocalDate.parse(kospi_date, inputFormatter);
+        formattedDate = date.format(outputFormatter);
+
+        kospi_price_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(4) > td:nth-child(2)";
+        kospi_price_element = doc.select(kospi_price_selector);
+        kospi_price = kospi_price_element.text();
+
+        kospi_rate_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(4) > td:nth-child(3)";
+        kospi_rate_element = doc.select(kospi_rate_selector);
+        kospi_rate = kospi_rate_element.text();
+
+        KospiResponseDto kospiResponseDto2 = new KospiResponseDto();
+        kospiResponseDto2.setDate(formattedDate);
+        kospiResponseDto2.setPrice(kospi_price);
+        kospiResponseDto2.setRate(kospi_rate);
+        outputList.add(kospiResponseDto2);
+
+        // 2
+        kospi_date_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(3) > td:nth-child(1)";
+        kospi_date_element = doc.select(kospi_date_selector);
+        kospi_date = kospi_date_element.text();
+        inputFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+        outputFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        date = LocalDate.parse(kospi_date, inputFormatter);
+        formattedDate = date.format(outputFormatter);
+
+
+        kospi_price_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(3) > td:nth-child(2)";
+        kospi_price_element = doc.select(kospi_price_selector);
+        kospi_price = kospi_price_element.text();
+
+        kospi_rate_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(3) > td:nth-child(3)";
+        kospi_rate_element = doc.select(kospi_rate_selector);
+        kospi_rate = kospi_rate_element.text();
+
+        KospiResponseDto kospiResponseDto3 = new KospiResponseDto();
+        kospiResponseDto3.setDate(formattedDate);
+        kospiResponseDto3.setPrice(kospi_price);
+        kospiResponseDto3.setRate(kospi_rate);
+        outputList.add(kospiResponseDto3);
+
+        kospi_date_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(2) > td:nth-child(1)";
+        kospi_date_element = doc.select(kospi_date_selector);
+        kospi_date = kospi_date_element.text();
+        inputFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+        outputFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        date = LocalDate.parse(kospi_date, inputFormatter);
+        formattedDate = date.format(outputFormatter);
+
+        kospi_price_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(2) > td:nth-child(2)";
+        kospi_price_element = doc.select(kospi_price_selector);
+        kospi_price = kospi_price_element.text();
+
+        kospi_rate_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(2) > td:nth-child(3)";
+        kospi_rate_element = doc.select(kospi_rate_selector);
+        kospi_rate = kospi_rate_element.text();
+
+        KospiResponseDto kospiResponseDto4 = new KospiResponseDto();
+        kospiResponseDto4.setDate(formattedDate);
+        kospiResponseDto4.setPrice(kospi_price);
+        kospiResponseDto4.setRate(kospi_rate);
+        outputList.add(kospiResponseDto4);
+
+        String naver_url = "https://finance.naver.com/sise/";
+        doc = Jsoup.connect(naver_url).get();
+
+        kospi_price_selector = "#KOSPI_now";
+        kospi_price_element = doc.select(kospi_price_selector);
+        kospi_price = kospi_price_element.text();
+
+        kospi_rate_selector = "#KOSPI_change";
+        kospi_rate_element = doc.select(kospi_rate_selector);
+        kospi_rate = kospi_rate_element.text();
+        kospi_rate = kospi_rate.replace("상승","");
+
+        KospiResponseDto kospiResponseDto5 = new KospiResponseDto();
+        inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
+        outputFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        LocalDateTime dateTime = LocalDateTime.parse(String.valueOf(LocalDateTime.now()), inputFormatter);
+        formattedDate = dateTime.format(outputFormatter);
+
+        kospiResponseDto5.setDate(formattedDate);
+        kospiResponseDto5.setPrice(kospi_price);
+        kospiResponseDto5.setRate(kospi_rate);
+        outputList.add(kospiResponseDto5);
+
+        return outputList;
     }
 
     @Override /*Kosdaq 데이터를 가져오는 메서드입니다.*/
-    public KosdaqResponseDto getKosdaq() throws IOException {
-        String url = "https://finance.naver.com/sise/";
-        Document doc = Jsoup.connect(url).get();
+    public List<KosdaqResponseDto> getKosdaq() throws IOException {
+        List<KosdaqResponseDto> outputList = new ArrayList<>();
+        String google_url = "https://www.google.com/search?q=%EC%9D%BC%EB%B3%84+%EC%BD%94%EC%8A%A4%EB%8B%A5+%EC%A7%80%EC%88%98&sca_esv=556355708&rlz=1C5CHFA_enKR1023KR1023&sxsrf=AB5stBjbqgmm_rA5dCKd_xrIKT2z9GmdXQ%3A1691867866146&ei=2trXZN7JCMOM-QaXy5W4CA&ved=0ahUKEwjenqz56teAAxVDRt4KHZdlBYcQ4dUDCA8&uact=5&oq=%EC%9D%BC%EB%B3%84+%EC%BD%94%EC%8A%A4%EB%8B%A5+%EC%A7%80%EC%88%98&gs_lp=Egxnd3Mtd2l6LXNlcnAiF-ydvOuzhCDsvZTsiqTri6Ug7KeA7IiYMgcQIxiKBRgnSOsQUM0JWPcNcAF4AZABApgB1gKgAfcGqgEHMC4yLjEuMbgBA8gBAPgBAcICChAAGEcY1gQYsAPCAgYQABgHGB7iAwQYACBBiAYBkAYK&sclient=gws-wiz-serp";
+        Document doc = Jsoup.connect(google_url).get();
 
-        String kosdaq_selector = "#contentarea > div.box_top_submain2 > div.lft > ul > li:nth-child(2) > a > span.blind";
-        Elements kosdaq_title_element = doc.select(kosdaq_selector);
-        String kosdaq_title = kosdaq_title_element.text();
+        // 4
+        String kosdaq_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(5) > td:nth-child(1)";
+        Elements kosdaq_date_element = doc.select(kosdaq_selector);
+        String kosdaq_date = kosdaq_date_element.text();
 
-        String kosdaq_price_selector = "#KOSDAQ_now";
+        String kosdaq_price_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(5) > td:nth-child(2)";
         Elements kosdaq_price_element = doc.select(kosdaq_price_selector);
         String kosdaq_price = kosdaq_price_element.text();
 
-        String kosdaq_rate_selector = "#KOSDAQ_change";
+        String kosdaq_rate_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(5) > td:nth-child(3)";
         Elements kosdaq_rate_element = doc.select(kosdaq_rate_selector);
         String kosdaq_rate = kosdaq_rate_element.text();
-        kosdaq_rate = kosdaq_rate.replace("상승","").trim();
 
-        KosdaqResponseDto kosdaqResponseDto = new KosdaqResponseDto();
-        kosdaqResponseDto.setTitle(kosdaq_title);
-        kosdaqResponseDto.setPrice(kosdaq_price);
-        kosdaqResponseDto.setRate(kosdaq_rate);
-        return kosdaqResponseDto;
+        KosdaqResponseDto kosdaqResponseDto1 = new KosdaqResponseDto();
+        kosdaqResponseDto1.setDate(kosdaq_date);
+        kosdaqResponseDto1.setPrice(kosdaq_price);
+        kosdaqResponseDto1.setRate(kosdaq_rate);
+        outputList.add(kosdaqResponseDto1);
+
+        // 3
+        kosdaq_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(4) > td:nth-child(1)";
+        kosdaq_date_element = doc.select(kosdaq_selector);
+        kosdaq_date = kosdaq_date_element.text();
+
+        kosdaq_price_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(5) > td:nth-child(2)";
+        kosdaq_price_element = doc.select(kosdaq_price_selector);
+        kosdaq_price = kosdaq_price_element.text();
+
+        kosdaq_rate_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(5) > td:nth-child(3)";
+        kosdaq_rate_element = doc.select(kosdaq_rate_selector);
+        kosdaq_rate = kosdaq_rate_element.text();
+
+        KosdaqResponseDto kosdaqResponseDto2 = new KosdaqResponseDto();
+        kosdaqResponseDto2.setDate(kosdaq_date);
+        kosdaqResponseDto2.setPrice(kosdaq_price);
+        kosdaqResponseDto2.setRate(kosdaq_rate);
+        outputList.add(kosdaqResponseDto2);
+
+        // 2
+        kosdaq_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(3) > td:nth-child(1)";
+        kosdaq_date_element = doc.select(kosdaq_selector);
+        kosdaq_date = kosdaq_date_element.text();
+
+        kosdaq_price_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(3) > td:nth-child(2)";
+        kosdaq_price_element = doc.select(kosdaq_price_selector);
+        kosdaq_price = kosdaq_price_element.text();
+
+        kosdaq_rate_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(3) > td:nth-child(3)";
+        kosdaq_rate_element = doc.select(kosdaq_rate_selector);
+        kosdaq_rate = kosdaq_rate_element.text();
+
+        KosdaqResponseDto kosdaqResponseDto3 = new KosdaqResponseDto();
+        kosdaqResponseDto3.setDate(kosdaq_date);
+        kosdaqResponseDto3.setPrice(kosdaq_price);
+        kosdaqResponseDto3.setRate(kosdaq_rate);
+        outputList.add(kosdaqResponseDto3);
+
+        // 1
+        kosdaq_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(2) > td:nth-child(1)";
+        kosdaq_date_element = doc.select(kosdaq_selector);
+        kosdaq_date = kosdaq_date_element.text();
+
+        kosdaq_price_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(2) > td:nth-child(2)";
+        kosdaq_price_element = doc.select(kosdaq_price_selector);
+        kosdaq_price = kosdaq_price_element.text();
+
+        kosdaq_rate_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(2) > td:nth-child(3)";
+        kosdaq_rate_element = doc.select(kosdaq_rate_selector);
+        kosdaq_rate = kosdaq_rate_element.text();
+
+        KosdaqResponseDto kosdaqResponseDto4 = new KosdaqResponseDto();
+        kosdaqResponseDto4.setDate(kosdaq_date);
+        kosdaqResponseDto4.setPrice(kosdaq_price);
+        kosdaqResponseDto4.setRate(kosdaq_rate);
+        outputList.add(kosdaqResponseDto4);
+
+        String naver_url = "https://finance.naver.com/sise/";
+        doc = Jsoup.connect(naver_url).get();
+
+        kosdaq_price_selector = "#KOSDAQ_now";
+        kosdaq_price_element = doc.select(kosdaq_price_selector);
+        kosdaq_price = kosdaq_price_element.text();
+
+        kosdaq_rate_selector = "#KOSDAQ_change";
+        kosdaq_rate_element = doc.select(kosdaq_rate_selector);
+        kosdaq_rate = kosdaq_rate_element.text();
+        kosdaq_rate = kosdaq_rate.replace("상승","");
+
+        KosdaqResponseDto kosdaqResponseDto5 = new KosdaqResponseDto();
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        LocalDateTime dateTime = LocalDateTime.parse(String.valueOf(LocalDateTime.now()), inputFormatter);
+        String formattedDate = dateTime.format(outputFormatter);
+
+        kosdaqResponseDto5.setDate(formattedDate);
+        kosdaqResponseDto5.setPrice(kosdaq_price);
+        kosdaqResponseDto5.setRate(kosdaq_rate);
+        outputList.add(kosdaqResponseDto5);
+
+        return outputList;
     }
 }

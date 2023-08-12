@@ -12,6 +12,6 @@ import java.util.List;
 public interface StockWebSocketService {
     StockPriceResponseDto getStock(String stockCode) throws IOException, JSONException;
     List<StockRankResponseDto> getStockRank() throws IOException, JSONException;
-    KospiResponseDto getKospi() throws IOException;
-    KosdaqResponseDto getKosdaq() throws IOException;
+    List<KospiResponseDto> getKospi() throws IOException;
+    List<KosdaqResponseDto> getKosdaq() throws IOException;
 }
