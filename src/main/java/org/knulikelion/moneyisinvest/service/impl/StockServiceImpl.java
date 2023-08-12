@@ -190,10 +190,15 @@ public class StockServiceImpl implements StockService {
                 stockCompanyNewsResponseDto.setNewsUrl("https://n.news.naver.com/article/" + officeId + "/" + articleId);
 
                 Document newsDocument = Jsoup.connect("https://n.news.naver.com/article/" + officeId + "/" + articleId).get();
-                Element metaElement = newsDocument.select("head meta[property=og:image]").first();
+                Element thumbnailElement = newsDocument.select("head meta[property=og:image]").first();
+                Element previewElement = newsDocument.select("head meta[property=og:description]").first();
 
-                if (metaElement != null) {
-                    stockCompanyNewsResponseDto.setNewsThumbnail(metaElement.attr("content"));
+                if (thumbnailElement != null) {
+                    stockCompanyNewsResponseDto.setNewsThumbnail(thumbnailElement.attr("content"));
+                }
+
+                if (previewElement != null) {
+                    stockCompanyNewsResponseDto.setNewsPreview(previewElement.attr("content"));
                 }
 
                 stockCompanyNewsList.add(stockCompanyNewsResponseDto);
