@@ -229,6 +229,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
     public List<KospiResponseDto> getKospi() throws IOException {
         List<KospiResponseDto> outputList = new ArrayList<>();
 //
+
         String google_url = "https://finance.naver.com/sise/sise_index_day.naver?code=KOSPI";
         Document doc = Jsoup.connect(google_url).get();
 
@@ -271,6 +272,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
         kospiResponseDto2.setRate(kospi_rate);
         outputList.add(kospiResponseDto2);
 
+
         // 4
         kospi_date_selector = "body > div > table.type_1 > tbody > tr:nth-child(10) > td.date";
         kospi_date_element = doc.select(kospi_date_selector);
@@ -289,7 +291,6 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
         kospiResponseDto3.setPrice(kospi_price);
         kospiResponseDto3.setRate(kospi_rate);
         outputList.add(kospiResponseDto3);
-
 
         // 3
         kospi_date_selector = "body > div > table.type_1 > tbody > tr:nth-child(5) > td.date";
@@ -456,7 +457,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
         kosdaqResponseDto4.setPrice(kosdaq_price);
         kosdaqResponseDto4.setRate(kosdaq_rate);
         outputList.add(kosdaqResponseDto4);
-
+      
         // 2
         kosdaq_selector = "body > div > table.type_1 > tbody > tr:nth-child(4) > td.date";
         kosdaq_date_element = doc.select(kosdaq_selector);
@@ -509,6 +510,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
         kosdaq_rate = kosdaq_rate.replace("상승","");
 
         KosdaqResponseDto kosdaqResponseDto7 = new KosdaqResponseDto();
+      
         DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
         LocalDateTime dateTime = LocalDateTime.parse(String.valueOf(LocalDateTime.now()), inputFormatter);
