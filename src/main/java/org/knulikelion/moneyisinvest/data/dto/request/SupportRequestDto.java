@@ -10,7 +10,6 @@ import lombok.*;
 @Builder
 public class SupportRequestDto {
 
-    private Long id;
     private String uid;
     private String title;
     private String contents;

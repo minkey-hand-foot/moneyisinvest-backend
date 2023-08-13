@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -23,16 +25,16 @@ public class Support {
     private Long id;
 
     @Column(nullable = false)
-    private String Title;
+    private String Title ="";
 
     @Column(nullable = false)
-    private String contents;
+    private String contents="";
 
     @Column(nullable = false)
-    private String status;
+    private String status ="";
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false, cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "FK_user_support", value = ConstraintMode.CONSTRAINT))
     private User user;
 
     @CreatedDate
