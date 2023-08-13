@@ -103,9 +103,7 @@ public class SupportServiceImpl implements SupportService {
         Optional<Support> getSupport = supportRepository.findByIdAndUserUid(supportId, uid);
 
         if(getSupport.isPresent()) {
-            Long userId = getSupport.get().getUser().getId();
             supportRepository.delete(getSupport.get());
-            userService.deleteById(userId);
 
             baseResponseDto.setSuccess(true);
             baseResponseDto.setMsg("문의사항이 삭제되었습니다.");
