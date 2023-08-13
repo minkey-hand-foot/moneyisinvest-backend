@@ -4,11 +4,19 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.knulikelion.moneyisinvest.data.dto.request.StockBuyRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.request.TransactionToSystemRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.*;
+import org.knulikelion.moneyisinvest.data.entity.Stock;
 import org.knulikelion.moneyisinvest.data.entity.StockHoliday;
 import org.knulikelion.moneyisinvest.data.repository.StockHolidayRepository;
+import org.knulikelion.moneyisinvest.data.repository.StockRepository;
+import org.knulikelion.moneyisinvest.data.repository.UserRepository;
+import org.knulikelion.moneyisinvest.service.StockCoinService;
 import org.knulikelion.moneyisinvest.service.StockService;
+import org.knulikelion.moneyisinvest.service.StockWebSocketService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -25,10 +33,18 @@ import java.util.regex.Pattern;
 @Service
 public class StockServiceImpl implements StockService {
     private final StockHolidayRepository stockHolidayRepository;
+    private final StockRepository stockRepository;
+    private final StockCoinService stockCoinService;
+    private final StockWebSocketService stockWebSocketService;
+    private final UserRepository userRepository;
 
     @Autowired
-    public StockServiceImpl(StockHolidayRepository stockHolidayRepository) {
+    public StockServiceImpl(StockHolidayRepository stockHolidayRepository, StockRepository stockRepository, StockCoinService stockCoinService, StockWebSocketService stockWebSocketService, UserRepository userRepository) {
         this.stockHolidayRepository = stockHolidayRepository;
+        this.stockRepository = stockRepository;
+        this.stockCoinService = stockCoinService;
+        this.stockWebSocketService = stockWebSocketService;
+        this.userRepository = userRepository;
     }
 
 
@@ -373,6 +389,34 @@ public class StockServiceImpl implements StockService {
 
         // DTO 객체 생성 및 반환
         return new StockCompanyFavResponseDto(stockId, logoUrl, companyName, price, stockPrice);
+    }
+
+    @Override
+    public BaseResponseDto buyStock(StockBuyRequestDto stockBuyRequestDto) throws JSONException, IOException {
+        TransactionToSystemRequestDto transactionToSystemRequestDto = new TransactionToSystemRequestDto();
+
+        transactionToSystemRequestDto.setTargetUid(stockBuyRequestDto.getUid());
+        transactionToSystemRequestDto.setAmount(Double.parseDouble(stockBuyRequestDto.getStockAmount()));
+
+        BaseResponseDto transactionResult = stockCoinService.withdrawStockCoinToSystem(transactionToSystemRequestDto);
+
+        if(stockRepository.findByStockCode(stockBuyRequestDto.getStockCode())==null){
+            Stock stock = new Stock();
+            stock.setStockCode(stockBuyRequestDto.getStockCode());
+            stock.setConclusion_price(stock.getConclusion_price());
+            stock.setConclusion_coin(stock.getConclusion_price()/100);
+
+            /*수익률 계산*/
+            Double myPrice = Double.parseDouble(stockBuyRequestDto.getConclusion_price());
+            Double myAmount = Double.parseDouble(stockBuyRequestDto.getStockAmount());
+            Double currentPrice = Double.parseDouble(stockWebSocketService.getStock(stockBuyRequestDto.getStockCode()).getStock_price());
+            Double rate = (myPrice*myAmount) / (currentPrice*myAmount) * 100 - 100;
+            stock.setRate(rate);
+
+            stock.setUser(userRepository.getByUid(stockBuyRequestDto.getUid()));
+        }
+
+        return null;
     }
 }
 
