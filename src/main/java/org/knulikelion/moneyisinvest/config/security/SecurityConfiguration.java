@@ -35,7 +35,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                                 "exception").permitAll()
                 .antMatchers(HttpMethod.GET, "/post/**").permitAll()
                 .antMatchers(HttpMethod.POST, "/post/**").hasRole("USER")
-                .antMatchers("/api/v1/shop/**").permitAll()
+                .antMatchers("/api/v1/shop/**").hasRole("USER")
                 .antMatchers("/api/v1/community/**").hasRole("USER")
                 .antMatchers("**exception**").permitAll()
                 .antMatchers("/api/v1/stock/**").permitAll()
