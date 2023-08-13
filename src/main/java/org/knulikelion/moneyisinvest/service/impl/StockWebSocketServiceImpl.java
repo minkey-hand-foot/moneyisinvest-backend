@@ -229,103 +229,126 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
     public List<KospiResponseDto> getKospi() throws IOException {
         List<KospiResponseDto> outputList = new ArrayList<>();
 //
-        String google_url = "https://www.google.com/search?q=%EC%9D%BC%EB%B3%84+%EC%BD%94%EC%8A%A4%ED%94%BC+%EC%A7%80%EC%88%98&rlz=1C5CHFA_enKR1023KR1023&oq=%EC%9D%BC%EB%B3%84+%EC%BD%94%EC%8A%A4%ED%94%BC+%EC%A7%80%EC%88%98&aqs=chrome..69i57j69i59.57086694j0j15&sourceid=chrome&ie=UTF-8";
+        String google_url = "https://finance.naver.com/sise/sise_index_day.naver?code=KOSPI";
         Document doc = Jsoup.connect(google_url).get();
 
-        // 4
-        String kospi_date_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(5) > td:nth-child(1)";
+        // 6
+        String kospi_date_selector = "body > div > table.type_1 > tbody > tr:nth-child(12) > td.date";
         Elements kospi_date_element = doc.select(kospi_date_selector);
         String kospi_date = kospi_date_element.text();
-        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
-        LocalDate date = LocalDate.parse(kospi_date, inputFormatter);
-        String formattedDate = date.format(outputFormatter);
 
-
-        String kospi_price_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(5) > td:nth-child(2)";
+        String kospi_price_selector = "body > div > table.type_1 > tbody > tr:nth-child(12) > td:nth-child(2)";
         Elements kospi_price_element = doc.select(kospi_price_selector);
         String kospi_price = kospi_price_element.text();
 
-        String kospi_rate_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(5) > td:nth-child(3)";
+        String kospi_rate_selector = "body > div > table.type_1 > tbody > tr:nth-child(12) > td:nth-child(4) > span";
         Elements kospi_rate_element = doc.select(kospi_rate_selector);
         String kospi_rate = kospi_rate_element.text();
 
         KospiResponseDto kospiResponseDto1 = new KospiResponseDto();
-        kospiResponseDto1.setDate(formattedDate);
+        kospiResponseDto1.setDate(kospi_date);
         kospiResponseDto1.setPrice(kospi_price);
         kospiResponseDto1.setRate(kospi_rate);
 
         outputList.add(kospiResponseDto1);
 
-        // 3
-        kospi_date_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(4) > td:nth-child(1)";
+        // 5
+        kospi_date_selector = "body > div > table.type_1 > tbody > tr:nth-child(11) > td.date";
         kospi_date_element = doc.select(kospi_date_selector);
         kospi_date = kospi_date_element.text();
-        inputFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-        outputFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
-        date = LocalDate.parse(kospi_date, inputFormatter);
-        formattedDate = date.format(outputFormatter);
 
-        kospi_price_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(4) > td:nth-child(2)";
+        kospi_price_selector = "body > div > table.type_1 > tbody > tr:nth-child(11) > td:nth-child(2)";
         kospi_price_element = doc.select(kospi_price_selector);
         kospi_price = kospi_price_element.text();
 
-        kospi_rate_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(4) > td:nth-child(3)";
+        kospi_rate_selector = "body > div > table.type_1 > tbody > tr:nth-child(11) > td:nth-child(4) > span";
         kospi_rate_element = doc.select(kospi_rate_selector);
         kospi_rate = kospi_rate_element.text();
 
         KospiResponseDto kospiResponseDto2 = new KospiResponseDto();
-        kospiResponseDto2.setDate(formattedDate);
+        kospiResponseDto2.setDate(kospi_date);
         kospiResponseDto2.setPrice(kospi_price);
         kospiResponseDto2.setRate(kospi_rate);
         outputList.add(kospiResponseDto2);
 
-        // 2
-        kospi_date_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(3) > td:nth-child(1)";
+        // 4
+        kospi_date_selector = "body > div > table.type_1 > tbody > tr:nth-child(10) > td.date";
         kospi_date_element = doc.select(kospi_date_selector);
         kospi_date = kospi_date_element.text();
-        inputFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-        outputFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
-        date = LocalDate.parse(kospi_date, inputFormatter);
-        formattedDate = date.format(outputFormatter);
 
-
-        kospi_price_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(3) > td:nth-child(2)";
+        kospi_price_selector = "body > div > table.type_1 > tbody > tr:nth-child(10) > td:nth-child(2)";
         kospi_price_element = doc.select(kospi_price_selector);
         kospi_price = kospi_price_element.text();
 
-        kospi_rate_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(3) > td:nth-child(3)";
+        kospi_rate_selector = "body > div > table.type_1 > tbody > tr:nth-child(10) > td:nth-child(4) > span";
         kospi_rate_element = doc.select(kospi_rate_selector);
         kospi_rate = kospi_rate_element.text();
 
         KospiResponseDto kospiResponseDto3 = new KospiResponseDto();
-        kospiResponseDto3.setDate(formattedDate);
+        kospiResponseDto3.setDate(kospi_date);
         kospiResponseDto3.setPrice(kospi_price);
         kospiResponseDto3.setRate(kospi_rate);
         outputList.add(kospiResponseDto3);
 
-        kospi_date_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(2) > td:nth-child(1)";
+
+        // 3
+        kospi_date_selector = "body > div > table.type_1 > tbody > tr:nth-child(5) > td.date";
         kospi_date_element = doc.select(kospi_date_selector);
         kospi_date = kospi_date_element.text();
-        inputFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-        outputFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
-        date = LocalDate.parse(kospi_date, inputFormatter);
-        formattedDate = date.format(outputFormatter);
 
-        kospi_price_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(2) > td:nth-child(2)";
+        kospi_price_selector = "body > div > table.type_1 > tbody > tr:nth-child(5) > td:nth-child(2)";
         kospi_price_element = doc.select(kospi_price_selector);
         kospi_price = kospi_price_element.text();
 
-        kospi_rate_selector = "#rso > div:nth-child(2) > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(2) > td:nth-child(3)";
+        kospi_rate_selector = "body > div > table.type_1 > tbody > tr:nth-child(5) > td:nth-child(4) > span";
         kospi_rate_element = doc.select(kospi_rate_selector);
         kospi_rate = kospi_rate_element.text();
 
         KospiResponseDto kospiResponseDto4 = new KospiResponseDto();
-        kospiResponseDto4.setDate(formattedDate);
+        kospiResponseDto4.setDate(kospi_date);
         kospiResponseDto4.setPrice(kospi_price);
         kospiResponseDto4.setRate(kospi_rate);
         outputList.add(kospiResponseDto4);
 
+        // 2
+        kospi_date_selector = "body > div > table.type_1 > tbody > tr:nth-child(4) > td.date";
+        kospi_date_element = doc.select(kospi_date_selector);
+        kospi_date = kospi_date_element.text();
+
+        kospi_price_selector = "body > div > table.type_1 > tbody > tr:nth-child(4) > td:nth-child(2)";
+        kospi_price_element = doc.select(kospi_price_selector);
+        kospi_price = kospi_price_element.text();
+
+        kospi_rate_selector = "body > div > table.type_1 > tbody > tr:nth-child(5) > td:nth-child(4) > span";
+        kospi_rate_element = doc.select(kospi_rate_selector);
+        kospi_rate = kospi_rate_element.text();
+
+        KospiResponseDto kospiResponseDto5 = new KospiResponseDto();
+        kospiResponseDto5.setDate(kospi_date);
+        kospiResponseDto5.setPrice(kospi_price);
+        kospiResponseDto5.setRate(kospi_rate);
+        outputList.add(kospiResponseDto5);
+
+        // 1
+        kospi_date_selector = "body > div > table.type_1 > tbody > tr:nth-child(3) > td.date";
+        kospi_date_element = doc.select(kospi_date_selector);
+        kospi_date = kospi_date_element.text();
+
+        kospi_price_selector = "body > div > table.type_1 > tbody > tr:nth-child(3) > td:nth-child(2)";
+        kospi_price_element = doc.select(kospi_price_selector);
+        kospi_price = kospi_price_element.text();
+
+        kospi_rate_selector = "body > div > table.type_1 > tbody > tr:nth-child(3) > td:nth-child(4) > span";
+        kospi_rate_element = doc.select(kospi_rate_selector);
+        kospi_rate = kospi_rate_element.text();
+
+        KospiResponseDto kospiResponseDto6 = new KospiResponseDto();
+        kospiResponseDto6.setDate(kospi_date);
+        kospiResponseDto6.setPrice(kospi_price);
+        kospiResponseDto6.setRate(kospi_rate);
+        outputList.add(kospiResponseDto6);
+
+        // 현재 코스피 지수
         String naver_url = "https://finance.naver.com/sise/";
         doc = Jsoup.connect(naver_url).get();
 
@@ -338,16 +361,16 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
         kospi_rate = kospi_rate_element.text();
         kospi_rate = kospi_rate.replace("상승","");
 
-        KospiResponseDto kospiResponseDto5 = new KospiResponseDto();
-        inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
-        outputFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        KospiResponseDto kospiResponseDto7 = new KospiResponseDto();
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
         LocalDateTime dateTime = LocalDateTime.parse(String.valueOf(LocalDateTime.now()), inputFormatter);
-        formattedDate = dateTime.format(outputFormatter);
+        String formattedDate = dateTime.format(outputFormatter);
 
-        kospiResponseDto5.setDate(formattedDate);
-        kospiResponseDto5.setPrice(kospi_price);
-        kospiResponseDto5.setRate(kospi_rate);
-        outputList.add(kospiResponseDto5);
+        kospiResponseDto7.setDate(formattedDate);
+        kospiResponseDto7.setPrice(kospi_price);
+        kospiResponseDto7.setRate(kospi_rate);
+        outputList.add(kospiResponseDto7);
 
         return outputList;
     }
@@ -355,19 +378,19 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
     @Override /*Kosdaq 데이터를 가져오는 메서드입니다.*/
     public List<KosdaqResponseDto> getKosdaq() throws IOException {
         List<KosdaqResponseDto> outputList = new ArrayList<>();
-        String google_url = "https://www.google.com/search?q=%EC%9D%BC%EB%B3%84+%EC%BD%94%EC%8A%A4%EB%8B%A5+%EC%A7%80%EC%88%98&sca_esv=556355708&rlz=1C5CHFA_enKR1023KR1023&sxsrf=AB5stBjbqgmm_rA5dCKd_xrIKT2z9GmdXQ%3A1691867866146&ei=2trXZN7JCMOM-QaXy5W4CA&ved=0ahUKEwjenqz56teAAxVDRt4KHZdlBYcQ4dUDCA8&uact=5&oq=%EC%9D%BC%EB%B3%84+%EC%BD%94%EC%8A%A4%EB%8B%A5+%EC%A7%80%EC%88%98&gs_lp=Egxnd3Mtd2l6LXNlcnAiF-ydvOuzhCDsvZTsiqTri6Ug7KeA7IiYMgcQIxiKBRgnSOsQUM0JWPcNcAF4AZABApgB1gKgAfcGqgEHMC4yLjEuMbgBA8gBAPgBAcICChAAGEcY1gQYsAPCAgYQABgHGB7iAwQYACBBiAYBkAYK&sclient=gws-wiz-serp";
+        String google_url = "https://finance.naver.com/sise/sise_index_day.naver?code=KOSDAQ";
         Document doc = Jsoup.connect(google_url).get();
 
-        // 4
-        String kosdaq_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(5) > td:nth-child(1)";
+        // 6
+        String kosdaq_selector = "body > div > table.type_1 > tbody > tr:nth-child(12) > td.date";
         Elements kosdaq_date_element = doc.select(kosdaq_selector);
         String kosdaq_date = kosdaq_date_element.text();
 
-        String kosdaq_price_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(5) > td:nth-child(2)";
+        String kosdaq_price_selector = "body > div > table.type_1 > tbody > tr:nth-child(12) > td:nth-child(2)";
         Elements kosdaq_price_element = doc.select(kosdaq_price_selector);
         String kosdaq_price = kosdaq_price_element.text();
 
-        String kosdaq_rate_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(5) > td:nth-child(3)";
+        String kosdaq_rate_selector = "body > div > table.type_1 > tbody > tr:nth-child(12) > td:nth-child(4) > span";
         Elements kosdaq_rate_element = doc.select(kosdaq_rate_selector);
         String kosdaq_rate = kosdaq_rate_element.text();
 
@@ -377,16 +400,16 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
         kosdaqResponseDto1.setRate(kosdaq_rate);
         outputList.add(kosdaqResponseDto1);
 
-        // 3
-        kosdaq_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(4) > td:nth-child(1)";
+        // 2
+        kosdaq_selector = "body > div > table.type_1 > tbody > tr:nth-child(11) > td.date";
         kosdaq_date_element = doc.select(kosdaq_selector);
         kosdaq_date = kosdaq_date_element.text();
 
-        kosdaq_price_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(5) > td:nth-child(2)";
+        kosdaq_price_selector = "body > div > table.type_1 > tbody > tr:nth-child(11) > td:nth-child(2)";
         kosdaq_price_element = doc.select(kosdaq_price_selector);
         kosdaq_price = kosdaq_price_element.text();
 
-        kosdaq_rate_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(5) > td:nth-child(3)";
+        kosdaq_rate_selector = "body > div > table.type_1 > tbody > tr:nth-child(11) > td:nth-child(4) > span";
         kosdaq_rate_element = doc.select(kosdaq_rate_selector);
         kosdaq_rate = kosdaq_rate_element.text();
 
@@ -396,16 +419,16 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
         kosdaqResponseDto2.setRate(kosdaq_rate);
         outputList.add(kosdaqResponseDto2);
 
-        // 2
-        kosdaq_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(3) > td:nth-child(1)";
+        // 4
+        kosdaq_selector = "body > div > table.type_1 > tbody > tr:nth-child(10) > td.date";
         kosdaq_date_element = doc.select(kosdaq_selector);
         kosdaq_date = kosdaq_date_element.text();
 
-        kosdaq_price_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(3) > td:nth-child(2)";
+        kosdaq_price_selector = "body > div > table.type_1 > tbody > tr:nth-child(10) > td:nth-child(2)";
         kosdaq_price_element = doc.select(kosdaq_price_selector);
         kosdaq_price = kosdaq_price_element.text();
 
-        kosdaq_rate_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(3) > td:nth-child(3)";
+        kosdaq_rate_selector = "body > div > table.type_1 > tbody > tr:nth-child(10) > td:nth-child(4) > span";
         kosdaq_rate_element = doc.select(kosdaq_rate_selector);
         kosdaq_rate = kosdaq_rate_element.text();
 
@@ -415,16 +438,16 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
         kosdaqResponseDto3.setRate(kosdaq_rate);
         outputList.add(kosdaqResponseDto3);
 
-        // 1
-        kosdaq_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(2) > td:nth-child(1)";
+        // 3
+        kosdaq_selector = "body > div > table.type_1 > tbody > tr:nth-child(5) > td.date";
         kosdaq_date_element = doc.select(kosdaq_selector);
         kosdaq_date = kosdaq_date_element.text();
 
-        kosdaq_price_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(2) > td:nth-child(2)";
+        kosdaq_price_selector = "body > div > table.type_1 > tbody > tr:nth-child(5) > td:nth-child(2)";
         kosdaq_price_element = doc.select(kosdaq_price_selector);
         kosdaq_price = kosdaq_price_element.text();
 
-        kosdaq_rate_selector = "#rso > div.ULSxyf > div > block-component > div > div.dG2XIf.XzTjhb > div > div > div > div > div.ifM9O > div > div > div > div > div.wDYxhc > div > div.webanswers-webanswers_table__webanswers-table > table > tbody > tr:nth-child(2) > td:nth-child(3)";
+        kosdaq_rate_selector = "body > div > table.type_1 > tbody > tr:nth-child(5) > td:nth-child(4) > span";
         kosdaq_rate_element = doc.select(kosdaq_rate_selector);
         kosdaq_rate = kosdaq_rate_element.text();
 
@@ -434,6 +457,45 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
         kosdaqResponseDto4.setRate(kosdaq_rate);
         outputList.add(kosdaqResponseDto4);
 
+        // 2
+        kosdaq_selector = "body > div > table.type_1 > tbody > tr:nth-child(4) > td.date";
+        kosdaq_date_element = doc.select(kosdaq_selector);
+        kosdaq_date = kosdaq_date_element.text();
+
+        kosdaq_price_selector = "body > div > table.type_1 > tbody > tr:nth-child(4) > td:nth-child(2)";
+        kosdaq_price_element = doc.select(kosdaq_price_selector);
+        kosdaq_price = kosdaq_price_element.text();
+
+        kosdaq_rate_selector = "body > div > table.type_1 > tbody > tr:nth-child(4) > td:nth-child(4) > span";
+        kosdaq_rate_element = doc.select(kosdaq_rate_selector);
+        kosdaq_rate = kosdaq_rate_element.text();
+
+        KosdaqResponseDto kosdaqResponseDto5 = new KosdaqResponseDto();
+        kosdaqResponseDto5.setDate(kosdaq_date);
+        kosdaqResponseDto5.setPrice(kosdaq_price);
+        kosdaqResponseDto5.setRate(kosdaq_rate);
+        outputList.add(kosdaqResponseDto5);
+
+        // 1
+        kosdaq_selector = "body > div > table.type_1 > tbody > tr:nth-child(3) > td.date";
+        kosdaq_date_element = doc.select(kosdaq_selector);
+        kosdaq_date = kosdaq_date_element.text();
+
+        kosdaq_price_selector = "body > div > table.type_1 > tbody > tr:nth-child(3) > td:nth-child(2)";
+        kosdaq_price_element = doc.select(kosdaq_price_selector);
+        kosdaq_price = kosdaq_price_element.text();
+
+        kosdaq_rate_selector = "body > div > table.type_1 > tbody > tr:nth-child(3) > td:nth-child(4) > span";
+        kosdaq_rate_element = doc.select(kosdaq_rate_selector);
+        kosdaq_rate = kosdaq_rate_element.text();
+
+        KosdaqResponseDto kosdaqResponseDto6 = new KosdaqResponseDto();
+        kosdaqResponseDto6.setDate(kosdaq_date);
+        kosdaqResponseDto6.setPrice(kosdaq_price);
+        kosdaqResponseDto6.setRate(kosdaq_rate);
+        outputList.add(kosdaqResponseDto6);
+
+        // 현재 코스닥 지수
         String naver_url = "https://finance.naver.com/sise/";
         doc = Jsoup.connect(naver_url).get();
 
@@ -446,16 +508,16 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
         kosdaq_rate = kosdaq_rate_element.text();
         kosdaq_rate = kosdaq_rate.replace("상승","");
 
-        KosdaqResponseDto kosdaqResponseDto5 = new KosdaqResponseDto();
+        KosdaqResponseDto kosdaqResponseDto7 = new KosdaqResponseDto();
         DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
         LocalDateTime dateTime = LocalDateTime.parse(String.valueOf(LocalDateTime.now()), inputFormatter);
         String formattedDate = dateTime.format(outputFormatter);
 
-        kosdaqResponseDto5.setDate(formattedDate);
-        kosdaqResponseDto5.setPrice(kosdaq_price);
-        kosdaqResponseDto5.setRate(kosdaq_rate);
-        outputList.add(kosdaqResponseDto5);
+        kosdaqResponseDto7.setDate(formattedDate);
+        kosdaqResponseDto7.setPrice(kosdaq_price);
+        kosdaqResponseDto7.setRate(kosdaq_rate);
+        outputList.add(kosdaqResponseDto7);
 
         return outputList;
     }
