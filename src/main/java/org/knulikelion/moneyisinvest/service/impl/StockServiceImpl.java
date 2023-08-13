@@ -333,5 +333,46 @@ public class StockServiceImpl implements StockService {
 
         return holidayResponseDtoList;
     }
+
+    public StockCompanyFavResponseDto getCompanyFavByStockId(String stockId) {
+        String url = "https://comp.kisline.com/co/CO0100M010GE.nice?stockcd=" + stockId + "&nav=2&header=N";
+
+        // stockLogoUrl을 설정하기위한 로고 URL
+        String logoUrl = "https://file.alphasquare.co.kr/media/images/stock_logo/kr/" + stockId + ".png";
+
+        // 설정할 companyName, price 값 초기화
+        String companyName = "";
+        double price = 0.0;
+        double stockPrice = 0.0; // 이전 종가 값을 초기화
+
+        try {
+            Document document = Jsoup.connect(url).get();
+
+            // 회사 이름 가져오기
+            Element h2Element = document.select("div.biztop h2").first();
+            if (h2Element != null) {
+                h2Element.select("small").remove();
+                companyName = h2Element.text();
+            }
+
+            // 가격 정보 가져오기
+            Element priceElement = document.select("#curr_price").first();
+            if (priceElement != null) {
+                price = Double.parseDouble(priceElement.text().replaceAll(",", ""));
+            }
+
+            // 이전 종가(daily 종가) 정보 가져오기
+            Element stockPriceElement = document.select("#prevday_price").first();
+            if (stockPriceElement != null) {
+                stockPrice = Double.parseDouble(stockPriceElement.text().replaceAll(",", ""));
+            }
+
+        } catch (IOException e) {
+            System.out.println("Error fetching data: " + e.getMessage());
+        }
+
+        // DTO 객체 생성 및 반환
+        return new StockCompanyFavResponseDto(stockId, logoUrl, companyName, price, stockPrice);
+    }
 }
 
