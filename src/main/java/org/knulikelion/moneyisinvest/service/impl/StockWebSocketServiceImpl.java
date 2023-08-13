@@ -29,6 +29,8 @@ import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.*;
 @Slf4j
 @Service
@@ -362,9 +364,9 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
         kospi_rate = kospi_rate.replace("상승","");
 
         KospiResponseDto kospiResponseDto7 = new KospiResponseDto();
-        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
+
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
-        LocalDateTime dateTime = LocalDateTime.parse(String.valueOf(LocalDateTime.now()), inputFormatter);
+        LocalDateTime dateTime = LocalDateTime.now();
         String formattedDate = dateTime.format(outputFormatter);
 
         kospiResponseDto7.setDate(formattedDate);
@@ -509,9 +511,9 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
         kosdaq_rate = kosdaq_rate.replace("상승","");
 
         KosdaqResponseDto kosdaqResponseDto7 = new KosdaqResponseDto();
-        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
+
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
-        LocalDateTime dateTime = LocalDateTime.parse(String.valueOf(LocalDateTime.now()), inputFormatter);
+        LocalDateTime dateTime = LocalDateTime.now();
         String formattedDate = dateTime.format(outputFormatter);
 
         kosdaqResponseDto7.setDate(formattedDate);
