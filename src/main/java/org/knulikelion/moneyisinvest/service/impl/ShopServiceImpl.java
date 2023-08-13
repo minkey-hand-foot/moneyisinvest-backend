@@ -2,6 +2,7 @@ package org.knulikelion.moneyisinvest.service.impl;
 
 import org.knulikelion.moneyisinvest.data.dto.request.TransactionToSystemRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.ShopHistoryResponseDto;
 import org.knulikelion.moneyisinvest.data.entity.Shop;
 import org.knulikelion.moneyisinvest.data.entity.ShopHistory;
 import org.knulikelion.moneyisinvest.data.repository.ShopHistoryRepository;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -78,5 +80,25 @@ public class ShopServiceImpl implements ShopService {
         }
 
         return baseResponseDto;
+    }
+
+    @Override
+    public List<ShopHistoryResponseDto> getShopHistory(String username) {
+        List<ShopHistory> selectedHistory = shopHistoryRepository.findAllByUserId(userRepository.getByUid(username).getId());
+        List<ShopHistoryResponseDto> shopHistoryResponseDtoList = new ArrayList<>();
+
+        for(ShopHistory temp : selectedHistory) {
+            ShopHistoryResponseDto shopHistoryResponseDto = new ShopHistoryResponseDto();
+
+            shopHistoryResponseDto.setImageUrl(temp.getShop().getImageUrl());
+            shopHistoryResponseDto.setItemName(temp.getShop().getItemName());
+            shopHistoryResponseDto.setCreatedAt(temp.getCreatedAt());
+            shopHistoryResponseDto.setUsed(temp.isUsed());
+            shopHistoryResponseDto.setPrice(temp.getShop().getPrice());
+
+            shopHistoryResponseDtoList.add(shopHistoryResponseDto);
+        }
+
+        return shopHistoryResponseDtoList;
     }
 }
