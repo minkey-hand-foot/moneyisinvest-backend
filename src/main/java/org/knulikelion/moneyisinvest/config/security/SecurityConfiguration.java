@@ -33,8 +33,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/sign-in", "/api/v1/sign-up",
                         "/api/v1/" +
                                 "exception").permitAll()
-                .antMatchers(HttpMethod.GET, "/post/**").permitAll()
-                .antMatchers(HttpMethod.POST, "/post/**").hasRole("USER")
                 .antMatchers("/api/v1/shop/**").hasRole("USER")
                 .antMatchers("/api/v1/community/**").hasRole("USER")
                 .antMatchers("**exception**").permitAll()
