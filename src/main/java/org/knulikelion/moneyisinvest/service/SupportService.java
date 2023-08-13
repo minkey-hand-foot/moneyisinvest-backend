@@ -10,7 +10,7 @@ import java.util.List;
 public interface SupportService {
 
     BaseResponseDto addSupport(SupportRequestDto supportRequestDto);
-    SupportResponseDto getOne(Long id);
-    List<SupportResponseDto> getAll(Long id);
-    BaseResponseDto removeSupport(Long id);
+    SupportResponseDto getOne(String uid, Long supportId);
+    List<SupportResponseDto> getAll(String uid);
+    BaseResponseDto removeSupport(String uid, Long supportId);
 }
