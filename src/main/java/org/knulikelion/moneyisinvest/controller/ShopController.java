@@ -1,6 +1,7 @@
 package org.knulikelion.moneyisinvest.controller;
 
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.ShopHistoryResponseDto;
 import org.knulikelion.moneyisinvest.data.entity.Shop;
 import org.knulikelion.moneyisinvest.service.ShopService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,5 +33,10 @@ public class ShopController {
     @PostMapping("/buy/items/id")
     public BaseResponseDto buyItemsById(@RequestParam Long id, String username) {
         return shopService.buyItemsById(id, username);
+    }
+
+    @GetMapping("/get/history")
+    public List<ShopHistoryResponseDto> getShopHistory(@RequestParam String username) {
+        return shopService.getShopHistory(username);
     }
 }
