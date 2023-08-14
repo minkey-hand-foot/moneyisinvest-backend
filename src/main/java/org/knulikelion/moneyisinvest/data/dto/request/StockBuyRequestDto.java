@@ -12,5 +12,4 @@ public class StockBuyRequestDto {
     private String stockCode;
     private String stockAmount;
     private String conclusion_price;
-    private String date;
 }
