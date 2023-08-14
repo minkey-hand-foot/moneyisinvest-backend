@@ -1,6 +1,7 @@
 package org.knulikelion.moneyisinvest.service;
 
 import org.knulikelion.moneyisinvest.data.dto.request.StockBuyRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.request.StockSellRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.*;
 import org.springframework.boot.configurationprocessor.json.JSONException;
 
@@ -24,4 +25,6 @@ public interface StockService {
      * successs, msg
      */
     BaseResponseDto buyStock(StockBuyRequestDto stockBuyRequestDto) throws JSONException, IOException;
+    String getCurrentPrice(String stockCode);
+    BaseResponseDto sellStock(StockSellRequestDto stockSellRequestDto);
 }
