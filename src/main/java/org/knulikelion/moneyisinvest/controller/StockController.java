@@ -2,6 +2,7 @@ package org.knulikelion.moneyisinvest.controller;
 
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
+import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.request.StockBuyRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.StockSellRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.*;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
@@ -20,10 +22,12 @@ import java.util.List;
 public class StockController {
     private final StockService stockService;
     private final StockWebSocketService stockWebSocketService;
+    private final JwtTokenProvider jwtTokenProvider;
     @Autowired
-    public StockController(StockService stockService, StockWebSocketService stockWebSocketService) {
+    public StockController(StockService stockService, StockWebSocketService stockWebSocketService, JwtTokenProvider jwtTokenProvider) {
         this.stockService = stockService;
         this.stockWebSocketService = stockWebSocketService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
     @GetMapping("/get/info")
     public StockCompanyInfoResponseDto getCompanyInfoByStockId(String stockId) throws IOException {
@@ -64,8 +68,8 @@ public class StockController {
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @PostMapping("/buy")
-    public BaseResponseDto buyStock(@RequestBody StockBuyRequestDto stockBuyRequestDto) throws JSONException, IOException {
-        return stockService.buyStock(stockBuyRequestDto);
+    public BaseResponseDto buyStock(HttpServletRequest request, @RequestBody StockBuyRequestDto stockBuyRequestDto) throws JSONException, IOException {
+        return stockService.buyStock(jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")),stockBuyRequestDto);
     }
     @PostMapping("/sell")
     public BaseResponseDto sellStock(@RequestBody StockSellRequestDto stockSellRequestDto){
