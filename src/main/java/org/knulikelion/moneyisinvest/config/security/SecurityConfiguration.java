@@ -35,6 +35,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                                 "exception").permitAll()
                 .antMatchers("/api/v1/shop/**").hasRole("USER")
                 .antMatchers("/api/v1/community/**").hasRole("USER")
+                .antMatchers("/api/v1/profile/images/**").permitAll()
+                .antMatchers("/api/v1/profile/get", "/api/v1/profile/upload").hasRole("USER")
                 .antMatchers("**exception**").permitAll()
                 .antMatchers("/api/v1/stock/**").permitAll()
                 .antMatchers("/stock").permitAll()
