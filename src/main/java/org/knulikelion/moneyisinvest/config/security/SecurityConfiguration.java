@@ -20,11 +20,15 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
+//                UI 미사용으로 기본 설정 비활성화
         httpSecurity.httpBasic().disable() // REST API는 UI를 사용하지 않으므로 기본설정을 비활성화
 
+//                CSRF 비활성화
                 .csrf().disable() // REST API는 csrf 보안이 필요 없으므로 비활성화
 
                 .sessionManagement()
+
+//                Session 미사용으로 비활성화
                 .sessionCreationPolicy(
                         SessionCreationPolicy.STATELESS)
 
@@ -47,6 +51,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/coin/get/**").hasRole("USER")
 //                사용자 정보 조회 User 허용
                 .antMatchers("/api/v1/user/detail").hasRole("USER")
+//                카카오페이 결제 전체 허용
                 .antMatchers("/api/v1/payment/kakao/pay").hasRole("USER")
                 .antMatchers("/api/v1/payment/kakao/success").permitAll()
                 .antMatchers("/api/v1/payment/kakao/cancel").permitAll()
@@ -71,8 +76,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class); // JWT Token 필터를 id/password 인증 필터 이전에 추가
     }
-
-
 
     @Override
     public void configure(WebSecurity webSecurity) {
