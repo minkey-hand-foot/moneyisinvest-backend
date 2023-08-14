@@ -39,6 +39,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/community/**").hasRole("USER")
                 .antMatchers("**exception**").permitAll()
                 .antMatchers("/api/v1/stock/**").permitAll()
+                .antMatchers("/api/v1/stock/buy").hasRole("USER")
+                .antMatchers("/api/v1/stock/sell").hasRole("USER")
                 .antMatchers("/stock").permitAll()
                 .antMatchers("/stockRank").permitAll()
                 .antMatchers("/api/v1/coin/**").permitAll()
