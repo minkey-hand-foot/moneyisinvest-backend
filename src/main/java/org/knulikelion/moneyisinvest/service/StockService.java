@@ -24,7 +24,7 @@ public interface StockService {
      * @return BaseResponseDto
      * successs, msg
      */
-    BaseResponseDto buyStock(StockBuyRequestDto stockBuyRequestDto) throws JSONException, IOException;
+    BaseResponseDto buyStock(String uid,StockBuyRequestDto stockBuyRequestDto) throws JSONException, IOException;
     String getCurrentPrice(String stockCode);
     BaseResponseDto sellStock(StockSellRequestDto stockSellRequestDto);
 }
