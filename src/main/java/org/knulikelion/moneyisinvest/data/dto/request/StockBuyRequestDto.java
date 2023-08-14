@@ -8,7 +8,6 @@ import lombok.*;
 @ToString
 @Builder
 public class StockBuyRequestDto {
-    private String uid;
     private String stockCode;
     private String stockAmount;
     private String conclusion_price;
