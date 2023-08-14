@@ -39,6 +39,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/sign-in", "/api/v1/sign-up").permitAll()
 //                상점 기능 User 허용
                 .antMatchers("/api/v1/shop/**").hasRole("USER")
+//                커뮤니티 기능 User 허용
                 .antMatchers("/api/v1/community/**").hasRole("USER")
 //                프로필 사진 조회: 전체. 프로필 업로드 및 조회: User
                 .antMatchers("/api/v1/profile/images/**").permitAll()
@@ -47,7 +48,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/stock/**").permitAll()
                 .antMatchers("/stock").permitAll()
                 .antMatchers("/stockRank").permitAll()
+//                코인 관련 임시 전체 허용
                 .antMatchers("/api/v1/coin/**").permitAll()
+//                코인 get 요청 User 허용
                 .antMatchers("/api/v1/coin/get/**").hasRole("USER")
 //                사용자 정보 조회 User 허용
                 .antMatchers("/api/v1/user/detail").hasRole("USER")
