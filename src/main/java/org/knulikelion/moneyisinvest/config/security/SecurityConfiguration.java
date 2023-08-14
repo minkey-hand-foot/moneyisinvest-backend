@@ -46,6 +46,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/profile/get", "/api/v1/profile/upload").hasRole("USER")
 //                주식 관련 전체 허용
                 .antMatchers("/api/v1/stock/**").permitAll()
+                .antMatchers("/api/v1/stock/buy").hasRole("USER")
+                .antMatchers("/api/v1/stock/sell").hasRole("USER")
                 .antMatchers("/stock").permitAll()
                 .antMatchers("/stockRank").permitAll()
 //                코인 관련 임시 전체 허용

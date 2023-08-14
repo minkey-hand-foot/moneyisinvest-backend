@@ -1,17 +1,39 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.knulikelion.moneyisinvest.data.dto.request.StockBuyRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.request.StockSellRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.request.TransactionToSystemRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.*;
+import org.knulikelion.moneyisinvest.data.entity.Favorite;
+import org.knulikelion.moneyisinvest.data.entity.Stock;
 import org.knulikelion.moneyisinvest.data.entity.StockHoliday;
+import org.knulikelion.moneyisinvest.data.entity.User;
+import org.knulikelion.moneyisinvest.data.repository.FavoriteRepository;
 import org.knulikelion.moneyisinvest.data.repository.StockHolidayRepository;
+import org.knulikelion.moneyisinvest.data.repository.StockRepository;
+import org.knulikelion.moneyisinvest.data.repository.UserRepository;
+import org.knulikelion.moneyisinvest.service.StockCoinService;
 import org.knulikelion.moneyisinvest.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.configurationprocessor.json.JSONException;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
@@ -19,16 +41,93 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+@Slf4j
 @Service
 public class StockServiceImpl implements StockService {
+    private String approvalToken;
+
+    @Value("${KIS.APP.KEY}")
+    private String app_Key;
+
+    @Value("${KIS.APP.SECRET}")
+    private String app_Secret;
     private final StockHolidayRepository stockHolidayRepository;
+    private final StockRepository stockRepository;
+    private final StockCoinService stockCoinService;
+    private final UserRepository userRepository;
+    private final FavoriteRepository favoriteRepository;
 
     @Autowired
-    public StockServiceImpl(StockHolidayRepository stockHolidayRepository) {
+    public StockServiceImpl(StockHolidayRepository stockHolidayRepository, StockRepository stockRepository, StockCoinService stockCoinService, UserRepository userRepository, FavoriteRepository favoriteRepository) {
         this.stockHolidayRepository = stockHolidayRepository;
+        this.stockRepository = stockRepository;
+        this.stockCoinService = stockCoinService;
+        this.userRepository = userRepository;
+        this.favoriteRepository = favoriteRepository;
+    }
+    @PostConstruct
+    protected void init() {
+        log.info("[init] ApprovalToken 초기화 시작");
+        scheduleTokenRefresh();
+        log.info("[init] ApprovalToken 초기화 완료");
+    }
+    private void scheduleTokenRefresh() {
+        TimerTask timerTask = new TimerTask() {
+            @SneakyThrows
+            @Override
+            public void run() {
+                try {
+                    JSONObject body = createBody();
+                    approvalToken = createApprovalToken(body);
+                } catch (JSONException | IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        };
+        Timer timer = new Timer();
+        long delay = 0;
+        long interval = 12 * 60 * 60 * 1000;
+
+        timer.scheduleAtFixedRate(timerTask, delay, interval);
+    }
+
+    public JSONObject createBody() throws JSONException { /*승인 키 받아올 때 사용되는 body 생성 코드 입니다.*/
+        JSONObject body = new JSONObject();
+        body.put("grant_type", "client_credentials");
+        body.put("appkey", app_Key);
+        body.put("appsecret", app_Secret);
+        return body;
+    }
+
+    public String createApprovalToken(JSONObject body) throws IOException, JSONException { /*승인 키 반환하는 코드 입니다.*/
+        String apiUrl = "https://openapi.koreainvestment.com:9443/oauth2/tokenP";
+        JSONObject result;
+        HttpURLConnection connection;
+        URL url = new URL(apiUrl);
+
+        connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setDoOutput(true);
+
+        try (OutputStream os = connection.getOutputStream()) { /*outPutStream 으로 connection 형태 가져옴*/
+            byte[] input = body.toString().getBytes("utf-8"); /*body 값을 json 형태로 입력*/
+            os.write(input, 0, input.length);
+        }
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"))) {
+            StringBuilder response = new StringBuilder();
+            String responseLine;
+            while ((responseLine = br.readLine()) != null) {
+                response.append(responseLine.trim());
+            }
+            result = new JSONObject(response.toString());
+        }
+        return result.getString("access_token");
     }
 
 
@@ -374,5 +473,151 @@ public class StockServiceImpl implements StockService {
         // DTO 객체 생성 및 반환
         return new StockCompanyFavResponseDto(stockId, logoUrl, companyName, price, stockPrice);
     }
+
+    public String getCurrentPrice(String stockCode){
+        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-price").newBuilder();
+        urlBuilder.addQueryParameter("FID_COND_MRKT_DIV_CODE", "J");
+        urlBuilder.addQueryParameter("FID_INPUT_ISCD", stockCode);
+        String url = urlBuilder.build().toString(); /*한국 현재 주식 시세 url*/
+
+        OkHttpClient client = new OkHttpClient();
+        StockPriceResponseDto stockPriceResponseDto = new StockPriceResponseDto();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .header("authorization", "Bearer " + approvalToken)
+                .header("appkey", app_Key)
+                .header("appsecret", app_Secret)
+                .header("tr_id", "FHKST01010100")
+                .header("Content-type", "application/json; charset=utf-8")
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful() && response.body() != null) {
+                JSONObject jsonObject = new JSONObject(response.body().string());
+                JSONObject outputs = jsonObject.getJSONObject("output");
+                stockPriceResponseDto.setCurrnet_time(String.valueOf(LocalDateTime.now()));
+                String price = (String) outputs.get("stck_prpr");
+
+                return price;
+            } else {
+                return null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
+
+
+    @Override /*주식 매수*/
+    public BaseResponseDto buyStock(StockBuyRequestDto stockBuyRequestDto) throws JSONException, IOException {
+        log.info("[buyStock] 주식 매수 종목 코드 : {}",stockBuyRequestDto.getStockCode());
+        BaseResponseDto baseResponseDto = new BaseResponseDto();
+        TransactionToSystemRequestDto transactionToSystemRequestDto = new TransactionToSystemRequestDto();
+
+        transactionToSystemRequestDto.setTargetUid(stockBuyRequestDto.getUid());
+        transactionToSystemRequestDto.setAmount(Double.parseDouble(stockBuyRequestDto.getConclusion_price())/100);
+
+        BaseResponseDto transactionResult = stockCoinService.withdrawStockCoinToSystem(transactionToSystemRequestDto);
+
+        if(transactionResult.isSuccess()) {
+            log.info("[withdrawStockCoinToSystem]stock 거래 성공 후 DB 저장");
+            log.info("[buyStock] 신규 매수 종목 코드 : {}",stockBuyRequestDto.getStockCode());
+            if (stockRepository.findByStockCode(stockBuyRequestDto.getStockCode()) == null) {
+                Stock stock = new Stock();
+                stock.setStockUrl(getCompanyInfoByStockId(stockBuyRequestDto.getStockCode()).getStockLogoUrl());
+                stock.setStockCode(stockBuyRequestDto.getStockCode()); // 종목
+                stock.setStockAmount(stockBuyRequestDto.getStockAmount()); // 종목 수량
+
+                Integer conclusion_price = Integer.parseInt(stockBuyRequestDto.getConclusion_price());
+                Integer amount = Integer.parseInt(stockBuyRequestDto.getStockAmount());
+                Integer current_price = conclusion_price * amount;
+                stock.setConclusion_price(current_price); // 체결가
+
+                stock.setConclusion_coin(stock.getConclusion_price() / 100); // 스톡가
+
+
+                Double myPrice = Double.parseDouble(stockBuyRequestDto.getConclusion_price());
+                Double myAmount = Double.parseDouble(stockBuyRequestDto.getStockAmount());
+                Double currentPrice = Double.parseDouble(getCurrentPrice(stockBuyRequestDto.getStockCode()));
+                Double rate = (((currentPrice * myAmount) - (myPrice * myAmount))/(myPrice * myAmount)) * 100;
+                stock.setRate(rate); /*수익률 계산*/
+
+                User user = userRepository.getByUid(stockBuyRequestDto.getUid());
+
+                stock.setUser(user); // user
+
+                List<Favorite> favoriteList = favoriteRepository.findAllByUserId(user.getId());
+                boolean isFavoriteSet = false;
+                if (!favoriteList.isEmpty()) {
+                    for (Favorite favorite : favoriteList) {
+                        if (favorite.getStockId().equals(stockBuyRequestDto.getStockCode())) {
+                            stock.setFavorite_status(true);
+                            isFavoriteSet = true;
+                            break;
+                        }
+                    }
+                }
+                if (!isFavoriteSet) {
+                    stock.setFavorite_status(false);
+                }
+            stockRepository.save(stock);
+            }else{
+                log.info("[withdrawStockCoinToSystem]stock 거래 성공 후 DB 저장");
+                log.info("[buyStock] 기존 보유 종목 코드 : {}",stockBuyRequestDto.getStockCode());
+                Stock findStock = stockRepository.findByStockCode(stockBuyRequestDto.getStockCode());
+
+                Integer sumAmount = Integer.parseInt(findStock.getStockAmount()) + Integer.parseInt(stockBuyRequestDto.getStockAmount());
+                findStock.setStockAmount(String.valueOf(sumAmount)); // 종목 체결 수량
+
+                Integer conclusion_price = Integer.parseInt(stockBuyRequestDto.getConclusion_price());
+                Integer amount = Integer.parseInt(stockBuyRequestDto.getStockAmount());
+                Integer current_price = conclusion_price * amount;
+                Integer price = findStock.getConclusion_price() + current_price;
+                findStock.setConclusion_price(price); // 현재가 체결
+
+                findStock.setConclusion_coin(price/100); // 스톡가
+
+                Double myPrice = Double.parseDouble(String.valueOf(price));
+                Double comparePrice = Double.parseDouble(String.valueOf(sumAmount)) * Double.parseDouble(getCurrentPrice(stockBuyRequestDto.getStockCode()));
+                Double rate = ((comparePrice-myPrice) / myPrice) * 100;
+                findStock.setRate(rate);
+
+                User user = userRepository.getByUid(stockBuyRequestDto.getUid());
+                List<Favorite> favoriteList = favoriteRepository.findAllByUserId(user.getId());
+                boolean isFavoriteSet = false;
+                if (!favoriteList.isEmpty()) {
+                    for (Favorite favorite : favoriteList) {
+                        if (favorite.getStockId().equals(stockBuyRequestDto.getStockCode())) {
+                            findStock.setFavorite_status(true);
+                            isFavoriteSet = true;
+                            break;
+                        }
+                    }
+                }
+                if (!isFavoriteSet) {
+                    findStock.setFavorite_status(false);
+                }
+
+                stockRepository.save(findStock);
+            }
+            baseResponseDto.setSuccess(true);
+            baseResponseDto.setMsg("주식 매수가 완료되었습니다.");
+            return baseResponseDto;
+        }else{
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("주식 매수에 실패하였습니다.");
+            return baseResponseDto;
+        }
+    }
+    @Override
+    public BaseResponseDto sellStock(StockSellRequestDto stockSellRequestDto) {
+        return null;
+    }
 }
+
 

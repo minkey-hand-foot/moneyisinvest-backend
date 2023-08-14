@@ -1,12 +1,15 @@
 package org.knulikelion.moneyisinvest.controller;
 
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import org.knulikelion.moneyisinvest.data.dto.request.StockBuyRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.request.StockSellRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.*;
 import org.knulikelion.moneyisinvest.service.StockService;
 import org.knulikelion.moneyisinvest.service.StockWebSocketService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.boot.configurationprocessor.json.JSONException;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -56,5 +59,16 @@ public class StockController {
     @GetMapping("/get/kosdaq")
     public List<KosdaqResponseDto> getKosdaq()throws IOException{
         return stockWebSocketService.getKosdaq();
+    }
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
+    @PostMapping("/buy")
+    public BaseResponseDto buyStock(@RequestBody StockBuyRequestDto stockBuyRequestDto) throws JSONException, IOException {
+        return stockService.buyStock(stockBuyRequestDto);
+    }
+    @PostMapping("/sell")
+    public BaseResponseDto sellStock(@RequestBody StockSellRequestDto stockSellRequestDto){
+        return stockService.sellStock(stockSellRequestDto);
     }
 }
