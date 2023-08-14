@@ -20,35 +20,45 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
+//        UI 미사용으로 기본 설정 비활성화
         httpSecurity.httpBasic().disable() // REST API는 UI를 사용하지 않으므로 기본설정을 비활성화
 
+//                CSRF 비활성화
                 .csrf().disable() // REST API는 csrf 보안이 필요 없으므로 비활성화
 
                 .sessionManagement()
+//                Session 미사용으로 비활성화
                 .sessionCreationPolicy(
-                        SessionCreationPolicy.STATELESS) // JWT Token 인증방식으로 세션은 필요 없으므로 비활성화
+                        SessionCreationPolicy.STATELESS)
 
                 .and()
-                .authorizeRequests() // 리퀘스트에 대한 사용권한 체크
-                .antMatchers("/api/v1/sign-in", "/api/v1/sign-up",
-                        "/api/v1/" +
-                                "exception").permitAll()
+//                아래부터 Request 사용 권한 체크
+                .authorizeRequests()
+//                로그인, 회원가입 허용
+                .antMatchers("/api/v1/sign-in", "/api/v1/sign-up").permitAll()
+//                상점 기능 User 허용
                 .antMatchers("/api/v1/shop/**").hasRole("USER")
+//                커뮤니티 기능 User 허용
                 .antMatchers("/api/v1/community/**").hasRole("USER")
+//                프로필 사진 조회: 전체. 프로필 업로드 및 조회: User
                 .antMatchers("/api/v1/profile/images/**").permitAll()
                 .antMatchers("/api/v1/profile/get", "/api/v1/profile/upload").hasRole("USER")
-                .antMatchers("**exception**").permitAll()
+//                주식 관련 전체 허용
                 .antMatchers("/api/v1/stock/**").permitAll()
                 .antMatchers("/stock").permitAll()
                 .antMatchers("/stockRank").permitAll()
+//                코인 관련 임시 전체 허용
                 .antMatchers("/api/v1/coin/**").permitAll()
+//                코인 get 요청 User 허용
                 .antMatchers("/api/v1/coin/get/**").hasRole("USER")
-                .antMatchers("/api/v1/profile/**").hasRole("USER")
+//                사용자 정보 조회 User 허용
                 .antMatchers("/api/v1/user/detail").hasRole("USER")
+//                카카오페이 결제 전체 허용
                 .antMatchers("/api/v1/payment/kakao/pay").hasRole("USER")
                 .antMatchers("/api/v1/payment/kakao/success").permitAll()
                 .antMatchers("/api/v1/payment/kakao/cancel").permitAll()
                 .antMatchers("/api/v1/payment/kakao/fail").permitAll()
+//                변경해야 할 부분
                 .antMatchers("/api/v1/favorite/add").permitAll()
                 .antMatchers("/api/v1/favorite/remove").permitAll()
                 .antMatchers("/api/v1/favorite/get").permitAll()
@@ -57,7 +67,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/support/getAll").permitAll()
                 .antMatchers("/api/v1/support/remove").permitAll()
 
-                .anyRequest().hasRole("ADMIN") // 나머지 요청은 인증된 ADMIN만 접근 가능
+//                이외 요청 Admin 권한 요청 가능
+                .anyRequest().hasRole("ADMIN")
 
                 .and()
                 .exceptionHandling().accessDeniedHandler(new CustomAccessDeniedHandler())
@@ -73,7 +84,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity webSecurity) {
-        webSecurity.ignoring().antMatchers("/v2/api-docs", "/swagger-resources/**",
-                "/swagger-ui.html", "/webjars/**", "/swagger/**", "/sign-api/exception");
+        webSecurity.ignoring().antMatchers("/v2/api-docs", "/swagger-resources/**", "/swagger-ui.html", "/webjars/**", "/swagger/**");
     }
 }
