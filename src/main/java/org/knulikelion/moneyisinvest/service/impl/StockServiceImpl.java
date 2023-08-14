@@ -514,12 +514,12 @@ public class StockServiceImpl implements StockService {
 
 
     @Override /*주식 매수*/
-    public BaseResponseDto buyStock(StockBuyRequestDto stockBuyRequestDto) throws JSONException, IOException {
+    public BaseResponseDto buyStock(String uid,StockBuyRequestDto stockBuyRequestDto) throws JSONException, IOException {
         log.info("[buyStock] 주식 매수 종목 코드 : {}",stockBuyRequestDto.getStockCode());
         BaseResponseDto baseResponseDto = new BaseResponseDto();
         TransactionToSystemRequestDto transactionToSystemRequestDto = new TransactionToSystemRequestDto();
 
-        transactionToSystemRequestDto.setTargetUid(stockBuyRequestDto.getUid());
+        transactionToSystemRequestDto.setTargetUid(uid);
         transactionToSystemRequestDto.setAmount(Double.parseDouble(stockBuyRequestDto.getConclusion_price())/100);
 
         BaseResponseDto transactionResult = stockCoinService.withdrawStockCoinToSystem(transactionToSystemRequestDto);
@@ -547,7 +547,7 @@ public class StockServiceImpl implements StockService {
                 Double rate = (((currentPrice * myAmount) - (myPrice * myAmount))/(myPrice * myAmount)) * 100;
                 stock.setRate(rate); /*수익률 계산*/
 
-                User user = userRepository.getByUid(stockBuyRequestDto.getUid());
+                User user = userRepository.getByUid(uid);
 
                 stock.setUser(user); // user
 
@@ -587,7 +587,7 @@ public class StockServiceImpl implements StockService {
                 Double rate = ((comparePrice-myPrice) / myPrice) * 100;
                 findStock.setRate(rate);
 
-                User user = userRepository.getByUid(stockBuyRequestDto.getUid());
+                User user = userRepository.getByUid(uid);
                 List<Favorite> favoriteList = favoriteRepository.findAllByUserId(user.getId());
                 boolean isFavoriteSet = false;
                 if (!favoriteList.isEmpty()) {
