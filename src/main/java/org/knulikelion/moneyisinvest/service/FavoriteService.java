@@ -8,8 +8,8 @@ import java.util.List;
 
 public interface FavoriteService {
 
-    BaseResponseDto addFavorite(String userId, String stockId);
-    BaseResponseDto removeFavorite(String userId, String stockId);
-    List<String> findUserFavoriteStockIds(String userId);
+    BaseResponseDto addFavorite(String uid, String stockId);
+    BaseResponseDto removeFavorite(String uid, String stockId);
+    List<String> findUserFavoriteStockIds(String uid);
 
 }

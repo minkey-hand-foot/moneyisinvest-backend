@@ -26,11 +26,11 @@ public class FavoriteServiceImpl implements FavoriteService {
     private final FavoriteRepository favoriteRepository;
 
     @Override
-    public BaseResponseDto addFavorite(String userId, String stockId) {
+    public BaseResponseDto addFavorite(String uid, String stockId) {
 
         BaseResponseDto baseResponseDto = new BaseResponseDto();
 
-        User getUser = userRepository.findByUid(userId);
+        User getUser = userRepository.findByUid(uid);
 
         Favorite favorite = new Favorite();
         favorite.setUser(getUser);
@@ -43,10 +43,10 @@ public class FavoriteServiceImpl implements FavoriteService {
         return baseResponseDto;
     }
     @Override
-    public BaseResponseDto removeFavorite(String userId, String stockId) {
+    public BaseResponseDto removeFavorite(String uid, String stockId) {
         BaseResponseDto baseResponseDto = new BaseResponseDto();
 
-        User user = userRepository.findByUid(userId);
+        User user = userRepository.findByUid(uid);
 
         List<Favorite> favorites = favoriteRepository.findByUserAndStockId(user, stockId);
 
@@ -65,8 +65,9 @@ public class FavoriteServiceImpl implements FavoriteService {
         return baseResponseDto;
     }
     @Override
-    public List<String> findUserFavoriteStockIds(String userId) {
-        List<Favorite> favorites = favoriteRepository.findByUserId(userId);
+    public List<String> findUserFavoriteStockIds(String uid) {
+        User user = userRepository.findByUid(uid);
+        List<Favorite> favorites = favoriteRepository.findByUser(user);
 
         return favorites.stream().map(Favorite::getStockId).collect(Collectors.toList());
     }

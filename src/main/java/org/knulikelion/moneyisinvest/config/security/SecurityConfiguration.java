@@ -20,13 +20,14 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
-//        UI 미사용으로 기본 설정 비활성화
+//                UI 미사용으로 기본 설정 비활성화
         httpSecurity.httpBasic().disable() // REST API는 UI를 사용하지 않으므로 기본설정을 비활성화
 
 //                CSRF 비활성화
                 .csrf().disable() // REST API는 csrf 보안이 필요 없으므로 비활성화
 
                 .sessionManagement()
+
 //                Session 미사용으로 비활성화
                 .sessionCreationPolicy(
                         SessionCreationPolicy.STATELESS)
@@ -58,14 +59,13 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/payment/kakao/success").permitAll()
                 .antMatchers("/api/v1/payment/kakao/cancel").permitAll()
                 .antMatchers("/api/v1/payment/kakao/fail").permitAll()
-//                변경해야 할 부분
-                .antMatchers("/api/v1/favorite/add").permitAll()
-                .antMatchers("/api/v1/favorite/remove").permitAll()
-                .antMatchers("/api/v1/favorite/get").permitAll()
-                .antMatchers("/api/v1/support/post").permitAll()
-                .antMatchers("/api/v1/support/getOne").permitAll()
-                .antMatchers("/api/v1/support/getAll").permitAll()
-                .antMatchers("/api/v1/support/remove").permitAll()
+                .antMatchers("/api/v1/favorite/post").hasRole("USER")
+                .antMatchers("/api/v1/favorite/remove").hasRole("USER")
+                .antMatchers("/api/v1/favorite/get").hasRole("USER")
+                .antMatchers("/api/v1/support/post").hasRole("USER")
+                .antMatchers("/api/v1/support/getOne").hasRole("USER")
+                .antMatchers("/api/v1/support/getAll").hasRole("USER")
+                .antMatchers("/api/v1/support/remove").hasRole("USER")
 
 //                이외 요청 Admin 권한 요청 가능
                 .anyRequest().hasRole("ADMIN")
@@ -79,8 +79,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class); // JWT Token 필터를 id/password 인증 필터 이전에 추가
     }
-
-
 
     @Override
     public void configure(WebSecurity webSecurity) {
