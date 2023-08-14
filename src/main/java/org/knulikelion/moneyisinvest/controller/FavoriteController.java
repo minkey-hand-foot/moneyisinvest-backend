@@ -31,24 +31,24 @@ public class FavoriteController {
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @PostMapping("/post")
-    public BaseResponseDto addFavorite(@RequestBody FavoriteRequestDto request) {
-        return favoriteService.addFavorite(request.getUid(),request.getStockId());
+    public BaseResponseDto addFavorite(@RequestParam("uid") String uid, @RequestParam("stockId") String stockId) {
+        return favoriteService.addFavorite(uid,stockId);
     }
     // 관심 주식 삭제
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @DeleteMapping("/remove")
-    public BaseResponseDto removeFavorite(@RequestBody FavoriteRequestDto request) {
-        return favoriteService.removeFavorite(request.getUid(),request.getStockId());
+    public BaseResponseDto removeFavorite(@RequestParam("uid") String uid, @RequestParam("stockId") String stockId) {
+        return favoriteService.removeFavorite(uid,stockId);
     }
     // 관심 주식 리스트 끌어오기
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @GetMapping("/get")
-    public ResponseEntity<List<StockCompanyFavResponseDto>> getUserFavoriteStock(@RequestBody FavoriteRequestDto request) {
-        List<String> favoriteStockIds = favoriteService.findUserFavoriteStockIds(request.getUid());
+    public ResponseEntity<List<StockCompanyFavResponseDto>> getUserFavoriteStock(@RequestParam("uid") String uid) {
+        List<String> favoriteStockIds = favoriteService.findUserFavoriteStockIds(uid);
         List<StockCompanyFavResponseDto> favoriteStocks = favoriteStockIds.stream()
                 .map(stockService::getCompanyFavByStockId)
                 .collect(Collectors.toList());

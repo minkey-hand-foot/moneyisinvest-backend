@@ -112,8 +112,8 @@ public class StockCoinServiceImpl implements StockCoinService {
                 baseResponseDto.setMsg("사용자를 찾을 수 없습니다.");
             } else {
                 Transaction transaction = Transaction.builder()
-                        .to(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()))
-                        .from(stockCoinWalletService.getWalletAddress("SYSTEM"))
+                        .from(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()))
+                        .to(stockCoinWalletService.getWalletAddress("SYSTEM"))
 //                        주식 매수 시 수수료 적용 X
                         .fee(0)
                         .amount(transactionToSystemRequestDto.getAmount())

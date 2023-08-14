@@ -8,6 +8,7 @@ import lombok.*;
 @ToString
 @Builder
 public class SupportResponseDto {
+
     private Long id;
     private String uid;
     private String title;

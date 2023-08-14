@@ -32,8 +32,8 @@ public class SupportController {
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @GetMapping("/getOne")
-    public SupportResponseDto getOneSupportById(Long id) {
-        return supportService.getOne(id);
+    public SupportResponseDto getOneSupportById(@RequestParam("uid") String uid, @RequestParam("supportId") Long supportId) {
+        return supportService.getOne(uid, supportId);
     }
 
     // 문의사항 전체 보기
@@ -41,8 +41,8 @@ public class SupportController {
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @GetMapping("/getAll")
-    public List<SupportResponseDto> getAllSupportById(Long id) {
-        return supportService.getAll(id);
+    public List<SupportResponseDto> getAllSupportById(@RequestParam("uid") String uid) {
+        return supportService.getAll(uid);
     }
 
     // 문의사항 삭제
@@ -50,8 +50,8 @@ public class SupportController {
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @DeleteMapping("/remove")
-    public BaseResponseDto removeSupport(Long id) {
-        return supportService.removeSupport(id);
+    public BaseResponseDto removeSupport(@RequestParam("uid") String uid, @RequestParam("supportId") Long supportId) {
+        return supportService.removeSupport(uid,supportId);
     }
 
 }

@@ -9,11 +9,14 @@ import org.knulikelion.moneyisinvest.data.entity.User;
 import org.knulikelion.moneyisinvest.data.repository.SupportRepository;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.SupportService;
+import org.knulikelion.moneyisinvest.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -22,6 +25,9 @@ public class SupportServiceImpl implements SupportService {
 
     private final UserRepository userRepository;
     private final SupportRepository supportRepository;
+
+    @Autowired
+    private UserService userService;
 
     @Override
     public BaseResponseDto addSupport(SupportRequestDto supportRequestDto) {
@@ -35,10 +41,9 @@ public class SupportServiceImpl implements SupportService {
         }else{
             Support support = new Support();
             support.setUser(getUser);
-            support.setId(support.getId());
-            support.setTitle(support.getTitle());
+            support.setTitle(supportRequestDto.getTitle());
             support.setStatus("답변 대기중");
-            support.setContents(support.getContents());
+            support.setContents(supportRequestDto.getContents());
             support.setCreatedAt(LocalDateTime.now());
             support.setUpdatedAt(LocalDateTime.now());
 
@@ -51,28 +56,29 @@ public class SupportServiceImpl implements SupportService {
     }
 
     @Override
-    public SupportResponseDto getOne(Long id) {
-        if(id == null) throw new RuntimeException("사용자 id가 없습니다.");
-        Optional<Support> support = supportRepository.findById(id);
-
+    public SupportResponseDto getOne(String uid, Long supportId) {
+        if(uid == null) throw new RuntimeException("사용자 id가 없습니다.");
+        Optional<Support> support = supportRepository.findByIdAndUserUid(supportId, uid);
+        Support foundSupport = support.orElseThrow(() -> new NoSuchElementException("No support found with id:" + uid));
         SupportResponseDto responseDto = new SupportResponseDto();
 
-        responseDto.setId(support.get().getId());
-        responseDto.setUid(support.get().getUser().getUid());
-        responseDto.setTitle(support.get().getTitle());
-        responseDto.setStatus(support.get().getStatus());
-        responseDto.setContents(support.get().getContents());
-        responseDto.setCreatedAt(support.get().getCreatedAt().toString());
-        responseDto.setUpdatedAt(support.get().getUpdatedAt().toString());
-
+        responseDto.setId(foundSupport.getId());
+        responseDto.setUid(foundSupport.getUser().getUid());
+        responseDto.setTitle(foundSupport.getTitle());
+        responseDto.setStatus(foundSupport.getStatus());
+        responseDto.setContents(foundSupport.getContents());
+        responseDto.setCreatedAt(foundSupport.getCreatedAt().toString());
+        responseDto.setUpdatedAt(foundSupport.getUpdatedAt().toString());
         return responseDto;
     }
 
     @Override
-    public List<SupportResponseDto> getAll(Long id) {
+    public List<SupportResponseDto> getAll(String uid) {
+
+        if(uid ==null) throw new RuntimeException("사용자 uid가 없습니다.");
         List<SupportResponseDto> supportResponseDtoList = new ArrayList<>();
 
-        List<Support> getSupports = supportRepository.findAllSupportId(id);
+        List<Support> getSupports = supportRepository.findAllByUserUid(uid);
 
         for(Support getSupport : getSupports) {
             SupportResponseDto supportResponseDto = new SupportResponseDto();
@@ -91,14 +97,13 @@ public class SupportServiceImpl implements SupportService {
 
 
     @Override
-    public BaseResponseDto removeSupport(Long id) {
+    public BaseResponseDto removeSupport(String uid, Long supportId) {
         BaseResponseDto baseResponseDto = new BaseResponseDto();
 
-        Support getSupport =supportRepository.getById(id);
+        Optional<Support> getSupport = supportRepository.findByIdAndUserUid(supportId, uid);
 
-        if(getSupport != null) {
-            getSupport.setUser(null);
-            supportRepository.delete(getSupport);
+        if(getSupport.isPresent()) {
+            supportRepository.delete(getSupport.get());
 
             baseResponseDto.setSuccess(true);
             baseResponseDto.setMsg("문의사항이 삭제되었습니다.");
