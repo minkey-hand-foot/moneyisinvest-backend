@@ -71,8 +71,11 @@ public class StockController {
     public BaseResponseDto buyStock(HttpServletRequest request, @RequestBody StockBuyRequestDto stockBuyRequestDto) throws JSONException, IOException {
         return stockService.buyStock(jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")),stockBuyRequestDto);
     }
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
     @PostMapping("/sell")
-    public BaseResponseDto sellStock(@RequestBody StockSellRequestDto stockSellRequestDto){
-        return stockService.sellStock(stockSellRequestDto);
+    public BaseResponseDto sellStock(HttpServletRequest request,@RequestBody StockSellRequestDto stockSellRequestDto){
+        return stockService.sellStock(jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")),stockSellRequestDto);
     }
 }
