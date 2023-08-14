@@ -20,6 +20,12 @@ public class Stock {
     private String stockCode;
 
     @Column
+    private String stockUrl;
+
+    @Column
+    private boolean favorite_status;
+
+    @Column
     private String stockAmount;
 
     @Column
