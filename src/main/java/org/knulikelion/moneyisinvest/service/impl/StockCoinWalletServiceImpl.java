@@ -54,6 +54,10 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
         this.stockCoinWalletPrivateKeyRepository = stockCoinWalletPrivateKeyRepository;
     }
 
+    public static double roundToFirstDecimal(double num) {
+        return Math.round(num * 10.0) / 10.0;
+    }
+
 // 비공개 키 생성 및 저장
     @Override
     public ECKey createPrivateKey(String username) {
@@ -234,7 +238,7 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
     @Override
     public double getWalletBalance(String address) {
         StockCoinWallet selectedWallet = stockCoinWalletRepository.findByAddress(address);
-        return selectedWallet.getBalance();
+        return roundToFirstDecimal(selectedWallet.getBalance());
     }
 
 //    유저 아이디로 잔액 조회
@@ -246,7 +250,7 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
             return 0;
         }
 
-        return selectedStockCoinWallet.getBalance();
+        return roundToFirstDecimal(selectedStockCoinWallet.getBalance());
     }
 
 //    지갑 주소로 잔액 조회
@@ -258,7 +262,7 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
             return 0;
         }
 
-        return selectedStockCoinWallet.getBalance();
+        return roundToFirstDecimal(selectedStockCoinWallet.getBalance());
     }
 
 //    초기 코드
