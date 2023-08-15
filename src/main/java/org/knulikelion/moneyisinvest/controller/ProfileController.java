@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.MypageResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.ProfilePictureUrlResponseDto;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.ProfileService;
@@ -39,6 +40,14 @@ public class ProfileController {
     @PostMapping("/upload")
     public BaseResponseDto uploadProfilePicture(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
         return profileService.storeFile(file, jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")));
+    }
+
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
+    @GetMapping("/user/detail")
+    public MypageResponseDto getUserDetail(HttpServletRequest request) {
+        return profileService.getUserDetail(request.getHeader("X-AUTH-TOKEN"));
     }
 
     @GetMapping("/images/{fileName:.+}")

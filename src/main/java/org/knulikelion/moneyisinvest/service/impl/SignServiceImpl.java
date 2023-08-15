@@ -96,22 +96,6 @@ public class SignServiceImpl implements SignService {
     }
 
     @Override
-    public MypageResponseDto getUserDetail(String token) {
-        User user = userRepository.getByUid(jwtTokenProvider.getUsername(token));
-
-        MypageResponseDto mypageResponseDto = new MypageResponseDto();
-        mypageResponseDto.setName(user.getName());
-        mypageResponseDto.setUid(user.getUid());
-
-        Resource file = profileService.loadFileAsResource(user.getProfileUrl());
-        String picUrl = "http://localhost:8080/api/v1/profile/images/" + file.getFilename();
-
-        mypageResponseDto.setProfileUrl(picUrl);
-
-        return mypageResponseDto;
-    }
-
-    @Override
     public SignInResultDto signIn(SignInRequestDto signInRequestDto) throws RuntimeException {
         LOGGER.info("[getSignInResult] signDataHandler 로 회원 정보 요청");
         User user = userRepository.getByUid(signInRequestDto.getUid());

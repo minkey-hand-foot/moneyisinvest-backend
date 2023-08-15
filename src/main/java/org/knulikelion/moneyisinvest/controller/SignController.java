@@ -63,14 +63,6 @@ public class SignController {
         throw new RuntimeException("접근이 금지되었습니다.");
     }
 
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
-    })
-    @GetMapping("/user/detail")
-    public MypageResponseDto getUserDetail(HttpServletRequest request) {
-        return signService.getUserDetail(request.getHeader("X-AUTH-TOKEN"));
-    }
-
     @ExceptionHandler(value = RuntimeException.class)
     public ResponseEntity<Map<String, String>> ExceptionHandler(RuntimeException e) {
         HttpHeaders responseHeaders = new HttpHeaders();

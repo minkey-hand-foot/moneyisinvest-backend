@@ -1,6 +1,8 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
+import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.MypageResponseDto;
 import org.knulikelion.moneyisinvest.data.entity.User;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.ProfileService;
@@ -19,12 +21,38 @@ import java.nio.file.StandardCopyOption;
 
 @Service
 public class ProfileServiceImpl implements ProfileService {
-    private final Path fileStorageLocation = Paths.get("src/main/resources/static/images");
+    private final Path fileStorageLocation = Paths.get("./moneyisinvest/");
+    private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
 
     @Autowired
-    public ProfileServiceImpl(UserRepository userRepository) {
+    public ProfileServiceImpl(JwtTokenProvider jwtTokenProvider, UserRepository userRepository) {
+        this.jwtTokenProvider = jwtTokenProvider;
         this.userRepository = userRepository;
+    }
+
+    @Override
+    public MypageResponseDto getUserDetail(String token) {
+        User user = userRepository.getByUid(jwtTokenProvider.getUsername(token));
+
+        MypageResponseDto mypageResponseDto = new MypageResponseDto();
+        mypageResponseDto.setName(user.getName());
+        mypageResponseDto.setUid(user.getUid());
+
+        try {
+            Resource file = loadFileAsResource(user.getProfileUrl());
+
+            if (file != null && file.exists()) {
+                String picUrl = "https://moneyisinvest.kr/api/v1/profile/images/" + file.getFilename();
+                mypageResponseDto.setProfileUrl(picUrl);
+            } else {
+                mypageResponseDto.setProfileUrl(null);
+            }
+        } catch (RuntimeException e) {
+            mypageResponseDto.setProfileUrl(null);
+        }
+
+        return mypageResponseDto;
     }
 
     @Override

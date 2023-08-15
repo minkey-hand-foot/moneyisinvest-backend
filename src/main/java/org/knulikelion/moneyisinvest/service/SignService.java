@@ -8,6 +8,5 @@ import org.knulikelion.moneyisinvest.data.dto.response.SignUpResultDto;
 
 public interface SignService {
     SignUpResultDto signUp(SignUpRequestDto signUpRequestDto);
-    MypageResponseDto getUserDetail(String token);
     SignInResultDto signIn(SignInRequestDto signInRequestDto) throws RuntimeException;
 }
