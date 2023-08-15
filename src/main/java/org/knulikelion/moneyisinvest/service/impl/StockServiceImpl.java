@@ -719,7 +719,6 @@ public class StockServiceImpl implements StockService {
                 .header("appkey",app_Key)
                 .header("appsecret",app_Secret)
                 .header("tr_id","FHKST03010100")
-                .header("custtype","B")
                 .header("content-type","application/json; charset=utf-8")
                 .build();
 
@@ -735,10 +734,10 @@ public class StockServiceImpl implements StockService {
 
                     StocksByDayResponseDto stocksByDayResponseDto = StocksByDayResponseDto.builder()
                             .current_date(output.getString("stck_bsop_date"))
-                            .end_Price(output.getString("bstp_nmix_prpr"))
-                            .start_Price(output.getString("bstp_nmix_oprc"))
-                            .high_Price(output.getString("bstp_nmix_hgpr"))
-                            .low_Price(output.getString("bstp_nmix_lwpr"))
+                            .end_Price(output.getString("stck_clpr"))
+                            .start_Price(output.getString("stck_oprc"))
+                            .high_Price(output.getString("stck_hgpr"))
+                            .low_Price(output.getString("stck_lwpr"))
                             .build();
                     outputList.add(stocksByDayResponseDto);
                 }
