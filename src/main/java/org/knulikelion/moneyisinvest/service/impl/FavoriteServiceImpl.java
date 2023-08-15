@@ -1,9 +1,7 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.knulikelion.moneyisinvest.data.dto.request.FavoriteRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
-import org.knulikelion.moneyisinvest.data.dto.response.FavoriteResponseDto;
 import org.knulikelion.moneyisinvest.data.entity.Favorite;
 import org.knulikelion.moneyisinvest.data.entity.User;
 import org.knulikelion.moneyisinvest.data.repository.FavoriteRepository;
@@ -11,8 +9,6 @@ import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.FavoriteService;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
