@@ -35,6 +35,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .and()
 //                아래부터 Request 사용 권한 체크
                 .authorizeRequests()
+                .antMatchers("/", "/static/**").permitAll()
 //                로그인, 회원가입 허용
                 .antMatchers("/api/v1/sign-in", "/api/v1/sign-up").permitAll()
 //                상점 기능 User 허용

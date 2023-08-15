@@ -1,0 +1,125 @@
+.askContainer {
+    margin: 0;
+    .askBox {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        .askContent {
+            flex-grow: 1;
+            padding: auto;
+            margin: auto;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            margin-top: 3.12rem;
+            .askTitle {
+                color: #000;
+                font-size: 1.5rem;
+                font-weight: 700;
+            }
+            .profile {
+                margin: 3.6212rem 1.94rem 0 0;
+                padding: 0;
+            }
+            .askProfile {
+                display: flex;
+                flex-direction: column;
+                gap: 1.87rem;
+                .askInfo {
+                    width: 49.125rem;
+                    border-radius: 0rem 0rem 1.875rem 1.875rem;
+                    .askInfo-top {
+                        height: 3.5625rem;
+                        border-radius: 0.625rem 0.625rem 0rem 0rem;
+                        background: #F0F9F8;
+                        display: flex;
+                        align-items: center;
+                        text-align: center;
+                        div {
+                            color: #3EB7AF;
+                            font-size: 1rem;
+                            font-weight: 600;
+                        }
+                        .askInfo-title {
+                            margin-left: 3.94rem;
+                            margin-right: 20.94rem;
+                        }
+                        .askInfo-progress {
+                            margin-right: 5.06rem;
+                        }
+                        .askInfo-date {
+                            margin-right: 5.56rem;
+                        }
+                    }
+                    /* AskPage.scss */
+                    .askInfo-scrollable {
+                        max-height: 37.125rem; /* 원하는 높이로 조정 */
+                        overflow-y: scroll;
+                        scrollbar-width: none; /* Firefox에 대한 스크롤바 숨김 */
+                        -ms-overflow-style: none; /* IE 및 Edge에 대한 스크롤바 숨김 */
+                        &::-webkit-scrollbar {
+                            width: 0px;
+                            height: 0px;
+                        }
+                    }
+                    .askInfo-write {
+                        display: flex;
+                        margin: 1.75rem 0 3.69rem 0;
+                        justify-content: center;
+                    }
+                }
+            }
+        }
+    }
+}
+.askInfo-content {
+    width: 49.0625rem;
+    height: 6.1875rem;
+    border: 0px solid #E4E4E4;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    div {
+        color: #000;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .askInfo-itemTitle {
+        display: flex;
+        flex: 0.9;
+        padding-left: 3.87rem;
+        height: 100%;
+        align-items: center;
+        cursor: pointer;
+        color: #000;
+    }
+    .askInfo-items {
+        color: #000;
+        display: flex;
+        flex-direction: row;
+        height: 100%;
+        align-items: center;
+        text-align: center;
+        .askInfo-itemProgress {
+            width: 6.4rem;
+        }
+        .askInfo-itemDate {
+            width: 10.05rem;
+        }
+        
+        .askInfo-itemButton {
+            width: 5.0625rem;
+            height: 2.125rem;
+            .askInfo-itemButton-placeholder {
+                width: 100%; /* 버튼의 너비와 동일하게 설정 */
+                height: 100%; /* 버튼의 높이와 동일하게 설정 */
+                background-color: #fff; /* 빈 요소의 배경색을 설정해주세요 */
+                pointer-events: none; /* 이벤트를 무시하도록 설정 */
+            }
+            .askInfo-delete {
+                width: 12rem;
+            }
+        }
+    }
+}

@@ -1,0 +1,192 @@
+.storeContainer {
+  margin: 0;
+  .storeBox {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    .storeContent {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      margin-top: 3.12rem;
+      /* @@님이 담은 상품이에요 */
+      .userCart {
+        margin: 8.5225rem 1.88rem 0 0;
+        padding: 0;
+        border: 1px solid #85D6D1;
+        border-radius: 10px;
+        padding:10px;
+        .usercart-text {
+          font-size: 16px;
+          font-weight: 700;
+          margin: 5px;
+        }
+          /* @@님이 담은 상품이에요 - 담은 상품 목록 */
+          .cart-section{
+            align-items: center;
+            text-align: center;
+            justify-content: center;
+          
+            .cart-list {
+              li{
+                list-style-type:none;
+                color:#797979;
+                font-size: 10pt;
+              }}
+
+              .item-img{
+                width: 32px;
+                height: 32px;
+                border-radius: 10px;
+                vertical-align: middle; /* 수직 가운데 정렬 */
+                margin: 5px;
+              }
+            }
+            .cartBuy-btn {
+              width: 142px;
+              height: 34px;
+              border-radius: 7px;
+              background-color: #85D6D1;  
+              font-size: 12pt;
+              border: none;
+              align-items: center;
+              text-align: center;
+              justify-content: center;
+              margin: 10px;
+            }  
+      }
+      .row-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.81rem;
+        .storeTitle {
+          color: #000;
+          font-size: 1.5rem;
+          font-weight: 700;
+          }    
+      }
+    }
+    
+  }
+
+}
+
+/* 상점 */
+
+.store-top {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 auto 0 auto;
+  gap: 50px;
+
+  /* 카테고리 */
+  .category {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 5px;
+
+    .category-btn {
+      height: 30px;
+      padding: 10px;
+      border-radius: 40px;
+      color: #797979;
+      background-color: #FFFFFF;
+      border-style: 1px solid;
+      border-color:  #E4E4E4;
+      font-size: 10pt;
+      margin: 3px;
+      line-height: 0.5;
+    }
+
+    .category-btn:active {
+      color: #FFFFFF;
+      background-color: #85D6D1;
+      border-style: none;
+    }
+  }
+
+/* 서치박스 */
+  .StoreSearch {
+    width: 29.5rem;
+    height: 3rem;
+    border-radius: 1.875rem;
+    border: 2px solid #D1EFEE;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0.63rem 1.31rem;
+    gap: 1.31rem;
+
+    input {
+        width: 100%;
+        border: none;
+        outline: none;
+        background: none;
+    }
+  }
+}
+
+/* 담은 상품, 상품 목록 */
+  .nickname  {
+  color: #000;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: auto 0.37rem auto 0;}
+
+  .hr {
+    border-color: #D1EFEE;
+    margin: 10px 0 ;
+  }
+
+  
+  /* 상품 목록 테이블 */
+  .products-table{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center; 
+    table  {
+      width: 48.9375rem;
+      border-collapse: collapse;
+    thead {
+        border-radius: 0.625rem 0.625rem 0rem 0rem;
+        height: 3.5625rem;
+        background: #F0F9F8;
+        color: #3EB7AF;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    tbody{
+      .product-item {
+        td{
+          height: 3.84544rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+          padding: 10px;
+          align-items: center;
+          justify-content: center; //btn 가운데 정렬
+        }
+        .td-btn {
+          display: flex;
+          margin: 17px auto;
+    
+          Button {
+            margin: 3px;
+          }
+        }
+        .product-img {
+            border-radius: 10px;
+        } 
+      }
+
+  }
+
+    }
+    
+  }
