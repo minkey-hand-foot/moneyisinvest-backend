@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.request.StockBuyRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.StockSellRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.request.StocksByDayRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.*;
 import org.knulikelion.moneyisinvest.service.StockService;
 import org.knulikelion.moneyisinvest.service.StockWebSocketService;
@@ -82,5 +83,9 @@ public class StockController {
     @PostMapping("/sell")
     public BaseResponseDto sellStock(HttpServletRequest request,@RequestBody StockSellRequestDto stockSellRequestDto){
         return stockService.sellStock(jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")),stockSellRequestDto);
+    }
+    @PostMapping("/get/stockByDay")
+    public List<StocksByDayResponseDto> getStockByDay(@RequestBody StocksByDayRequestDto stocksByDayRequestDto) throws IOException {
+        return stockService.getStockByDay(stocksByDayRequestDto);
     }
 }

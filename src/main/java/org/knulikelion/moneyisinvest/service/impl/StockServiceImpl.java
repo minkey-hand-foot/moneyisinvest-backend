@@ -6,12 +6,14 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.json.JSONArray;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.knulikelion.moneyisinvest.data.dto.request.StockBuyRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.StockSellRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.request.StocksByDayRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.TransactionToSystemRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.*;
 import org.knulikelion.moneyisinvest.data.entity.Favorite;
@@ -26,9 +28,6 @@ import org.knulikelion.moneyisinvest.service.StockCoinService;
 import org.knulikelion.moneyisinvest.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-//import org.springframework.boot.configurationprocessor.json.JSONException;
-//import org.springframework.boot.configurationprocessor.json.JSONObject;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -579,6 +578,8 @@ public class StockServiceImpl implements StockService {
     }
 
 
+
+
     @Override /*주식 매수*/
     public BaseResponseDto buyStock(String uid, StockBuyRequestDto stockBuyRequestDto) throws JSONException, IOException {
         log.info("[buyStock] 주식 매수 종목 코드 : {}", stockBuyRequestDto.getStockCode());
@@ -747,6 +748,64 @@ public class StockServiceImpl implements StockService {
             }
         }
         return baseResponseDto;
+    }
+
+    @Override
+    public List<StocksByDayResponseDto> getStockByDay(StocksByDayRequestDto stocksByDayRequestDto) throws IOException {
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+        LocalDateTime dateTime = LocalDateTime.now();
+
+        // 어제 날짜 계산
+        LocalDateTime yesterdayDate = dateTime.minusDays(1);
+        String formattedYesterday = yesterdayDate.format(outputFormatter);
+        // 한 달 전 날짜 계산
+        LocalDateTime oneMonthAgoDate = dateTime.minusMonths(1);
+        String formattedOneMonthAgo = oneMonthAgoDate.format(outputFormatter);
+
+        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice").newBuilder();
+        urlBuilder.addQueryParameter("FID_COND_MRKT_DIV_CODE","J");
+        urlBuilder.addQueryParameter("FID_INPUT_ISCD",stocksByDayRequestDto.getStockCode());
+        urlBuilder.addQueryParameter("FID_PERIOD_DIV_CODE", "D");
+        urlBuilder.addQueryParameter("FID_ORG_ADJ_PRC","0");
+        urlBuilder.addQueryParameter("FID_INPUT_DATE_1",formattedOneMonthAgo); // 시작
+        urlBuilder.addQueryParameter("FID_INPUT_DATE_2",formattedYesterday); // 끝
+
+        String url = urlBuilder.build().toString(); /*한달 기준 주식 data url*/
+
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .header("authorization","Bearer "+approvalToken)
+                .header("appkey",app_Key)
+                .header("appsecret",app_Secret)
+                .header("tr_id","FHKST03010100")
+                .header("content-type","application/json; charset=utf-8")
+                .build();
+
+        List<StocksByDayResponseDto> outputList = new ArrayList<>();
+
+        try(Response response = client.newCall(request).execute()){
+            if(response.isSuccessful() && response.body() != null){
+                JSONObject jsonObject = new JSONObject(response.body().string());
+                JSONArray outputs = jsonObject.getJSONArray("output2");
+
+                for(int i =0; i<outputs.length(); i++){
+                    JSONObject output = outputs.getJSONObject(i);
+
+                    StocksByDayResponseDto stocksByDayResponseDto = StocksByDayResponseDto.builder()
+                            .current_date(output.getString("stck_bsop_date"))
+                            .end_Price(output.getString("stck_clpr"))
+                            .start_Price(output.getString("stck_oprc"))
+                            .high_Price(output.getString("stck_hgpr"))
+                            .low_Price(output.getString("stck_lwpr"))
+                            .build();
+                    outputList.add(stocksByDayResponseDto);
+                }
+                return outputList;
+            }
+        }
+        return null;
     }
 }
 

@@ -2,6 +2,7 @@ package org.knulikelion.moneyisinvest.service;
 
 import org.knulikelion.moneyisinvest.data.dto.request.StockBuyRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.StockSellRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.request.StocksByDayRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.*;
 import org.json.JSONException;
 
@@ -28,4 +29,5 @@ public interface StockService {
     BaseResponseDto buyStock(String uid,StockBuyRequestDto stockBuyRequestDto) throws JSONException, IOException;
     String getCurrentPrice(String stockCode);
     BaseResponseDto sellStock(String uid,StockSellRequestDto stockSellRequestDto);
+    List<StocksByDayResponseDto> getStockByDay(StocksByDayRequestDto stocksByDayRequestDto) throws IOException;
 }
