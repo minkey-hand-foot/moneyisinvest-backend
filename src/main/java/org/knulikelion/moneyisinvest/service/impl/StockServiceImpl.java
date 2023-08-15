@@ -933,47 +933,47 @@ public class StockServiceImpl implements StockService {
         return null;
     }
 
-    @Override // 사용자 보유 주식 리스트 반환.
-    public List<OwnedStockCompanyResponseDto> getUserStock(String uid) {
-        User user = userRepository.getByUid(uid);
-
-        List<Stock> ownedStocks = stockCoinWalletService.getAllOwnedStockByUser(user);
-
-        List<OwnedStockCompanyResponseDto> getStockList = new ArrayList<>();
-        for(Stock stock : ownedStocks) {
-            OwnedStockCompanyResponseDto getStock = new OwnedStockCompanyResponseDto();
-
-            String stockCode = stock.getStockCode();
-            StockCompanyFavResponseDto company = getCompanyFavByStockId(stockCode);
-            String stockPrice = getCurrentPrice(stockCode);
-
-            getStock.setStockLogoUrl(company.getStockLogoUrl());
-            getStock.setCompanyName(company.getCompanyName());
-            getStock.setStockPrice(Integer.valueOf(stockPrice));
-            getStock.setPreparation_day_before_rate(String.valueOf(company.getPreparation_day_before_rate()));
-            /*getStock.setPrice(company.getPrice());*/
-
-            getStockList.add(getStock);
-        }
-        return getStockList;
-    }
-
-    @Override
-    public OwnedStockQuantityResponseDto getStockQuantity(String uid, String stockId) {
-        User user = userRepository.findByUid(uid);
-        Stock stock = stockRepository.findByIdAndUserId(Long.valueOf(stockId),user.getId());
-
-        int quantity = stockCoinWalletService.getStockQuantity(user, stockId);
-        return new OwnedStockQuantityResponseDto(stockId,stock.getStockName(),quantity);
-    }
-
-    @Override // 주식 거래 내역 파악.
-    public List<StockTransactionResponseDto> getTransactionHistory(String uid) {
-       User user = userRepository.findByUid(uid);
-
-       List<StockTransaction> transactions = stockCoinWalletService.getTransactionHistory(user);
-       return transactions.stream().map(StockTransactionResponseDto::new).collect(Collectors.toList());
-    }
+//    @Override // 사용자 보유 주식 리스트 반환.
+//    public List<OwnedStockCompanyResponseDto> getUserStock(String uid) {
+//        User user = userRepository.getByUid(uid);
+//
+//        List<Stock> ownedStocks = stockCoinWalletService.getAllOwnedStockByUser(user);
+//
+//        List<OwnedStockCompanyResponseDto> getStockList = new ArrayList<>();
+//        for(Stock stock : ownedStocks) {
+//            OwnedStockCompanyResponseDto getStock = new OwnedStockCompanyResponseDto();
+//
+//            String stockCode = stock.getStockCode();
+//            StockCompanyFavResponseDto company = getCompanyFavByStockId(stockCode);
+//            String stockPrice = getCurrentPrice(stockCode);
+//
+//            getStock.setStockLogoUrl(company.getStockLogoUrl());
+//            getStock.setCompanyName(company.getCompanyName());
+//            getStock.setStockPrice(Integer.valueOf(stockPrice));
+//            getStock.setPreparation_day_before_rate(String.valueOf(company.getPreparation_day_before_rate()));
+//            /*getStock.setPrice(company.getPrice());*/
+//
+//            getStockList.add(getStock);
+//        }
+//        return getStockList;
+//    }
+//
+//    @Override
+//    public OwnedStockQuantityResponseDto getStockQuantity(String uid, String stockId) {
+//        User user = userRepository.findByUid(uid);
+//        Stock stock = stockRepository.findByIdAndUserId(Long.valueOf(stockId),user.getId());
+//
+//        int quantity = stockCoinWalletService.getStockQuantity(user, stockId);
+//        return new OwnedStockQuantityResponseDto(stockId,stock.getStockName(),quantity);
+//    }
+//
+//    @Override // 주식 거래 내역 파악.
+//    public List<StockTransactionResponseDto> getTransactionHistory(String uid) {
+//       User user = userRepository.findByUid(uid);
+//
+//       List<StockTransaction> transactions = stockCoinWalletService.getTransactionHistory(user);
+//       return transactions.stream().map(StockTransactionResponseDto::new).collect(Collectors.toList());
+//    }
 }
 
 
