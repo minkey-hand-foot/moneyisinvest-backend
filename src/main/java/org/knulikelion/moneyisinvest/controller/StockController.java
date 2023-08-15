@@ -37,6 +37,11 @@ public class StockController {
     public List<StockCompanyNewsResponseDto> getCompanyNewsByStockId(String stockId) {
         return stockService.getCompanyNewsByStockId(stockId);
     }
+
+    @GetMapping("/get/news/all")
+    public List<StockCompanyNewsResponseDto> getAllNews() throws IOException {
+        return stockService.getAllNews();
+    }
     @GetMapping("/get/name")
     public String getStockNameByStockId(String stockId) {
         return stockService.getStockNameByStockId(stockId);

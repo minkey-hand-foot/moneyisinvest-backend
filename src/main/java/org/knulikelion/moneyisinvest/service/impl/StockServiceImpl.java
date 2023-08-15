@@ -340,6 +340,67 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
+    public List<StockCompanyNewsResponseDto> getAllNews() throws IOException {
+        String url = "https://news.naver.com/main/list.naver?mode=LS2D&mid=shm&sid1=101&sid2=258";
+        Document document = Jsoup.connect(url).get();
+
+        Elements ulElements = document.select("#main_content > div.list_body.newsflash_body > ul.type06_headline");
+
+        List<StockCompanyNewsResponseDto> stockCompanyNewsList = new ArrayList<>();
+
+        for (Element ulElement : ulElements) {
+            for (Element liElement : ulElement.select("li")) {
+                String link = null;
+                String title = null;
+                String lede = null;
+                String writing = null;
+                String date = null;
+                String thumbnail = null;
+
+                for (Element dtElement : liElement.select("dl > dt")) {
+                    if (!dtElement.hasClass("photo")) {
+                        Element aElement = dtElement.select("a").first();
+                        link = aElement.attr("href");
+                        title = aElement.text();
+                    } else {
+                        Element imgElement = dtElement.select("img").first();
+                        if (imgElement != null) {
+                            thumbnail = imgElement.attr("src");
+                        }
+                    }
+                }
+
+                Element ledeElement = liElement.select("dd > span.lede").first();
+                if (ledeElement != null) {
+                    lede = ledeElement.text();
+                }
+
+                Element writingElement = liElement.select("dd > span.writing").first();
+                if (writingElement != null) {
+                    writing = writingElement.text();
+                }
+
+                Element dateElement = liElement.select("dd > span.date").first();
+                if (dateElement != null) {
+                    date = dateElement.text();
+                }
+
+                StockCompanyNewsResponseDto stockCompanyNewsResponseDto = new StockCompanyNewsResponseDto();
+                stockCompanyNewsResponseDto.setNewsUrl(link);
+                stockCompanyNewsResponseDto.setNewsTitle(title);
+                stockCompanyNewsResponseDto.setNewsThumbnail(thumbnail);
+                stockCompanyNewsResponseDto.setNewsPreview(lede);
+                stockCompanyNewsResponseDto.setNewsCreatedAt(date);
+                stockCompanyNewsResponseDto.setNewsCompany(writing);
+
+                stockCompanyNewsList.add(stockCompanyNewsResponseDto);
+            }
+        }
+
+        return stockCompanyNewsList;
+    }
+
+    @Override
     public List<StockSearchResponseDto> searchStockByKeyword(String keyword) throws UnsupportedEncodingException {
         String encodedKeyword = URLEncoder.encode(keyword, "EUC_KR");
 

@@ -13,6 +13,7 @@ public interface StockService {
     StockCompanyInfoResponseDto getCompanyInfoByStockId(String stockId);
     List<StockCompanyNewsResponseDto> getCompanyNewsByStockId(String stockId);
     String getStockNameByStockId(String stockId);
+    List<StockCompanyNewsResponseDto> getAllNews() throws IOException;
     List<StockSearchResponseDto> searchStockByKeyword(String keyword) throws UnsupportedEncodingException;
     CheckHolidayResponseDto checkIsHolidayNow();
     List<HolidayResponseDto> getAllHoliday();
