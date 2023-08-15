@@ -1,8 +1,6 @@
 package org.knulikelion.moneyisinvest.service;
 
-import org.knulikelion.moneyisinvest.data.dto.request.FavoriteRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
-import org.knulikelion.moneyisinvest.data.dto.response.FavoriteResponseDto;
 
 import java.util.List;
 

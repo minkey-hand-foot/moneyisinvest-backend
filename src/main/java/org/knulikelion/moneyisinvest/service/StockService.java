@@ -3,7 +3,7 @@ package org.knulikelion.moneyisinvest.service;
 import org.knulikelion.moneyisinvest.data.dto.request.StockBuyRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.StockSellRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.*;
-import org.springframework.boot.configurationprocessor.json.JSONException;
+import org.json.JSONException;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
