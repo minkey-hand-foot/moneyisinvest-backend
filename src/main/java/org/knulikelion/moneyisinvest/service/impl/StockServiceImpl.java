@@ -656,18 +656,12 @@ public class StockServiceImpl implements StockService {
         return null;
     }
 
-
-
-
     @Override /*주식 매수*/
     public BaseResponseDto buyStock(String uid, StockBuyRequestDto stockBuyRequestDto) throws JSONException, IOException {
         log.info("[buyStock] 주식 매수 종목 코드 : {}", stockBuyRequestDto.getStockCode());
         BaseResponseDto baseResponseDto = new BaseResponseDto();
         TransactionToSystemRequestDto transactionToSystemRequestDto = new TransactionToSystemRequestDto();
 
-        User user;
-        Stock stock = null;
-        
         transactionToSystemRequestDto.setTargetUid(uid);
         transactionToSystemRequestDto.setAmount(Double.parseDouble(stockBuyRequestDto.getConclusion_price()) / 100);
 
@@ -675,34 +669,49 @@ public class StockServiceImpl implements StockService {
 
         if (transactionResult.isSuccess()) {
             log.info("[buyStock] stock 거래 성공 후 DB 저장");
-            log.info("[buyStock] 신규 매수 종목 코드 : {}", stockBuyRequestDto.getStockCode());
             if (stockRepository.findByStockCode(stockBuyRequestDto.getStockCode()) == null) {
-                stock = new Stock();
-                stock.setStockUrl(getCompanyInfoByStockId(stockBuyRequestDto.getStockCode()).getStockLogoUrl());
-                stock.setStockCode(stockBuyRequestDto.getStockCode()); // 종목
-                stock.setStockAmount(stockBuyRequestDto.getStockAmount()); // 종목 수량
+                log.info("[buyStock] 신규 매수 종목 코드 : {}", stockBuyRequestDto.getStockCode());
+                Stock stock = new Stock();
+                stock.setStockUrl(getCompanyInfoByStockId(stockBuyRequestDto.getStockCode()).getStockLogoUrl()); // 로고
+                stock.setStockCode(stockBuyRequestDto.getStockCode()); // 종목 코드
+                stock.setStockName(getStockNameByStockId(stockBuyRequestDto.getStockCode())); // 종목 이름
 
-                Integer conclusion_price = Integer.parseInt(stockBuyRequestDto.getConclusion_price());
-                Integer amount = Integer.parseInt(stockBuyRequestDto.getStockAmount());
-                Integer current_price = conclusion_price * amount;
-                stock.setConclusion_price(current_price); // 체결가
+                /*수익률 = ((현재 가격 × 보유 주식 개수) - (구매 가격 × 보유 주식 개수)) / (구매 가격 × 보유 주식 개수) × 100*/
+                Integer myAmount = Integer.parseInt(stockBuyRequestDto.getStockAmount());
+                Double real_price = Double.parseDouble(getCurrentPrice(stockBuyRequestDto.getStockCode()));
+                Integer my_buy_price = Integer.parseInt(stockBuyRequestDto.getConclusion_price());
 
-                stock.setConclusion_coin(stock.getConclusion_price() / 100); // 스톡가
+                Double rate = ((real_price * myAmount) - (my_buy_price * myAmount)) / (my_buy_price * myAmount) * 100;
+                rate = Math.round(rate * 1000) / 1000.0;
+                stock.setRate(rate); // 수익률
 
+                stock.setStockAmount(Integer.valueOf(stockBuyRequestDto.getStockAmount())); // 총 종목 수량
 
-                Double myPrice = Double.parseDouble(stockBuyRequestDto.getConclusion_price());
-                Double myAmount = Double.parseDouble(stockBuyRequestDto.getStockAmount());
-                Double currentPrice = Double.parseDouble(getCurrentPrice(stockBuyRequestDto.getStockCode()));
-                Double rate = (((currentPrice * myAmount) - (myPrice * myAmount)) / (myPrice * myAmount)) * 100;
-                stock.setRate(rate); /*수익률 계산*/
+                Integer conclusion_price = Integer.valueOf(getCurrentPrice(stockBuyRequestDto.getStockCode()));
+                Integer conclusion_amount = Integer.parseInt(stockBuyRequestDto.getStockAmount());
+                Integer current_price = conclusion_price * conclusion_amount;
+                stock.setReal_sum_coin_price(current_price/100); // 실제 종목의 평가 총 코인 가격
 
-                user = userRepository.getByUid(uid);
+                stock.setReal_sum_price(current_price); // 실제 종목의 평가 총 가격
 
-                stock.setUser(user); // user
+                Integer my_conclusion_price = Integer.valueOf(stockBuyRequestDto.getConclusion_price());
+                stock.setMy_conclusion_sum_coin((my_conclusion_price * conclusion_amount)/100); // 내 체결 총 코인 가격
+
+                stock.setMy_conclusion_sum_price(my_conclusion_price * conclusion_amount); // 내 체결 총 가격
+
+                stock.setMy_per_conclusion_coin(Integer.parseInt(stockBuyRequestDto.getConclusion_price())/100); // 보유 평 코인
+
+                stock.setMy_per_conclusion_price(Integer.valueOf(stockBuyRequestDto.getConclusion_price())); // 평 단가
+
+                stock.setReal_per_coin(Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode()))/100); // 실제 평 코인
+
+                stock.setReal_per_price(Integer.valueOf(getCurrentPrice(stockBuyRequestDto.getStockCode()))); // 실제 평 단가
+
+                User user = userRepository.getByUid(uid);
 
                 List<Favorite> favoriteList = favoriteRepository.findAllByUserId(user.getId());
                 boolean isFavoriteSet = false;
-                if (!favoriteList.isEmpty()) {
+                if (!favoriteList.isEmpty()) { // 찜 여부
                     for (Favorite favorite : favoriteList) {
                         if (favorite.getStockId().equals(stockBuyRequestDto.getStockCode())) {
                             stock.setFavorite_status(true);
@@ -714,32 +723,44 @@ public class StockServiceImpl implements StockService {
                 if (!isFavoriteSet) {
                     stock.setFavorite_status(false);
                 }
-                stockRepository.save(stock);
+
+                stock.setUser(user); // 유저 저장
+                stockRepository.save(stock); // Entity 저장
             } else {
                 log.info("[withdrawStockCoinToSystem]stock 거래 성공 후 DB 저장");
                 log.info("[buyStock] 기존 보유 종목 코드 : {}", stockBuyRequestDto.getStockCode());
                 Stock findStock = stockRepository.findByStockCode(stockBuyRequestDto.getStockCode());
 
-                Integer sumAmount = Integer.parseInt(findStock.getStockAmount()) + Integer.parseInt(stockBuyRequestDto.getStockAmount());
-                findStock.setStockAmount(String.valueOf(sumAmount)); // 종목 체결 수량
+                Integer myAmount = findStock.getStockAmount() + Integer.parseInt(stockBuyRequestDto.getStockAmount());
+                findStock.setStockAmount(myAmount); // 총 보유 수량
 
-                Integer conclusion_price = Integer.parseInt(stockBuyRequestDto.getConclusion_price());
-                Integer amount = Integer.parseInt(stockBuyRequestDto.getStockAmount());
-                Integer current_price = conclusion_price * amount;
-                Integer price = findStock.getConclusion_price() + current_price;
-                findStock.setConclusion_price(price); // 현재가 체결
+                Integer current_price = Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode()));
+                Integer compare_price = current_price * myAmount;
+                Integer my_total_price = findStock.getMy_conclusion_sum_price() + (Integer.parseInt(stockBuyRequestDto.getConclusion_price()) * Integer.parseInt(stockBuyRequestDto.getStockAmount()));
+                Double rate = (((double) compare_price - my_total_price) / my_total_price) * 100;
+                rate = Math.round(rate * 1000) / 1000.0;
+                findStock.setRate(rate); // 수익률
 
-                findStock.setConclusion_coin(price / 100); // 스톡가
+                findStock.setReal_sum_coin_price(((Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode())))*myAmount) / 100); // 실제 종목의 평가 총 코인 가격
 
-                Double myPrice = Double.parseDouble(String.valueOf(price));
-                Double comparePrice = Double.parseDouble(String.valueOf(sumAmount)) * Double.parseDouble(getCurrentPrice(stockBuyRequestDto.getStockCode()));
-                Double rate = ((comparePrice - myPrice) / myPrice) * 100;
-                findStock.setRate(rate);
+                findStock.setReal_sum_price(Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode()))*myAmount); // 실제 종목의 평가 총 가격
 
-                user = userRepository.getByUid(uid);
+                findStock.setMy_conclusion_sum_coin(my_total_price / 100); // 내 체결 총 코인 가격
+
+                findStock.setMy_conclusion_sum_price(my_total_price); // 내 체결 총 가격
+
+                findStock.setMy_per_conclusion_coin((my_total_price / myAmount) / 100); // 보유 평 코인
+
+                findStock.setMy_per_conclusion_price(my_total_price / myAmount); // 평 단가
+
+                findStock.setReal_per_coin(Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode()))/100); // 실제 평 코인
+
+                findStock.setReal_per_price(Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode()))); // 실제 평 단가
+
+                User user = userRepository.getByUid(uid);
                 List<Favorite> favoriteList = favoriteRepository.findAllByUserId(user.getId());
                 boolean isFavoriteSet = false;
-                if (!favoriteList.isEmpty()) {
+                if (!favoriteList.isEmpty()) { // 찜 여부
                     for (Favorite favorite : favoriteList) {
                         if (favorite.getStockId().equals(stockBuyRequestDto.getStockCode())) {
                             findStock.setFavorite_status(true);
@@ -751,21 +772,8 @@ public class StockServiceImpl implements StockService {
                 if (!isFavoriteSet) {
                     findStock.setFavorite_status(false);
                 }
-
                 stockRepository.save(findStock);
             }
-            StockTransaction stockTransaction = new StockTransaction();
-            stockTransaction.setUser(user);
-            stockTransaction.setStockId(stockBuyRequestDto.getStockCode());
-            stockTransaction.setStockCode(stock.getStockCode());
-            stockTransaction.setStockName(stock.getStockName());
-            stockTransaction.setQuantity(Integer.parseInt(stockBuyRequestDto.getStockAmount()));
-            stockTransaction.setUnitPrice(Double.parseDouble(stockBuyRequestDto.getConclusion_price()));
-            stockTransaction.setPurchase(true);
-            stockTransaction.setTransactionDate(LocalDateTime.now());
-
-            stockTransactionRepository.save(stockTransaction);
-
             baseResponseDto.setSuccess(true);
             baseResponseDto.setMsg("주식 매수가 완료되었습니다.");
             return baseResponseDto;
@@ -781,10 +789,8 @@ public class StockServiceImpl implements StockService {
         log.info("[sellStock] 주식 매수 종목 코드 : {}", stockSellRequestDto.getStockCode());
 
         BaseResponseDto baseResponseDto = new BaseResponseDto();
-        TransactionToSystemRequestDto transactionToSystemRequestDto = new TransactionToSystemRequestDto();
 
-        User user;
-        Stock findStock;
+        TransactionToSystemRequestDto transactionToSystemRequestDto = new TransactionToSystemRequestDto();
 
         if (stockRepository.findByStockCode(stockSellRequestDto.getStockCode()) == null) {
             baseResponseDto.setMsg("보유하지 않은 종목입니다.");
@@ -796,38 +802,48 @@ public class StockServiceImpl implements StockService {
             BaseResponseDto transactionResult = stockCoinService.sellStock(transactionToSystemRequestDto);
             if (transactionResult.isSuccess()) {
                 log.info("[sellStock] stock 거래 성공 후 DB 저장");
-                findStock = stockRepository.findByStockCode(stockSellRequestDto.getStockCode());
-                Integer myAmount = Integer.parseInt(findStock.getStockAmount());
+                Stock findStock = stockRepository.findByStockCode(stockSellRequestDto.getStockCode());
+
+                Integer savedAmount = findStock.getStockAmount();
                 Integer sellAmount = Integer.parseInt(stockSellRequestDto.getStockAmount());
-                findStock.setStockAmount(String.valueOf(myAmount - sellAmount)); // 종목 수량
+                Integer myAmount = savedAmount - sellAmount;
+                findStock.setStockAmount(myAmount); // 총 종목 수량
 
-                StockTransaction stockTransaction = new StockTransaction();
-                user = userRepository.getByUid(uid);
-                stockTransaction.setUser(user);
-                stockTransaction.setStockId(findStock.getId().toString());
-                stockTransaction.setStockCode(findStock.getStockCode());
-                stockTransaction.setStockName(findStock.getStockName());
-                stockTransaction.setQuantity(sellAmount);
-                stockTransaction.setUnitPrice(Double.parseDouble(stockSellRequestDto.getSell_price()));
-                stockTransaction.setPurchase(false);
-                stockTransaction.setTransactionDate(LocalDateTime.now());
+                if (myAmount > 0) {
+                    Double savedPrice = Double.valueOf(findStock.getMy_conclusion_sum_price());
+                    Double sellPrice = Double.valueOf(stockSellRequestDto.getSell_price());
+                    Double fixedPrice = savedPrice - (sellPrice * sellAmount);
+                    Double current_price = Double.valueOf(getCurrentPrice(stockSellRequestDto.getStockCode()));
+                    /*수익률 = ((현재 가격 × 보유 주식 개수) - (구매 가격 × 보유 주식 개수)) / (구매 가격 × 보유 주식 개수) × 100*/
 
-                stockTransactionRepository.save(stockTransaction);
-                if (myAmount - sellAmount > 0) {
-                    Integer myPrice = findStock.getConclusion_price();
-                    Integer sellPrice = Integer.parseInt(stockSellRequestDto.getSell_price());
-                    Integer fixedPrice = myPrice - sellPrice * sellAmount;
-                    findStock.setConclusion_price(fixedPrice); // 체결가
+                    Double rate;
+                    if (fixedPrice != 0) {
+                        rate = (((current_price * myAmount) - fixedPrice) / fixedPrice) * 100;
+                        rate = Math.round(rate * 1000) / 1000.0;
+                        findStock.setRate(rate); // 수익률
+                    } else {
+                        findStock.setRate((double) 0);
+                    }
 
-                    findStock.setConclusion_coin(fixedPrice / 100); // 스톡가
+                    findStock.setReal_sum_coin_price((Integer.parseInt(getCurrentPrice(stockSellRequestDto.getStockCode()))*myAmount)/100); // 실제 종목의 평가 총 코인 가격
 
-                    Double getPrice = Double.parseDouble(getCurrentPrice(stockSellRequestDto.getStockCode()));
-                    Double fixPrice = Double.parseDouble(String.valueOf(fixedPrice));
-                    Double Amount = Double.parseDouble(String.valueOf(myAmount - sellAmount));
+                    findStock.setReal_sum_price(Integer.parseInt(getCurrentPrice(stockSellRequestDto.getStockCode()))*myAmount); // 실제 종목의 평가 총 가격
 
-                    findStock.setRate((((getPrice * Amount) - fixPrice) / fixPrice) * 100); // 수익률 계산
+                    Integer myPrice = findStock.getMy_conclusion_sum_price();
 
-                    user = userRepository.getByUid(uid);
+                    findStock.setMy_conclusion_sum_coin(((myPrice - Integer.parseInt(stockSellRequestDto.getSell_price()) * sellAmount))/100); // 내 체결 총 코인 가격
+
+                    findStock.setMy_conclusion_sum_price(myPrice - Integer.parseInt(stockSellRequestDto.getSell_price())*sellAmount); // 내 체결 총 가격
+
+                    findStock.setMy_per_conclusion_coin((((myPrice - Integer.parseInt(stockSellRequestDto.getSell_price())*sellAmount))/100)/myAmount); // 보유 평 코인
+
+                    findStock.setMy_per_conclusion_price((myPrice - Integer.parseInt(stockSellRequestDto.getSell_price())*sellAmount)/myAmount); // 평 단가
+
+                    findStock.setReal_per_coin(Integer.parseInt(getCurrentPrice(stockSellRequestDto.getStockCode()))/100); // 실제 평 코인
+
+                    findStock.setReal_per_price(Integer.valueOf(getCurrentPrice(stockSellRequestDto.getStockCode()))); // 실제 평 단가
+
+                    User user = userRepository.getByUid(uid);
                     List<Favorite> favoriteList = favoriteRepository.findAllByUserId(user.getId());
                     boolean isFavoriteSet = false;
                     if (!favoriteList.isEmpty()) {
@@ -845,7 +861,7 @@ public class StockServiceImpl implements StockService {
                     stockRepository.save(findStock);
                     baseResponseDto.setMsg("주식 매도가 완료되었습니다.");
                     baseResponseDto.setSuccess(true);
-                } else if (myAmount - sellAmount == 0) {
+                } else if (myAmount == 0) {
                     findStock.setUser(null);
                     stockRepository.delete(findStock);
                     baseResponseDto.setMsg("보유 종목 수량이 0 입니다.");
