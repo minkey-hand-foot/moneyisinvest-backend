@@ -20,6 +20,9 @@ public class Stock {
     private String stockCode;
 
     @Column
+    private String stockName;
+
+    @Column
     private String stockUrl;
 
     @Column
@@ -27,6 +30,9 @@ public class Stock {
 
     @Column
     private String stockAmount;
+
+    @Column
+    private int quantity;
 
     @Column
     private Integer conclusion_price;

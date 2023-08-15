@@ -14,16 +14,18 @@ public class StockCompanyFavResponseDto {
     private String stockId;
     private String stockLogoUrl;
     private String companyName;
-    private String preparation_day_before_rate;
-    private String price;
-    private String stockPrice;
+    private double preparation_day_before_rate;
+    private double price;
+    private double stockPrice;
     private boolean favorite;
 
-    public StockCompanyFavResponseDto(String stockId, String logoUrl, String companyName, double price, double stockPrice) {
-        this.stockId = stockId;
-        this.stockLogoUrl = logoUrl;
+
+    public StockCompanyFavResponseDto(String stockLogoUrl, String companyName, double price, double stockPrice, double preparation_day_before_rate,boolean favorite) {
+        this.stockLogoUrl = stockLogoUrl;
         this.companyName = companyName;
-        this.price = String.valueOf(price);
-        this.stockPrice = String.valueOf(stockPrice);
+        this.price = price;
+        this.stockPrice = stockPrice;
+        this.preparation_day_before_rate = preparation_day_before_rate;
+        this.favorite = favorite;
     }
 }
