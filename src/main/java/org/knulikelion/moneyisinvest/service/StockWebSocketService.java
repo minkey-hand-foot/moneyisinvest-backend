@@ -4,7 +4,7 @@ import org.knulikelion.moneyisinvest.data.dto.response.KosdaqResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.KospiResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.StockPriceResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.StockRankResponseDto;
-import org.springframework.boot.configurationprocessor.json.JSONException;
+import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.List;
