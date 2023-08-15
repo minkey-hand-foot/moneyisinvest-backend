@@ -17,6 +17,12 @@
         <java.version>11</java.version>
     </properties>
     <dependencies>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20200518</version>
+        </dependency>
+        
         <!--JSOUP Dependency-->
         <dependency>
             <groupId>org.bitcoinj</groupId>
