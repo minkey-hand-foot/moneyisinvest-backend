@@ -11,6 +11,13 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import org.knulikelion.moneyisinvest.data.dto.request.StockBuyRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.StockSellRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.StocksByDayRequestDto;
@@ -135,14 +142,67 @@ public class StockServiceImpl implements StockService {
         return result.getString("access_token");
     }
 
+    public static boolean checkImageExists(String logoUrl) {
+        try {
+            URL url = new URL(logoUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("HEAD");
+
+            int responseCode = connection.getResponseCode();
+            return (responseCode >= 200 && responseCode < 300);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static String createImageFromText(String stockId, String text) {
+        Path fileStorageLocation = Paths.get("./moneyisinvest/");
+        Path imagePath = fileStorageLocation.resolve(stockId + ".png");
+
+        int width = 500;
+        int height = 500;
+
+        // 텍스트에서 맨 앞 글자를 추출합니다.
+        String firstCharacter = text.substring(0, 1);
+
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = image.createGraphics();
+
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g2d.setColor(new Color(133, 214, 209)); // 밝은 파란색 배경 설정
+        g2d.fillRect(0, 0, width, height);
+        g2d.setColor(Color.WHITE); // 하얀색 글씨 설정
+
+        Font font = new Font("Arial", Font.PLAIN, 170);
+        g2d.setFont(font);
+        FontMetrics fontMetrics = g2d.getFontMetrics();
+
+        int textWidth = fontMetrics.stringWidth(firstCharacter);
+        int textHeight = fontMetrics.getHeight();
+        int x = (width - textWidth) / 2;
+        int y = (height - textHeight) / 2 + fontMetrics.getAscent();
+
+        g2d.drawString(firstCharacter, x, y);
+        g2d.dispose();
+
+        try {
+            Files.createDirectories(fileStorageLocation); // 디렉터리 생성
+            File file = new File(imagePath.toString());
+            ImageIO.write(image, "png", file);
+
+            return "http://moneyisinvest.kr/api/v1/profile/images/" + stockId + ".png";
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 
     @Override
     public StockCompanyInfoResponseDto getCompanyInfoByStockId(String stockId) {
         StockCompanyInfoResponseDto stockCompanyInfoResponseDto = new StockCompanyInfoResponseDto();
         String url = "https://comp.kisline.com/co/CO0100M010GE.nice?stockcd=" + stockId + "&nav=2&header=N";
-
-        String logoUrl = "https://file.alphasquare.co.kr/media/images/stock_logo/kr/" + stockId + ".png";
-        stockCompanyInfoResponseDto.setStockLogoUrl(logoUrl);
 
         try {
             Document document = Jsoup.connect(url).get();
@@ -246,6 +306,16 @@ public class StockServiceImpl implements StockService {
 
         } catch (IOException e) {
             System.out.println("Error fetching data: " + e.getMessage());
+        }
+
+        String logoUrl = "https://file.alphasquare.co.kr/media/images/stock_logo/kr/" + stockId + ".png";
+
+        boolean imageExists = checkImageExists(logoUrl);
+
+        if(!imageExists) {
+            stockCompanyInfoResponseDto.setStockLogoUrl(createImageFromText(stockId, stockCompanyInfoResponseDto.getStockName()));
+        } else {
+            stockCompanyInfoResponseDto.setStockLogoUrl(logoUrl);
         }
 
         return stockCompanyInfoResponseDto;

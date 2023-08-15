@@ -43,7 +43,7 @@ public class ProfileServiceImpl implements ProfileService {
             Resource file = loadFileAsResource(user.getProfileUrl());
 
             if (file != null && file.exists()) {
-                String picUrl = "https://moneyisinvest.kr/api/v1/profile/images/" + file.getFilename();
+                String picUrl = "http://moneyisinvest.kr/api/v1/profile/images/" + file.getFilename();
                 mypageResponseDto.setProfileUrl(picUrl);
             } else {
                 mypageResponseDto.setProfileUrl(null);
