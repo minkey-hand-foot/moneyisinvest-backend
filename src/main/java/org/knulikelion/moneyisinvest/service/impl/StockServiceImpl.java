@@ -11,20 +11,22 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import org.knulikelion.moneyisinvest.data.dto.request.StockBuyRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.StockSellRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.StocksByDayRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.TransactionToSystemRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.*;
-import org.knulikelion.moneyisinvest.data.entity.Favorite;
-import org.knulikelion.moneyisinvest.data.entity.Stock;
-import org.knulikelion.moneyisinvest.data.entity.StockHoliday;
-import org.knulikelion.moneyisinvest.data.entity.User;
-import org.knulikelion.moneyisinvest.data.repository.FavoriteRepository;
-import org.knulikelion.moneyisinvest.data.repository.StockHolidayRepository;
-import org.knulikelion.moneyisinvest.data.repository.StockRepository;
-import org.knulikelion.moneyisinvest.data.repository.UserRepository;
+import org.knulikelion.moneyisinvest.data.entity.*;
+import org.knulikelion.moneyisinvest.data.repository.*;
 import org.knulikelion.moneyisinvest.service.StockCoinService;
+import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.knulikelion.moneyisinvest.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,6 +50,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Service
 public class StockServiceImpl implements StockService {
@@ -63,14 +67,18 @@ public class StockServiceImpl implements StockService {
     private final StockCoinService stockCoinService;
     private final UserRepository userRepository;
     private final FavoriteRepository favoriteRepository;
+    private final StockTransactionRepository stockTransactionRepository;
+    private final StockCoinWalletService stockCoinWalletService;
 
     @Autowired
-    public StockServiceImpl(StockHolidayRepository stockHolidayRepository, StockRepository stockRepository, StockCoinService stockCoinService, UserRepository userRepository, FavoriteRepository favoriteRepository) {
+    public StockServiceImpl(StockHolidayRepository stockHolidayRepository, StockRepository stockRepository, StockCoinService stockCoinService, UserRepository userRepository, FavoriteRepository favoriteRepository, StockTransactionRepository stockTransactionRepository, StockCoinWalletService stockCoinWalletService) {
         this.stockHolidayRepository = stockHolidayRepository;
         this.stockRepository = stockRepository;
         this.stockCoinService = stockCoinService;
         this.userRepository = userRepository;
         this.favoriteRepository = favoriteRepository;
+        this.stockTransactionRepository = stockTransactionRepository;
+        this.stockCoinWalletService = stockCoinWalletService;
     }
 
     @PostConstruct
@@ -135,14 +143,67 @@ public class StockServiceImpl implements StockService {
         return result.getString("access_token");
     }
 
+    public static boolean checkImageExists(String logoUrl) {
+        try {
+            URL url = new URL(logoUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("HEAD");
+
+            int responseCode = connection.getResponseCode();
+            return (responseCode >= 200 && responseCode < 300);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static String createImageFromText(String stockId, String text) {
+        Path fileStorageLocation = Paths.get("./moneyisinvest/");
+        Path imagePath = fileStorageLocation.resolve(stockId + ".png");
+
+        int width = 500;
+        int height = 500;
+
+        // 텍스트에서 맨 앞 글자를 추출합니다.
+        String firstCharacter = text.substring(0, 1);
+
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = image.createGraphics();
+
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g2d.setColor(new Color(133, 214, 209)); // 밝은 파란색 배경 설정
+        g2d.fillRect(0, 0, width, height);
+        g2d.setColor(Color.WHITE); // 하얀색 글씨 설정
+
+        Font font = new Font("Arial", Font.PLAIN, 170);
+        g2d.setFont(font);
+        FontMetrics fontMetrics = g2d.getFontMetrics();
+
+        int textWidth = fontMetrics.stringWidth(firstCharacter);
+        int textHeight = fontMetrics.getHeight();
+        int x = (width - textWidth) / 2;
+        int y = (height - textHeight) / 2 + fontMetrics.getAscent();
+
+        g2d.drawString(firstCharacter, x, y);
+        g2d.dispose();
+
+        try {
+            Files.createDirectories(fileStorageLocation); // 디렉터리 생성
+            File file = new File(imagePath.toString());
+            ImageIO.write(image, "png", file);
+
+            return "http://moneyisinvest.kr/api/v1/profile/images/" + stockId + ".png";
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 
     @Override
     public StockCompanyInfoResponseDto getCompanyInfoByStockId(String stockId) {
         StockCompanyInfoResponseDto stockCompanyInfoResponseDto = new StockCompanyInfoResponseDto();
         String url = "https://comp.kisline.com/co/CO0100M010GE.nice?stockcd=" + stockId + "&nav=2&header=N";
-
-        String logoUrl = "https://file.alphasquare.co.kr/media/images/stock_logo/kr/" + stockId + ".png";
-        stockCompanyInfoResponseDto.setStockLogoUrl(logoUrl);
 
         try {
             Document document = Jsoup.connect(url).get();
@@ -246,6 +307,16 @@ public class StockServiceImpl implements StockService {
 
         } catch (IOException e) {
             System.out.println("Error fetching data: " + e.getMessage());
+        }
+
+        String logoUrl = "https://file.alphasquare.co.kr/media/images/stock_logo/kr/" + stockId + ".png";
+
+        boolean imageExists = checkImageExists(logoUrl);
+
+        if(!imageExists) {
+            stockCompanyInfoResponseDto.setStockLogoUrl(createImageFromText(stockId, stockCompanyInfoResponseDto.getStockName()));
+        } else {
+            stockCompanyInfoResponseDto.setStockLogoUrl(logoUrl);
         }
 
         return stockCompanyInfoResponseDto;
@@ -499,45 +570,53 @@ public class StockServiceImpl implements StockService {
         return holidayResponseDtoList;
     }
 
+
     public StockCompanyFavResponseDto getCompanyFavByStockId(String stockId) {
-        String url = "https://comp.kisline.com/co/CO0100M010GE.nice?stockcd=" + stockId + "&nav=2&header=N";
+        // 로고 URL
+        String logoUrl ="https://file.alphasquare.co.kr/media/images/stock_logo/kr/" + stockId + ".png";
 
-        // stockLogoUrl을 설정하기위한 로고 URL
-        String logoUrl = "https://file.alphasquare.co.kr/media/images/stock_logo/kr/" + stockId + ".png";
+        // 초기화
+        String companyName = getStockNameByStockId(stockId);
+        double price = Double.parseDouble(getCurrentPrice(stockId));
+        double stockPrice = price/100;
+        boolean favorite = false;
+        double preparation_day_before_rate = 0;
 
-        // 설정할 companyName, price 값 초기화
-        String companyName = "";
-        double price = 0.0;
-        double stockPrice = 0.0; // 이전 종가 값을 초기화
 
-        try {
-            Document document = Jsoup.connect(url).get();
+        OkHttpClient client = new OkHttpClient();
 
-            // 회사 이름 가져오기
-            Element h2Element = document.select("div.biztop h2").first();
-            if (h2Element != null) {
-                h2Element.select("small").remove();
-                companyName = h2Element.text();
+        // 한국 현재 주식 시세 URL 생성
+        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-price").newBuilder();
+        urlBuilder.addQueryParameter("FID_COND_MRKT_DIV_CODE", "J");
+        urlBuilder.addQueryParameter("FID_INPUT_ISCD", stockId);
+        String url = urlBuilder.build().toString();
+
+        // 헤더 및 토큰 작성
+        Request request = new Request.Builder()
+                .url(url)
+                .header("authorization", "Bearer " + approvalToken)
+                .header("appkey", app_Key)
+                .header("appsecret", app_Secret)
+                .header("tr_id", "FHKST01010100")
+                .header("Content-Type", "application/json; charset=utf-8")
+                .build();
+
+        // 응답 처리
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful() && response.body() != null) {
+                JSONObject jsonObject = new JSONObject(response.body().string());
+                JSONObject outputs = jsonObject.getJSONObject("output");
+
+                // 전일대비 가격율을 가져옵니다.
+                String prdy_vrss = outputs.getString("prdy_ctrt");
+                preparation_day_before_rate = Double.parseDouble(prdy_vrss);
+                favorite = true;
             }
-
-            // 가격 정보 가져오기
-            Element priceElement = document.select("#curr_price").first();
-            if (priceElement != null) {
-                price = Double.parseDouble(priceElement.text().replaceAll(",", ""));
-            }
-
-            // 이전 종가(daily 종가) 정보 가져오기
-            Element stockPriceElement = document.select("#prevday_price").first();
-            if (stockPriceElement != null) {
-                stockPrice = Double.parseDouble(stockPriceElement.text().replaceAll(",", ""));
-            }
-
-        } catch (IOException e) {
-            System.out.println("Error fetching data: " + e.getMessage());
+        } catch (IOException | JSONException e) {
+            e.printStackTrace();
         }
-
-        // DTO 객체 생성 및 반환
-        return new StockCompanyFavResponseDto(stockId, logoUrl, companyName, price, stockPrice);
+        // DTO 객체 생성 및 반환   String stockLogoUrl, String companyName, double price, double stockPrice, double preparation_day_before_rate,boolean favorite
+        return new StockCompanyFavResponseDto(stockId,logoUrl, companyName, price, stockPrice,preparation_day_before_rate,favorite);
     }
 
     public String getCurrentPrice(String stockCode) {
@@ -586,6 +665,9 @@ public class StockServiceImpl implements StockService {
         BaseResponseDto baseResponseDto = new BaseResponseDto();
         TransactionToSystemRequestDto transactionToSystemRequestDto = new TransactionToSystemRequestDto();
 
+        User user;
+        Stock stock = null;
+        
         transactionToSystemRequestDto.setTargetUid(uid);
         transactionToSystemRequestDto.setAmount(Double.parseDouble(stockBuyRequestDto.getConclusion_price()) / 100);
 
@@ -595,7 +677,7 @@ public class StockServiceImpl implements StockService {
             log.info("[buyStock] stock 거래 성공 후 DB 저장");
             log.info("[buyStock] 신규 매수 종목 코드 : {}", stockBuyRequestDto.getStockCode());
             if (stockRepository.findByStockCode(stockBuyRequestDto.getStockCode()) == null) {
-                Stock stock = new Stock();
+                stock = new Stock();
                 stock.setStockUrl(getCompanyInfoByStockId(stockBuyRequestDto.getStockCode()).getStockLogoUrl());
                 stock.setStockCode(stockBuyRequestDto.getStockCode()); // 종목
                 stock.setStockAmount(stockBuyRequestDto.getStockAmount()); // 종목 수량
@@ -614,7 +696,7 @@ public class StockServiceImpl implements StockService {
                 Double rate = (((currentPrice * myAmount) - (myPrice * myAmount)) / (myPrice * myAmount)) * 100;
                 stock.setRate(rate); /*수익률 계산*/
 
-                User user = userRepository.getByUid(uid);
+                user = userRepository.getByUid(uid);
 
                 stock.setUser(user); // user
 
@@ -654,7 +736,7 @@ public class StockServiceImpl implements StockService {
                 Double rate = ((comparePrice - myPrice) / myPrice) * 100;
                 findStock.setRate(rate);
 
-                User user = userRepository.getByUid(uid);
+                user = userRepository.getByUid(uid);
                 List<Favorite> favoriteList = favoriteRepository.findAllByUserId(user.getId());
                 boolean isFavoriteSet = false;
                 if (!favoriteList.isEmpty()) {
@@ -672,6 +754,18 @@ public class StockServiceImpl implements StockService {
 
                 stockRepository.save(findStock);
             }
+            StockTransaction stockTransaction = new StockTransaction();
+            stockTransaction.setUser(user);
+            stockTransaction.setStockId(stockBuyRequestDto.getStockCode());
+            stockTransaction.setStockCode(stock.getStockCode());
+            stockTransaction.setStockName(stock.getStockName());
+            stockTransaction.setQuantity(Integer.parseInt(stockBuyRequestDto.getStockAmount()));
+            stockTransaction.setUnitPrice(Double.parseDouble(stockBuyRequestDto.getConclusion_price()));
+            stockTransaction.setPurchase(true);
+            stockTransaction.setTransactionDate(LocalDateTime.now());
+
+            stockTransactionRepository.save(stockTransaction);
+
             baseResponseDto.setSuccess(true);
             baseResponseDto.setMsg("주식 매수가 완료되었습니다.");
             return baseResponseDto;
@@ -687,8 +781,10 @@ public class StockServiceImpl implements StockService {
         log.info("[sellStock] 주식 매수 종목 코드 : {}", stockSellRequestDto.getStockCode());
 
         BaseResponseDto baseResponseDto = new BaseResponseDto();
-
         TransactionToSystemRequestDto transactionToSystemRequestDto = new TransactionToSystemRequestDto();
+
+        User user;
+        Stock findStock;
 
         if (stockRepository.findByStockCode(stockSellRequestDto.getStockCode()) == null) {
             baseResponseDto.setMsg("보유하지 않은 종목입니다.");
@@ -700,10 +796,23 @@ public class StockServiceImpl implements StockService {
             BaseResponseDto transactionResult = stockCoinService.sellStock(transactionToSystemRequestDto);
             if (transactionResult.isSuccess()) {
                 log.info("[sellStock] stock 거래 성공 후 DB 저장");
-                Stock findStock = stockRepository.findByStockCode(stockSellRequestDto.getStockCode());
+                findStock = stockRepository.findByStockCode(stockSellRequestDto.getStockCode());
                 Integer myAmount = Integer.parseInt(findStock.getStockAmount());
                 Integer sellAmount = Integer.parseInt(stockSellRequestDto.getStockAmount());
                 findStock.setStockAmount(String.valueOf(myAmount - sellAmount)); // 종목 수량
+
+                StockTransaction stockTransaction = new StockTransaction();
+                user = userRepository.getByUid(uid);
+                stockTransaction.setUser(user);
+                stockTransaction.setStockId(findStock.getId().toString());
+                stockTransaction.setStockCode(findStock.getStockCode());
+                stockTransaction.setStockName(findStock.getStockName());
+                stockTransaction.setQuantity(sellAmount);
+                stockTransaction.setUnitPrice(Double.parseDouble(stockSellRequestDto.getSell_price()));
+                stockTransaction.setPurchase(false);
+                stockTransaction.setTransactionDate(LocalDateTime.now());
+
+                stockTransactionRepository.save(stockTransaction);
                 if (myAmount - sellAmount > 0) {
                     Integer myPrice = findStock.getConclusion_price();
                     Integer sellPrice = Integer.parseInt(stockSellRequestDto.getSell_price());
@@ -718,7 +827,7 @@ public class StockServiceImpl implements StockService {
 
                     findStock.setRate((((getPrice * Amount) - fixPrice) / fixPrice) * 100); // 수익률 계산
 
-                    User user = userRepository.getByUid(uid);
+                    user = userRepository.getByUid(uid);
                     List<Favorite> favoriteList = favoriteRepository.findAllByUserId(user.getId());
                     boolean isFavoriteSet = false;
                     if (!favoriteList.isEmpty()) {
@@ -806,6 +915,48 @@ public class StockServiceImpl implements StockService {
             }
         }
         return null;
+    }
+
+    @Override // 사용자 보유 주식 리스트 반환.
+    public List<OwnedStockCompanyResponseDto> getUserStock(String uid) {
+        User user = userRepository.getByUid(uid);
+
+        List<Stock> ownedStocks = stockCoinWalletService.getAllOwnedStockByUser(user);
+
+        List<OwnedStockCompanyResponseDto> getStockList = new ArrayList<>();
+        for(Stock stock : ownedStocks) {
+            OwnedStockCompanyResponseDto getStock = new OwnedStockCompanyResponseDto();
+
+            String stockCode = stock.getStockCode();
+            StockCompanyFavResponseDto company = getCompanyFavByStockId(stockCode);
+            String stockPrice = getCurrentPrice(stockCode);
+
+            getStock.setStockLogoUrl(company.getStockLogoUrl());
+            getStock.setCompanyName(company.getCompanyName());
+            getStock.setStockPrice(Integer.valueOf(stockPrice));
+            getStock.setPreparation_day_before_rate(String.valueOf(company.getPreparation_day_before_rate()));
+            /*getStock.setPrice(company.getPrice());*/
+
+            getStockList.add(getStock);
+        }
+        return getStockList;
+    }
+
+    @Override
+    public OwnedStockQuantityResponseDto getStockQuantity(String uid, String stockId) {
+        User user = userRepository.findByUid(uid);
+        Stock stock = stockRepository.findByIdAndUserId(Long.valueOf(stockId),user.getId());
+
+        int quantity = stockCoinWalletService.getStockQuantity(user, stockId);
+        return new OwnedStockQuantityResponseDto(stockId,stock.getStockName(),quantity);
+    }
+
+    @Override // 주식 거래 내역 파악.
+    public List<StockTransactionResponseDto> getTransactionHistory(String uid) {
+       User user = userRepository.findByUid(uid);
+
+       List<StockTransaction> transactions = stockCoinWalletService.getTransactionHistory(user);
+       return transactions.stream().map(StockTransactionResponseDto::new).collect(Collectors.toList());
     }
 }
 
