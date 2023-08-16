@@ -57,7 +57,11 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
     }
 
     public static double roundToFirstDecimal(double num) {
-        return Math.round(num * 10.0) / 10.0;
+        if (num % 1 >= 0.5) {
+            return Math.ceil(num);
+        } else {
+            return Math.floor(num);
+        }
     }
 
 // 비공개 키 생성 및 저장
