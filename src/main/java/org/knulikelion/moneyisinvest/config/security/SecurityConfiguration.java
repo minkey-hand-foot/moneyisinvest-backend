@@ -40,7 +40,13 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 //                상점 기능 User 허용
                 .antMatchers("/api/v1/shop/**").hasRole("USER")
 //                커뮤니티 기능 User 허용
-                .antMatchers("/api/v1/community/**").hasRole("USER")
+                .antMatchers("/api/v1/community/post").hasRole("USER")
+                .antMatchers("/api/v1/community/remove").hasRole("USER")
+                .antMatchers("/api/v1/community/update").hasRole("USER")
+                .antMatchers("/api/v1/community/reply").hasRole("USER")
+                .antMatchers("/api/v1/community/get").permitAll()
+                .antMatchers("/api/detail").permitAll()
+
 //                프로필 사진 조회: 전체. 프로필 업로드 및 조회: User
                 .antMatchers("/api/v1/profile/images/**").permitAll()
                 .antMatchers("/api/v1/profile/get", "/api/v1/profile/upload").hasRole("USER")
