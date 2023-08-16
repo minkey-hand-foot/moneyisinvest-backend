@@ -61,7 +61,6 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
                 try {
                     JSONObject body = createBody();
                     approvalToken = createApprovalToken(body);
-                    System.out.println(approvalToken);
                 } catch (JSONException | IOException e) {
                     throw new RuntimeException(e);
                 }
