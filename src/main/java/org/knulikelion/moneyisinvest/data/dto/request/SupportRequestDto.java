@@ -9,9 +9,6 @@ import lombok.*;
 @ToString
 @Builder
 public class SupportRequestDto {
-
-    private String uid;
     private String title;
     private String contents;
-
 }
