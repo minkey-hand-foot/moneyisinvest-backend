@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.knulikelion.moneyisinvest.data.dto.response.KakaoApproveResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.KakaoReadyResponseDto;
 import org.knulikelion.moneyisinvest.data.entity.PlanPayment;
+import org.knulikelion.moneyisinvest.data.entity.User;
 import org.knulikelion.moneyisinvest.data.repository.PlanPaymentRepository;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -92,6 +93,10 @@ public class KakaoPayService {
         planPayment.setExpirationAt(dateAfter30Days.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 
         planPaymentRepository.save(planPayment);
+
+        User user = userRepository.getByUid(kakaoReady.getUid());
+        user.setPlan("premium");
+        userRepository.save(user);
 
         return approveResponse;
     }

@@ -2,6 +2,7 @@ package org.knulikelion.moneyisinvest.controller;
 
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
+import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.response.KakaoApproveResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.KakaoReadyResponseDto;
 import org.knulikelion.moneyisinvest.service.KakaoPayService;
@@ -10,14 +11,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+
 @RestController
 @RequestMapping("/api/v1/payment/kakao")
 public class KakaoPayController {
     private final KakaoPayService kakaoPayService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    public KakaoPayController(KakaoPayService kakaoPayService) {
+    public KakaoPayController(KakaoPayService kakaoPayService, JwtTokenProvider jwtTokenProvider) {
         this.kakaoPayService = kakaoPayService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
 //    결제 요청
@@ -25,8 +30,8 @@ public class KakaoPayController {
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @PostMapping("/pay")
-    public KakaoReadyResponseDto paySubscriptionFeewithKakaopay(String uid) {
-        return kakaoPayService.kakaoPayReady(uid);
+    public KakaoReadyResponseDto paySubscriptionFeewithKakaopay(HttpServletRequest request) {
+        return kakaoPayService.kakaoPayReady(jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")));
     }
 
 //    결제 성공
