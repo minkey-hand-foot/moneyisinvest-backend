@@ -153,7 +153,16 @@ public class CommunityServiceImpl implements CommunityService {
     public BaseResponseDto removeComment(Long id) {
         BaseResponseDto baseResponseDto = new BaseResponseDto();
         Community foundComment = communityRepository.getById(id);
-        if(foundComment != null) {
+        List<CommunityReply> communityReplyList = communityReplyRepository.findAllByCommunity_Id(id);
+
+        if (foundComment != null) {
+            if(!communityReplyList.isEmpty()){
+                for (CommunityReply temp : communityReplyList){
+                    temp.setUser(null);
+                    temp.setCommunity(null);
+                    communityReplyRepository.delete(temp);
+                }
+            }
             foundComment.setUser(null);
             communityRepository.delete(foundComment);
 
