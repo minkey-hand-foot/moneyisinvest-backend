@@ -2,15 +2,17 @@ package org.knulikelion.moneyisinvest.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.StockCompanyFavResponseDto;
 import org.knulikelion.moneyisinvest.data.entity.Favorite;
 import org.knulikelion.moneyisinvest.data.entity.User;
 import org.knulikelion.moneyisinvest.data.repository.FavoriteRepository;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.FavoriteService;
+import org.knulikelion.moneyisinvest.service.StockService;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -20,6 +22,7 @@ public class FavoriteServiceImpl implements FavoriteService {
     private final UserRepository userRepository;
 
     private final FavoriteRepository favoriteRepository;
+    private final StockService stockService;
 
     @Override
     public BaseResponseDto addFavorite(String uid, String stockId) {
@@ -61,10 +64,23 @@ public class FavoriteServiceImpl implements FavoriteService {
         return baseResponseDto;
     }
     @Override
-    public List<String> findUserFavoriteStockIds(String uid) {
+    public List<StockCompanyFavResponseDto> findUserFavoriteStockIds(String uid) {
         User user = userRepository.findByUid(uid);
         List<Favorite> favorites = favoriteRepository.findByUser(user);
+        List<StockCompanyFavResponseDto> outputList = new ArrayList<>();
+        if(!favorites.isEmpty()) {
+            for (Favorite temp : favorites) {
+                StockCompanyFavResponseDto stockCompanyFavResponseDto = new StockCompanyFavResponseDto();
+                stockCompanyFavResponseDto.setStockCode(temp.getStockId());
+                stockCompanyFavResponseDto.setStockLogoUrl(stockService.getCompanyInfoByStockId(temp.getStockId()).getStockLogoUrl());
+                stockCompanyFavResponseDto.setCompanyName(stockService.getStockNameByStockId(temp.getStockId()));
+                stockCompanyFavResponseDto.setPreparation_day_before_rate(Double.parseDouble(stockService.getDayBeforeRate(temp.getStockId())));
+                stockCompanyFavResponseDto.setPrice(Integer.parseInt(stockService.getCurrentPrice(temp.getStockId())));
+                stockCompanyFavResponseDto.setStockPrice(Integer.parseInt(stockService.getCurrentPrice(temp.getStockId()))/100);
+                outputList.add(stockCompanyFavResponseDto);
+            }
+        }
 
-        return favorites.stream().map(Favorite::getStockId).collect(Collectors.toList());
+        return outputList;
     }
 }
