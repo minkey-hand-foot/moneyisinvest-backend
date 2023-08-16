@@ -9,6 +9,7 @@ import lombok.*;
 @Builder
 public class StockTransactionHistoryResponseDto {
     private String transactionDate;
+    private String stockLogo;
     private Integer unitPrice;
     private Integer quantity;
     private String stockName;

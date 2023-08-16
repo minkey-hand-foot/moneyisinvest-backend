@@ -18,8 +18,6 @@ public interface StockService {
     List<StockSearchResponseDto> searchStockByKeyword(String keyword) throws UnsupportedEncodingException;
     CheckHolidayResponseDto checkIsHolidayNow();
     List<HolidayResponseDto> getAllHoliday();
-    StockCompanyFavResponseDto getCompanyFavByStockId(String stockId);
-
     /**
      * @param stockBuyRequestDto
      * stockCode, stockAmount, conclusion_price, date
@@ -32,6 +30,7 @@ public interface StockService {
     List<StocksByDayResponseDto> getStockByDay(StocksByDayRequestDto stocksByDayRequestDto) throws IOException;
     Integer getUsersStockQuantity(String uid, String stockId);
     List<OwnedStockResponseDto> getUserStock(String uid);
+    String getDayBeforeRate(String stockCode);
 
     List<StockTransactionHistoryResponseDto> getStockTransactionHistory(String uid);
 }
