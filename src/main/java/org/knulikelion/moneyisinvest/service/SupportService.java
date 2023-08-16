@@ -9,8 +9,8 @@ import java.util.List;
 
 public interface SupportService {
 
-    BaseResponseDto addSupport(SupportRequestDto supportRequestDto);
-    SupportResponseDto getOne(String uid, Long supportId);
+    BaseResponseDto addSupport(SupportRequestDto supportRequestDto, String uid);
+    List<SupportResponseDto> getUserSupport(String uid);
     List<SupportResponseDto> getAll(String uid);
     BaseResponseDto removeSupport(String uid, Long supportId);
 }
