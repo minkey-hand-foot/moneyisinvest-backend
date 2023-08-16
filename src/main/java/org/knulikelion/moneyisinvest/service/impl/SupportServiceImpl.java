@@ -1,6 +1,7 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.request.SupportRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SupportResponseDto;
@@ -25,15 +26,16 @@ public class SupportServiceImpl implements SupportService {
 
     private final UserRepository userRepository;
     private final SupportRepository supportRepository;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Autowired
     private UserService userService;
 
     @Override
-    public BaseResponseDto addSupport(SupportRequestDto supportRequestDto) {
+    public BaseResponseDto addSupport(SupportRequestDto supportRequestDto, String uid) {
         BaseResponseDto baseResponseDto = new BaseResponseDto();
 
-        User getUser = userRepository.findByUid(supportRequestDto.getUid());
+        User getUser = userRepository.findByUid(uid);
 
         if(getUser == null) {
             baseResponseDto.setSuccess(false);
@@ -56,20 +58,30 @@ public class SupportServiceImpl implements SupportService {
     }
 
     @Override
-    public SupportResponseDto getOne(String uid, Long supportId) {
+    public List<SupportResponseDto> getUserSupport(String uid) {
         if(uid == null) throw new RuntimeException("사용자 id가 없습니다.");
-        Optional<Support> support = supportRepository.findByIdAndUserUid(supportId, uid);
-        Support foundSupport = support.orElseThrow(() -> new NoSuchElementException("No support found with id:" + uid));
-        SupportResponseDto responseDto = new SupportResponseDto();
+        User user = userRepository.findByUid(uid);
+        List<Support> supportList = supportRepository.findByUser_Id(user.getId());
+        List<SupportResponseDto> supportResponseDtoList = new ArrayList<>();
 
-        responseDto.setId(foundSupport.getId());
-        responseDto.setUid(foundSupport.getUser().getUid());
-        responseDto.setTitle(foundSupport.getTitle());
-        responseDto.setStatus(foundSupport.getStatus());
-        responseDto.setContents(foundSupport.getContents());
-        responseDto.setCreatedAt(foundSupport.getCreatedAt().toString());
-        responseDto.setUpdatedAt(foundSupport.getUpdatedAt().toString());
-        return responseDto;
+        if(supportList.isEmpty()){
+            return null;
+        }else {
+            for(Support temp : supportList) {
+                SupportResponseDto responseDto = new SupportResponseDto();
+
+                responseDto.setUid(temp.getUser().getUid());
+                responseDto.setTitle(temp.getTitle());
+                responseDto.setStatus(temp.getStatus());
+                responseDto.setContents(temp.getContents());
+                responseDto.setCreatedAt(temp.getCreatedAt().toString());
+                responseDto.setUpdatedAt(temp.getUpdatedAt().toString());
+
+                supportResponseDtoList.add(responseDto);
+
+            }
+        }
+        return supportResponseDtoList;
     }
 
     @Override
@@ -82,7 +94,6 @@ public class SupportServiceImpl implements SupportService {
 
         for(Support getSupport : getSupports) {
             SupportResponseDto supportResponseDto = new SupportResponseDto();
-            supportResponseDto.setId(getSupport.getId());
             supportResponseDto.setUid(getSupport.getUser().getUid());
             supportResponseDto.setTitle(getSupport.getTitle());
             supportResponseDto.setContents(getSupport.getContents());
