@@ -50,7 +50,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -774,6 +773,19 @@ public class StockServiceImpl implements StockService {
                 }
                 stockRepository.save(findStock);
             }
+
+            StockTransaction stockTransaction = StockTransaction.builder()
+                    .stockCode(stockBuyRequestDto.getStockCode())
+                    .stockName(getCompanyInfoByStockId(stockBuyRequestDto.getStockCode()).getStockName())
+                    .quantity(Integer.parseInt(stockBuyRequestDto.getStockAmount()))
+                    .isPurchase(true)
+                    .transactionDate(LocalDateTime.now())
+                    .unitPrice(Double.parseDouble(stockBuyRequestDto.getConclusion_price()))
+                    .user(userRepository.findByUid(uid))
+                    .build();
+
+            stockTransactionRepository.save(stockTransaction);
+
             baseResponseDto.setSuccess(true);
             baseResponseDto.setMsg("주식 매수가 완료되었습니다.");
             return baseResponseDto;
@@ -858,6 +870,18 @@ public class StockServiceImpl implements StockService {
                     if (!isFavoriteSet) {
                         findStock.setFavorite_status(false);
                     }
+                    StockTransaction stockTransaction = StockTransaction.builder()
+                            .stockCode(stockSellRequestDto.getStockCode())
+                            .stockName(getCompanyInfoByStockId(stockSellRequestDto.getStockCode()).getStockName())
+                            .quantity(Integer.parseInt(stockSellRequestDto.getStockAmount()))
+                            .isPurchase(false)
+                            .transactionDate(LocalDateTime.now())
+                            .unitPrice(Double.parseDouble(stockSellRequestDto.getSell_price()))
+                            .user(userRepository.findByUid(uid))
+                            .build();
+
+                    stockTransactionRepository.save(stockTransaction);
+
                     stockRepository.save(findStock);
                     baseResponseDto.setMsg("주식 매도가 완료되었습니다.");
                     baseResponseDto.setSuccess(true);
@@ -932,48 +956,80 @@ public class StockServiceImpl implements StockService {
         }
         return null;
     }
+  
+    @Override
+    public Integer getUsersStockQuantity(String uid, String stockId) {
+        Long userId = userRepository.getByUid(uid).getId();
+        List<Stock> stock = stockRepository.findByUserId(userId);
 
-//    @Override // 사용자 보유 주식 리스트 반환.
-//    public List<OwnedStockCompanyResponseDto> getUserStock(String uid) {
-//        User user = userRepository.getByUid(uid);
-//
-//        List<Stock> ownedStocks = stockCoinWalletService.getAllOwnedStockByUser(user);
-//
-//        List<OwnedStockCompanyResponseDto> getStockList = new ArrayList<>();
-//        for(Stock stock : ownedStocks) {
-//            OwnedStockCompanyResponseDto getStock = new OwnedStockCompanyResponseDto();
-//
-//            String stockCode = stock.getStockCode();
-//            StockCompanyFavResponseDto company = getCompanyFavByStockId(stockCode);
-//            String stockPrice = getCurrentPrice(stockCode);
-//
-//            getStock.setStockLogoUrl(company.getStockLogoUrl());
-//            getStock.setCompanyName(company.getCompanyName());
-//            getStock.setStockPrice(Integer.valueOf(stockPrice));
-//            getStock.setPreparation_day_before_rate(String.valueOf(company.getPreparation_day_before_rate()));
-//            /*getStock.setPrice(company.getPrice());*/
-//
-//            getStockList.add(getStock);
-//        }
-//        return getStockList;
-//    }
-//
-//    @Override
-//    public OwnedStockQuantityResponseDto getStockQuantity(String uid, String stockId) {
-//        User user = userRepository.findByUid(uid);
-//        Stock stock = stockRepository.findByIdAndUserId(Long.valueOf(stockId),user.getId());
-//
-//        int quantity = stockCoinWalletService.getStockQuantity(user, stockId);
-//        return new OwnedStockQuantityResponseDto(stockId,stock.getStockName(),quantity);
-//    }
-//
-//    @Override // 주식 거래 내역 파악.
-//    public List<StockTransactionResponseDto> getTransactionHistory(String uid) {
-//       User user = userRepository.findByUid(uid);
-//
-//       List<StockTransaction> transactions = stockCoinWalletService.getTransactionHistory(user);
-//       return transactions.stream().map(StockTransactionResponseDto::new).collect(Collectors.toList());
-//    }
+        Integer quantity = null;
+
+        for(Stock temp : stock) {
+            if(temp.getStockCode().equals(stockId)) {
+                quantity = temp.getStockAmount();
+            }
+        }
+
+        return quantity;
+    }
+
+    @Override
+    public List<OwnedStockResponseDto> getUserStock(String uid) {
+        User user = userRepository.findByUid(uid);
+        List<Stock> stockList = stockRepository.findAllByUser(user);
+        if(stockList.isEmpty()){
+            return null;
+        }
+        List<OwnedStockResponseDto> ownedStockResponseDtoList = new ArrayList<>();
+
+        for (Stock temp : stockList){
+            OwnedStockResponseDto ownedStockResponseDto = new OwnedStockResponseDto();
+            ownedStockResponseDto.setStockUrl(temp.getStockUrl());
+            ownedStockResponseDto.setStockCode(temp.getStockCode());
+            ownedStockResponseDto.setStockName(temp.getStockName());
+            int current_price = Integer.parseInt(getCurrentPrice(temp.getStockCode()));
+            int amount = temp.getStockAmount();
+            int my_price = temp.getMy_conclusion_sum_price();
+
+            Double rate = (double) ((((current_price * amount) - my_price) / (double) my_price) * 100);
+            rate = Math.round(rate * 1000) / 1000.0;
+
+            ownedStockResponseDto.setRate(rate);
+            ownedStockResponseDto.setStockAmount(temp.getStockAmount());
+
+            ownedStockResponseDto.setReal_sum_coin_price((current_price * amount)/100);
+            ownedStockResponseDto.setReal_sum_price(current_price*amount);
+            ownedStockResponseDto.setMy_conclusion_sum_coin(temp.getMy_conclusion_sum_coin());
+            ownedStockResponseDto.setMy_conclusion_sum_price(temp.getMy_conclusion_sum_price());
+            ownedStockResponseDto.setMy_per_conclusion_coin(temp.getMy_per_conclusion_coin());
+            ownedStockResponseDto.setMy_per_conclusion_price(temp.getMy_per_conclusion_price());
+            ownedStockResponseDto.setReal_per_coin(current_price/100);
+            ownedStockResponseDto.setReal_per_price(current_price);
+            ownedStockResponseDto.setFavorite_status(temp.isFavorite_status());
+            ownedStockResponseDtoList.add(ownedStockResponseDto);
+        }
+        return ownedStockResponseDtoList;
+    }
+
+    @Override
+    public List<StockTransactionHistoryResponseDto> getStockTransactionHistory(String uid) {
+        List<StockTransactionHistoryResponseDto> stockTransactionHistoryResponseDtoList = new ArrayList<>();
+
+        List<StockTransaction> stockTransactions = stockTransactionRepository.findByUserId(userRepository.getByUid(uid).getId());
+
+        for(StockTransaction temp : stockTransactions) {
+            StockTransactionHistoryResponseDto stockTransactionHistoryResponseDto = new StockTransactionHistoryResponseDto();
+            stockTransactionHistoryResponseDto.setTransactionDate(temp.getTransactionDate().toString());
+            stockTransactionHistoryResponseDto.setStockCode(temp.getStockCode());
+            stockTransactionHistoryResponseDto.setStockName(temp.getStockName());
+            stockTransactionHistoryResponseDto.setUnitPrice((int) temp.getUnitPrice());
+            stockTransactionHistoryResponseDto.setQuantity(temp.getQuantity());
+
+            stockTransactionHistoryResponseDtoList.add(stockTransactionHistoryResponseDto);
+        }
+
+        return stockTransactionHistoryResponseDtoList;
+    }
 }
 
 

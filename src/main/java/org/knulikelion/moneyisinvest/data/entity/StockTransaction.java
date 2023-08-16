@@ -22,8 +22,6 @@ public class StockTransaction {
     @JoinColumn(name = "user_id")
     private User user;
     @Column
-    private String stockId;
-    @Column
     private String stockCode;
     @Column
     private String stockName;
