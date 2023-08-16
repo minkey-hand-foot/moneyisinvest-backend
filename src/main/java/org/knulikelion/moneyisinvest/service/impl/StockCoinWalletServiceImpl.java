@@ -105,7 +105,7 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
 //            해시코드 지정
             transactionHistoryResponseDto.setHashCode(block.getHash());
 //            입금, 출금 여부 지정
-            if(getWalletAddress(username) == allTransaction.getFrom()) {
+            if(getWalletAddress(username).equals(allTransaction.getFrom())) {
                 transactionHistoryResponseDto.setType("출금");
             } else {
                 transactionHistoryResponseDto.setType("입금");
