@@ -11,7 +11,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 public interface StockService {
-    List<CompanyResultTableResponseDto> getCompanyResultTable() throws IOException;
+    List<CompanyResultTableResponseDto> getCompanyResultTable(String stockId) throws IOException;
     StockCompanyInfoResponseDto getCompanyInfoByStockId(String stockId);
     List<StockCompanyNewsResponseDto> getCompanyNewsByStockId(String stockId);
     String getStockNameByStockId(String stockId);
