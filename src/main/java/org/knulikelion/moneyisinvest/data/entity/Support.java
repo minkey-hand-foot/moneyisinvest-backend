@@ -33,8 +33,8 @@ public class Support {
     @Column(nullable = false)
     private String status ="";
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false, cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "FK_user_support", value = ConstraintMode.CONSTRAINT))
+    @ManyToOne
+    @JoinColumn(name = "user_id")
     private User user;
 
     @CreatedDate
@@ -43,5 +43,4 @@ public class Support {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
-
 }

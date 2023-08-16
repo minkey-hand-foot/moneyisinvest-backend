@@ -47,9 +47,6 @@ public class User implements UserDetails {
     @Column
     private String profileUrl;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Support> supports;
-
     @ElementCollection(fetch = FetchType.EAGER)
     @Builder.Default
     @Column
