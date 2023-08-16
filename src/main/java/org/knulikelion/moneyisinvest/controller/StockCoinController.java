@@ -138,10 +138,4 @@ public class StockCoinController {
     public BaseResponseDto createWallet(@RequestParam String username) {
         return stockCoinWalletService.createWallet(username);
     }
-
-//    사용자에게 코인 지급
-    @GetMapping("/system/give")
-    public String giveCoinToUser(@RequestParam String username, double amount) {
-        return stockCoinService.createSystemTransaction(username, amount);
-    }
 }
