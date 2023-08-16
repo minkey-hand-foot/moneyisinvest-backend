@@ -63,10 +63,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/favorite/post").hasRole("USER")
                 .antMatchers("/api/v1/favorite/remove").hasRole("USER")
                 .antMatchers("/api/v1/favorite/get").hasRole("USER")
-                .antMatchers("/api/v1/support/post").hasRole("USER")
-                .antMatchers("/api/v1/support/getOne").hasRole("USER")
-                .antMatchers("/api/v1/support/getAll").hasRole("USER")
-                .antMatchers("/api/v1/support/remove").hasRole("USER")
+                .antMatchers("/api/v1/support/**").hasRole("USER")
 
 //                이외 요청 Admin 권한 요청 가능
                 .anyRequest().hasRole("ADMIN")
