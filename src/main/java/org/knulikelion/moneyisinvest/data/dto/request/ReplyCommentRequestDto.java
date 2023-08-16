@@ -10,5 +10,4 @@ import lombok.*;
 public class ReplyCommentRequestDto {
     private Long targetCommentId;
     private String comment;
-    private String uid;
 }
