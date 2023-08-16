@@ -3,6 +3,7 @@ package org.knulikelion.moneyisinvest.service.impl;
 import org.knulikelion.moneyisinvest.common.CommonResponse;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.request.SignInRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.request.TransactionToSystemRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.MypageResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignInResultDto;
 import org.knulikelion.moneyisinvest.data.dto.request.SignUpRequestDto;
@@ -11,6 +12,7 @@ import org.knulikelion.moneyisinvest.data.entity.User;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.ProfileService;
 import org.knulikelion.moneyisinvest.service.SignService;
+import org.knulikelion.moneyisinvest.service.StockCoinService;
 import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,19 +31,22 @@ public class SignServiceImpl implements SignService {
 
     public UserRepository userRepository;
     public ProfileService profileService;
+
     public JwtTokenProvider jwtTokenProvider;
+    public StockCoinService stockCoinService;
     public PasswordEncoder passwordEncoder;
     public StockCoinWalletService stockCoinWalletService;
 
     @Autowired
     public SignServiceImpl(UserRepository userRepository, JwtTokenProvider jwtTokenProvider,
                            PasswordEncoder passwordEncoder, ProfileService profileService,
-                           StockCoinWalletService stockCoinWalletService) {
+                           StockCoinWalletService stockCoinWalletService, StockCoinService stockCoinService) {
         this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
         this.profileService = profileService;
         this.stockCoinWalletService = stockCoinWalletService;
+        this.stockCoinService = stockCoinService;
     }
 
     private static final String EMAIL_REGEX = "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$";
@@ -68,6 +73,8 @@ public class SignServiceImpl implements SignService {
 
             LOGGER.info("사용자의 새 지갑 생성, UID: " + signUpRequestDto.getUid());
             stockCoinWalletService.createWallet(signUpRequestDto.getUid());
+
+            stockCoinService.createSystemTransaction(signUpRequestDto.getUid(), 1000);
 
         SignUpResultDto signUpResultDto = new SignInResultDto();
 

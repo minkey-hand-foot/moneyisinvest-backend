@@ -61,6 +61,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
                 try {
                     JSONObject body = createBody();
                     approvalToken = createApprovalToken(body);
+                    System.out.println(approvalToken);
                 } catch (JSONException | IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -195,6 +196,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
             if (response.isSuccessful() && response.body() != null) {
                 JSONObject jsonObject = new JSONObject(response.body().string());
                 JSONArray outputs = jsonObject.getJSONArray("output");
+                System.out.println(outputs.toString());
 
                 int limit = Math.min(outputs.length(), 5);
                 for (int i = 0; i < limit; i++) { /*5등 까지만*/
