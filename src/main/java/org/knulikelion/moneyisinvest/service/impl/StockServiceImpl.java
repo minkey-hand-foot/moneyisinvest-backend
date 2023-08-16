@@ -67,17 +67,15 @@ public class StockServiceImpl implements StockService {
     private final UserRepository userRepository;
     private final FavoriteRepository favoriteRepository;
     private final StockTransactionRepository stockTransactionRepository;
-    private final StockCoinWalletService stockCoinWalletService;
 
     @Autowired
-    public StockServiceImpl(StockHolidayRepository stockHolidayRepository, StockRepository stockRepository, StockCoinService stockCoinService, UserRepository userRepository, FavoriteRepository favoriteRepository, StockTransactionRepository stockTransactionRepository, StockCoinWalletService stockCoinWalletService) {
+    public StockServiceImpl(StockHolidayRepository stockHolidayRepository, StockRepository stockRepository, StockCoinService stockCoinService, UserRepository userRepository, FavoriteRepository favoriteRepository, StockTransactionRepository stockTransactionRepository) {
         this.stockHolidayRepository = stockHolidayRepository;
         this.stockRepository = stockRepository;
         this.stockCoinService = stockCoinService;
         this.userRepository = userRepository;
         this.favoriteRepository = favoriteRepository;
         this.stockTransactionRepository = stockTransactionRepository;
-        this.stockCoinWalletService = stockCoinWalletService;
     }
 
     @PostConstruct
@@ -569,55 +567,6 @@ public class StockServiceImpl implements StockService {
         return holidayResponseDtoList;
     }
 
-
-    public StockCompanyFavResponseDto getCompanyFavByStockId(String stockId) {
-        // 로고 URL
-        String logoUrl ="https://file.alphasquare.co.kr/media/images/stock_logo/kr/" + stockId + ".png";
-
-        // 초기화
-        String companyName = getStockNameByStockId(stockId);
-        double price = Double.parseDouble(getCurrentPrice(stockId));
-        double stockPrice = price/100;
-        boolean favorite = false;
-        double preparation_day_before_rate = 0;
-
-
-        OkHttpClient client = new OkHttpClient();
-
-        // 한국 현재 주식 시세 URL 생성
-        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-price").newBuilder();
-        urlBuilder.addQueryParameter("FID_COND_MRKT_DIV_CODE", "J");
-        urlBuilder.addQueryParameter("FID_INPUT_ISCD", stockId);
-        String url = urlBuilder.build().toString();
-
-        // 헤더 및 토큰 작성
-        Request request = new Request.Builder()
-                .url(url)
-                .header("authorization", "Bearer " + approvalToken)
-                .header("appkey", app_Key)
-                .header("appsecret", app_Secret)
-                .header("tr_id", "FHKST01010100")
-                .header("Content-Type", "application/json; charset=utf-8")
-                .build();
-
-        // 응답 처리
-        try (Response response = client.newCall(request).execute()) {
-            if (response.isSuccessful() && response.body() != null) {
-                JSONObject jsonObject = new JSONObject(response.body().string());
-                JSONObject outputs = jsonObject.getJSONObject("output");
-
-                // 전일대비 가격율을 가져옵니다.
-                String prdy_vrss = outputs.getString("prdy_ctrt");
-                preparation_day_before_rate = Double.parseDouble(prdy_vrss);
-                favorite = true;
-            }
-        } catch (IOException | JSONException e) {
-            e.printStackTrace();
-        }
-        // DTO 객체 생성 및 반환   String stockLogoUrl, String companyName, double price, double stockPrice, double preparation_day_before_rate,boolean favorite
-        return new StockCompanyFavResponseDto(stockId,logoUrl, companyName, price, stockPrice,preparation_day_before_rate,favorite);
-    }
-
     public String getCurrentPrice(String stockCode) {
         HttpUrl.Builder urlBuilder = HttpUrl.parse("https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-price").newBuilder();
         urlBuilder.addQueryParameter("FID_COND_MRKT_DIV_CODE", "J");
@@ -644,6 +593,43 @@ public class StockServiceImpl implements StockService {
                 String price = (String) outputs.get("stck_prpr");
 
                 return price;
+            } else {
+                return null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+    @Override
+    public String getDayBeforeRate(String stockCode) {
+        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-price").newBuilder();
+        urlBuilder.addQueryParameter("FID_COND_MRKT_DIV_CODE", "J");
+        urlBuilder.addQueryParameter("FID_INPUT_ISCD", stockCode);
+        String url = urlBuilder.build().toString(); /*한국 현재 주식 시세 url*/
+
+        OkHttpClient client = new OkHttpClient();
+        StockPriceResponseDto stockPriceResponseDto = new StockPriceResponseDto();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .header("authorization", "Bearer " + approvalToken)
+                .header("appkey", app_Key)
+                .header("appsecret", app_Secret)
+                .header("tr_id", "FHKST01010100")
+                .header("Content-type", "application/json; charset=utf-8")
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful() && response.body() != null) {
+                JSONObject jsonObject = new JSONObject(response.body().string());
+                JSONObject outputs = jsonObject.getJSONObject("output");
+                stockPriceResponseDto.setCurrnet_time(String.valueOf(LocalDateTime.now()));
+                String rate = (String) outputs.get("prdy_ctrt");
+
+                return rate;
             } else {
                 return null;
             }
@@ -956,7 +942,7 @@ public class StockServiceImpl implements StockService {
         }
         return null;
     }
-  
+
     @Override
     public Integer getUsersStockQuantity(String uid, String stockId) {
         Long userId = userRepository.getByUid(uid).getId();
@@ -1005,7 +991,21 @@ public class StockServiceImpl implements StockService {
             ownedStockResponseDto.setMy_per_conclusion_price(temp.getMy_per_conclusion_price());
             ownedStockResponseDto.setReal_per_coin(current_price/100);
             ownedStockResponseDto.setReal_per_price(current_price);
-            ownedStockResponseDto.setFavorite_status(temp.isFavorite_status());
+
+            List<Favorite> favoriteList = favoriteRepository.findAllByUserId(user.getId());
+            boolean isFavoriteSet = false;
+            if (!favoriteList.isEmpty()) {
+                for (Favorite favorite : favoriteList) {
+                    if (favorite.getStockId().equals(temp.getStockCode())) {
+                        ownedStockResponseDto.setFavorite_status(true);
+                        isFavoriteSet = true;
+                        break;
+                    }
+                }
+            }
+            if (!isFavoriteSet) {
+                ownedStockResponseDto.setFavorite_status(false);
+            }
             ownedStockResponseDtoList.add(ownedStockResponseDto);
         }
         return ownedStockResponseDtoList;
@@ -1024,6 +1024,7 @@ public class StockServiceImpl implements StockService {
             stockTransactionHistoryResponseDto.setStockName(temp.getStockName());
             stockTransactionHistoryResponseDto.setUnitPrice((int) temp.getUnitPrice());
             stockTransactionHistoryResponseDto.setQuantity(temp.getQuantity());
+            stockTransactionHistoryResponseDto.setStockLogo(getCompanyInfoByStockId(temp.getStockCode()).getStockLogoUrl());
 
             stockTransactionHistoryResponseDtoList.add(stockTransactionHistoryResponseDto);
         }
@@ -1031,5 +1032,4 @@ public class StockServiceImpl implements StockService {
         return stockTransactionHistoryResponseDtoList;
     }
 }
-
 
