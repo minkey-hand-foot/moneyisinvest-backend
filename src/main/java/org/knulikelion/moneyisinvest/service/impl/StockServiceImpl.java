@@ -44,10 +44,8 @@ import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -196,6 +194,71 @@ public class StockServiceImpl implements StockService {
         }
     }
 
+    @Override
+    public List<CompanyResultTableResponseDto> getCompanyResultTable() throws IOException {
+        List<CompanyResultTableResponseDto> companyResultTableResponseDtoList = new ArrayList<>();
+        String url = "https://finance.naver.com/item/main.naver?code=005930";
+        List<String> indicators = Arrays.asList("매출액", "영업이익", "당기순이익", "부채비율", "당좌비율", "유보율");
+
+        Document doc = Jsoup.connect(url).get();
+        Element table = doc.selectFirst("table.tb_type1.tb_num.tb_type1_ifrs");
+        Elements rows = table.select("tbody > tr");
+
+        // 연도 부분만 저장합니다.
+        Elements yearElements = table.select("thead > tr > th:contains(.12)");
+
+        List<String> perList = new ArrayList<>();
+        List<String> pbrList = new ArrayList<>();
+
+        Elements ratioRows = doc.select("table.tb_type1.tb_num.tb_type1_ifrs > tbody > tr");
+        for (Element row : ratioRows) {
+            String rowTitle = row.select("th").text();
+            if (rowTitle.equals("PER(배)")) {
+                Elements tds = row.select("td");
+                tds.forEach(td -> perList.add(td.text()));
+            } else if (rowTitle.contains("PBR(배)")) {
+                Elements tds = row.select("td");
+                tds.forEach(td -> pbrList.add(td.text()));
+            }
+        }
+
+        for (int i = 0; i < rows.size(); i++) {
+            Element row = rows.get(i);
+            String rowTitle = row.select("th").text();
+
+            if (indicators.contains(rowTitle)) {
+                for (int j = 0; j < yearElements.size(); j++) {
+                    Map<String, String> resultMap = new HashMap<>();
+
+                    for (int k = 0; k < rows.size(); k++) {
+                        String indicator = rows.get(k).selectFirst("th").text();
+                        String value = rows.get(k).select("td").get(j).text();
+                        resultMap.put(indicator, value);
+                    }
+
+                    CompanyResultTableResponseDto dto = CompanyResultTableResponseDto.builder()
+                            .date(yearElements.get(j).text())
+                            .take(resultMap.get("매출액"))
+                            .operatingProfit(resultMap.get("영업이익"))
+                            .netIncome(resultMap.get("당기순이익"))
+                            .debtRatio(resultMap.get("부채비율"))
+                            .quickRatio(resultMap.get("당좌비율"))
+                            .retentionRate(resultMap.get("유보율"))
+                            .per(perList.get(j))
+                            .pbr(pbrList.get(j))
+                            .build();
+
+                    companyResultTableResponseDtoList.add(dto);
+
+                    if (companyResultTableResponseDtoList.size() >= 4) {
+                        return companyResultTableResponseDtoList;
+                    }
+                }
+            }
+        }
+
+        return companyResultTableResponseDtoList;
+    }
 
     @Override
     public StockCompanyInfoResponseDto getCompanyInfoByStockId(String stockId) {
