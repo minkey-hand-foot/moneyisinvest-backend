@@ -72,8 +72,8 @@ public class StockController {
     }
 
     @GetMapping("/get/companyResult")
-    public List<CompanyResultTableResponseDto> getCompanyResultTable() throws IOException {
-        return stockService.getCompanyResultTable();
+    public List<CompanyResultTableResponseDto> getCompanyResultTable(@RequestParam String stockId) throws IOException {
+        return stockService.getCompanyResultTable(stockId);
     }
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")

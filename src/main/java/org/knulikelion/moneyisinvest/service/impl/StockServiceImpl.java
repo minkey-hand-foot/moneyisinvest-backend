@@ -195,9 +195,9 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public List<CompanyResultTableResponseDto> getCompanyResultTable() throws IOException {
+    public List<CompanyResultTableResponseDto> getCompanyResultTable(String stockId) throws IOException {
         List<CompanyResultTableResponseDto> companyResultTableResponseDtoList = new ArrayList<>();
-        String url = "https://finance.naver.com/item/main.naver?code=005930";
+        String url = "https://finance.naver.com/item/main.naver?code=" + stockId;
         List<String> indicators = Arrays.asList("매출액", "영업이익", "당기순이익", "부채비율", "당좌비율", "유보율");
 
         Document doc = Jsoup.connect(url).get();
