@@ -27,12 +27,4 @@ public class Favorite {
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
     private User user;
-
-    @CreatedDate
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
-
 }
