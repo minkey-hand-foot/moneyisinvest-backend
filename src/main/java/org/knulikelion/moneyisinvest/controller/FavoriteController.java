@@ -7,7 +7,6 @@ import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.StockCompanyFavResponseDto;
 import org.knulikelion.moneyisinvest.service.FavoriteService;
-import org.knulikelion.moneyisinvest.service.StockService;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -21,7 +20,6 @@ import java.util.List;
 public class FavoriteController {
 
     private final FavoriteService favoriteService;
-    private final StockService stockService;
     private final JwtTokenProvider jwtTokenProvider;
 
     // 관심 주식 추가
