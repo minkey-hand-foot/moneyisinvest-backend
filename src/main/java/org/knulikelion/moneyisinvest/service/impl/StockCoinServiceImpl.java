@@ -228,6 +228,21 @@ public class StockCoinServiceImpl implements StockCoinService {
     }
 
     @Override
+    public String giveSignUpCoin(String address) {
+        Transaction transaction = Transaction.builder()
+                .from(stockCoinWalletService.getWalletAddress("SYSTEM"))
+                .to(address)
+                .amount(1000)
+                .fee(0)
+                .build();
+
+        processTransaction(transaction);
+        stockCoinWalletService.updateWalletBalances(transaction);
+
+        return "코인 지급 완료";
+    }
+
+    @Override
     public void processTransaction(Transaction transaction) {
         // Check if the transaction is valid based on your criteria
         if (isValidTransaction(transaction)) {

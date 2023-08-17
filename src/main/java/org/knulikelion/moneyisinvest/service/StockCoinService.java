@@ -21,5 +21,8 @@ public interface StockCoinService {
     BaseResponseDto sellStock(TransactionToSystemRequestDto transactionToSystemRequestDto);
 
     String createSystemTransaction(String username, double amount);
+
+    String giveSignUpCoin(String address);
+
     void processTransaction(Transaction transaction);
 }

@@ -4,6 +4,7 @@ import org.knulikelion.moneyisinvest.common.CommonResponse;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.request.SignInRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.TransactionToSystemRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.MypageResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignInResultDto;
 import org.knulikelion.moneyisinvest.data.dto.request.SignUpRequestDto;
@@ -72,10 +73,12 @@ public class SignServiceImpl implements SignService {
                     .build();
 
             LOGGER.info("사용자의 새 지갑 생성, UID: " + signUpRequestDto.getUid());
-            stockCoinWalletService.createWallet(signUpRequestDto.getUid());
+            BaseResponseDto walletResult = stockCoinWalletService.createWallet(signUpRequestDto.getUid());
 
-            stockCoinService.createSystemTransaction(signUpRequestDto.getUid(), 1000);
-
+            if(walletResult.isSuccess()) {
+                stockCoinService.giveSignUpCoin(walletResult.getMsg());
+            }
+            
         SignUpResultDto signUpResultDto = new SignInResultDto();
 
 //      signUpRequestDto에서 입력받는 uid가 이메일 주소인지 확인
