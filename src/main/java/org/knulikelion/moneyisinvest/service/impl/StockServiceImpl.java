@@ -723,7 +723,8 @@ public class StockServiceImpl implements StockService {
 
         if (transactionResult.isSuccess()) {
             log.info("[buyStock] stock 거래 성공 후 DB 저장");
-            if (stockRepository.findByStockCode(stockBuyRequestDto.getStockCode()) == null) {
+            Stock foundStock = stockRepository.findByUserIdAndStockCode(userRepository.getByUid(uid).getId(), stockBuyRequestDto.getStockCode());
+            if(foundStock == null) {
                 log.info("[buyStock] 신규 매수 종목 코드 : {}", stockBuyRequestDto.getStockCode());
                 Stock stock = new Stock();
                 stock.setStockUrl(getCompanyInfoByStockId(stockBuyRequestDto.getStockCode()).getStockLogoUrl()); // 로고
@@ -783,33 +784,34 @@ public class StockServiceImpl implements StockService {
             } else {
                 log.info("[withdrawStockCoinToSystem]stock 거래 성공 후 DB 저장");
                 log.info("[buyStock] 기존 보유 종목 코드 : {}", stockBuyRequestDto.getStockCode());
-                Stock findStock = stockRepository.findByStockCode(stockBuyRequestDto.getStockCode());
+//                Stock findStock = foundStock;
+//                Stock findStock = stockRepository.findByStockCode(stockBuyRequestDto.getStockCode());
 
-                Integer myAmount = findStock.getStockAmount() + Integer.parseInt(stockBuyRequestDto.getStockAmount());
-                findStock.setStockAmount(myAmount); // 총 보유 수량
+                Integer myAmount = foundStock.getStockAmount() + Integer.parseInt(stockBuyRequestDto.getStockAmount());
+                foundStock.setStockAmount(myAmount); // 총 보유 수량
 
                 Integer current_price = Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode()));
                 Integer compare_price = current_price * myAmount;
-                Integer my_total_price = findStock.getMy_conclusion_sum_price() + (Integer.parseInt(stockBuyRequestDto.getConclusion_price()) * Integer.parseInt(stockBuyRequestDto.getStockAmount()));
+                Integer my_total_price = foundStock.getMy_conclusion_sum_price() + (Integer.parseInt(stockBuyRequestDto.getConclusion_price()) * Integer.parseInt(stockBuyRequestDto.getStockAmount()));
                 Double rate = (((double) compare_price - my_total_price) / my_total_price) * 100;
                 rate = Math.round(rate * 1000) / 1000.0;
-                findStock.setRate(rate); // 수익률
+                foundStock.setRate(rate); // 수익률
 
-                findStock.setReal_sum_coin_price(((Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode())))*myAmount) / 100); // 실제 종목의 평가 총 코인 가격
+                foundStock.setReal_sum_coin_price(((Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode())))*myAmount) / 100); // 실제 종목의 평가 총 코인 가격
 
-                findStock.setReal_sum_price(Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode()))*myAmount); // 실제 종목의 평가 총 가격
+                foundStock.setReal_sum_price(Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode()))*myAmount); // 실제 종목의 평가 총 가격
 
-                findStock.setMy_conclusion_sum_coin(my_total_price / 100); // 내 체결 총 코인 가격
+                foundStock.setMy_conclusion_sum_coin(my_total_price / 100); // 내 체결 총 코인 가격
 
-                findStock.setMy_conclusion_sum_price(my_total_price); // 내 체결 총 가격
+                foundStock.setMy_conclusion_sum_price(my_total_price); // 내 체결 총 가격
 
-                findStock.setMy_per_conclusion_coin((my_total_price / myAmount) / 100); // 보유 평 코인
+                foundStock.setMy_per_conclusion_coin((my_total_price / myAmount) / 100); // 보유 평 코인
 
-                findStock.setMy_per_conclusion_price(my_total_price / myAmount); // 평 단가
+                foundStock.setMy_per_conclusion_price(my_total_price / myAmount); // 평 단가
 
-                findStock.setReal_per_coin(Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode()))/100); // 실제 평 코인
+                foundStock.setReal_per_coin(Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode()))/100); // 실제 평 코인
 
-                findStock.setReal_per_price(Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode()))); // 실제 평 단가
+                foundStock.setReal_per_price(Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode()))); // 실제 평 단가
 
                 User user = userRepository.getByUid(uid);
                 List<Favorite> favoriteList = favoriteRepository.findAllByUserId(user.getId());
@@ -817,16 +819,16 @@ public class StockServiceImpl implements StockService {
                 if (!favoriteList.isEmpty()) { // 찜 여부
                     for (Favorite favorite : favoriteList) {
                         if (favorite.getStockId().equals(stockBuyRequestDto.getStockCode())) {
-                            findStock.setFavorite_status(true);
+                            foundStock.setFavorite_status(true);
                             isFavoriteSet = true;
                             break;
                         }
                     }
                 }
                 if (!isFavoriteSet) {
-                    findStock.setFavorite_status(false);
+                    foundStock.setFavorite_status(false);
                 }
-                stockRepository.save(findStock);
+                stockRepository.save(foundStock);
             }
 
             StockTransaction stockTransaction = StockTransaction.builder()
