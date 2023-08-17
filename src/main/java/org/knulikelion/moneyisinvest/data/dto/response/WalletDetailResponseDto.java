@@ -11,6 +11,6 @@ public class WalletDetailResponseDto {
     private String address;
     private String type;
     private String createdAt;
-    private double balance;
-    private double won;
+    private String balance;
+    private String won;
 }
