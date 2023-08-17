@@ -80,6 +80,7 @@ public class SupportServiceImpl implements SupportService {
                 if (temp.getId().equals(supprotId)) {
                     responseDto = new SupportResponseDto();
 
+                    responseDto.setSupportId(temp.getId());
                     responseDto.setUid(temp.getUser().getUid());
                     responseDto.setTitle(temp.getTitle());
                     responseDto.setStatus(temp.getStatus());
@@ -104,6 +105,7 @@ public class SupportServiceImpl implements SupportService {
 
         for(Support getSupport : getSupports) {
             SupportResponseDto supportResponseDto = new SupportResponseDto();
+            supportResponseDto.setSupportId(getSupport.getId());
             supportResponseDto.setUid(getSupport.getUser().getUid());
             supportResponseDto.setTitle(getSupport.getTitle());
             supportResponseDto.setContents(getSupport.getContents());
