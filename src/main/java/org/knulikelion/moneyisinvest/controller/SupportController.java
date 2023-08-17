@@ -53,8 +53,8 @@ public class SupportController {
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @DeleteMapping("/remove")
-    public BaseResponseDto removeSupport(@RequestParam("uid") String uid, @RequestParam("supportId") Long supportId) {
-        return supportService.removeSupport(uid,supportId);
+    public BaseResponseDto removeSupport(HttpServletRequest request, @RequestParam("supportId") Long supportId) {
+        return supportService.removeSupport(jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")),supportId);
     }
 
 }
