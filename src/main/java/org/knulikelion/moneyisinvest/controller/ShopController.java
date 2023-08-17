@@ -5,12 +5,17 @@ import io.swagger.annotations.ApiImplicitParams;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.ShopHistoryResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.ShopItemListResponseDto;
 import org.knulikelion.moneyisinvest.data.entity.Shop;
 import org.knulikelion.moneyisinvest.service.ProfileService;
 import org.knulikelion.moneyisinvest.service.ShopService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -65,15 +70,20 @@ public class ShopController {
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @GetMapping("/get/items")
-    public List<Shop> getAllItems() {
-        return shopService.getAllItems();
+    public ResponseEntity<Page<ShopItemListResponseDto>> getAllItems(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ShopItemListResponseDto> items = shopService.getAllItems(pageable);
+        return new ResponseEntity<>(items, HttpStatus.OK);
     }
+
 
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @GetMapping("/get/items/id")
-    public Optional<Shop> getItemsById(@RequestParam Long id) {
+    public ShopItemListResponseDto getItemsById(@RequestParam Long id) {
         return shopService.getItemsById(id);
     }
 

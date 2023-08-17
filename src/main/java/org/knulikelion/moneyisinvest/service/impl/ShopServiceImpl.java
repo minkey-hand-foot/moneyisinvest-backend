@@ -3,6 +3,7 @@ package org.knulikelion.moneyisinvest.service.impl;
 import org.knulikelion.moneyisinvest.data.dto.request.TransactionToSystemRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.ShopHistoryResponseDto;
+import org.knulikelion.moneyisinvest.data.dto.response.ShopItemListResponseDto;
 import org.knulikelion.moneyisinvest.data.entity.Shop;
 import org.knulikelion.moneyisinvest.data.entity.ShopHistory;
 import org.knulikelion.moneyisinvest.data.repository.ShopHistoryRepository;
@@ -11,6 +12,8 @@ import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.ShopService;
 import org.knulikelion.moneyisinvest.service.StockCoinService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,7 +27,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 
 @Service
 public class ShopServiceImpl implements ShopService {
@@ -44,9 +46,17 @@ public class ShopServiceImpl implements ShopService {
 
 
     @Override
-    public List<Shop> getAllItems() {
-        return shopRepository.findAll();
+    public Page<ShopItemListResponseDto> getAllItems(Pageable pageable) {
+        Page<Shop> shopPage = shopRepository.findAll(pageable);
+        return shopPage.map(shop -> ShopItemListResponseDto.builder()
+                .id(shop.getId())
+                .itemName(shop.getItemName())
+                .category(shop.getCategory())
+                .imageUrl(shop.getImageUrl())
+                .price(NumberFormat.getInstance(Locale.getDefault()).format(shop.getPrice()))
+                .build());
     }
+
 
     @Override
     public BaseResponseDto uploadShopItems(MultipartFile file, String itemName, String itemCategory, double stockPrice) {
@@ -64,7 +74,7 @@ public class ShopServiceImpl implements ShopService {
                     .itemName(itemName)
                     .imageUrl("https://moneyisinvest.kr/api/v1/shop/images/" + fileName)
                     .category(itemCategory)
-                    .price(stockPrice)
+                    .price(stockPrice * 70)
                     .build();
 
             shopRepository.save(shop);
@@ -80,8 +90,19 @@ public class ShopServiceImpl implements ShopService {
     }
 
     @Override
-    public Optional<Shop> getItemsById(Long id) {
-        return shopRepository.findById(id);
+    public ShopItemListResponseDto getItemsById(Long id) {
+        Shop shop = shopRepository.findById(id).get();
+        NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+
+        ShopItemListResponseDto shopItemListResponseDto = ShopItemListResponseDto.builder()
+                .id(shop.getId())
+                .imageUrl(shop.getImageUrl())
+                .category(shop.getCategory())
+                .itemName(shop.getItemName())
+                .price(nf.format(shop.getPrice()))
+                .build();
+
+        return shopItemListResponseDto;
     }
 
     @Override
