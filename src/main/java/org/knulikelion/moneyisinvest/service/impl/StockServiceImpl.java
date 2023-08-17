@@ -40,6 +40,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.NumberFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -1037,6 +1038,7 @@ public class StockServiceImpl implements StockService {
         List<OwnedStockResponseDto> ownedStockResponseDtoList = new ArrayList<>();
 
         for (Stock temp : stockList){
+            NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
             OwnedStockResponseDto ownedStockResponseDto = new OwnedStockResponseDto();
             ownedStockResponseDto.setStockUrl(temp.getStockUrl());
             ownedStockResponseDto.setStockCode(temp.getStockCode());
@@ -1051,14 +1053,15 @@ public class StockServiceImpl implements StockService {
             ownedStockResponseDto.setRate(rate);
             ownedStockResponseDto.setStockAmount(temp.getStockAmount());
 
-            ownedStockResponseDto.setReal_sum_coin_price((current_price * amount)/100);
-            ownedStockResponseDto.setReal_sum_price(current_price*amount);
-            ownedStockResponseDto.setMy_conclusion_sum_coin(temp.getMy_conclusion_sum_coin());
-            ownedStockResponseDto.setMy_conclusion_sum_price(temp.getMy_conclusion_sum_price());
-            ownedStockResponseDto.setMy_per_conclusion_coin(temp.getMy_per_conclusion_coin());
-            ownedStockResponseDto.setMy_per_conclusion_price(temp.getMy_per_conclusion_price());
-            ownedStockResponseDto.setReal_per_coin(current_price/100);
-            ownedStockResponseDto.setReal_per_price(current_price);
+
+            ownedStockResponseDto.setReal_sum_coin_price(nf.format((current_price * amount) / 100));
+            ownedStockResponseDto.setReal_sum_price(nf.format(current_price * amount));
+            ownedStockResponseDto.setMy_conclusion_sum_coin(nf.format(temp.getMy_conclusion_sum_coin()));
+            ownedStockResponseDto.setMy_conclusion_sum_price(nf.format(temp.getMy_conclusion_sum_price()));
+            ownedStockResponseDto.setMy_per_conclusion_coin(nf.format(temp.getMy_per_conclusion_coin()));
+            ownedStockResponseDto.setMy_per_conclusion_price(nf.format(temp.getMy_per_conclusion_price()));
+            ownedStockResponseDto.setReal_per_coin(nf.format(current_price / 100));
+            ownedStockResponseDto.setReal_per_price(nf.format(current_price));
 
             List<Favorite> favoriteList = favoriteRepository.findAllByUserId(user.getId());
             boolean isFavoriteSet = false;

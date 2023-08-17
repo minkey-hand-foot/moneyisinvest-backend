@@ -15,13 +15,13 @@ public class OwnedStockResponseDto {
     private String stockName;
     private Double rate;
     private int stockAmount;
-    private int real_sum_coin_price;
-    private int real_sum_price;
-    private int my_conclusion_sum_coin;
-    private int my_conclusion_sum_price;
-    private int my_per_conclusion_coin;
-    private int my_per_conclusion_price;
-    private int real_per_coin;
-    private int real_per_price;
+    private String real_sum_coin_price;
+    private String real_sum_price;
+    private String my_conclusion_sum_coin;
+    private String my_conclusion_sum_price;
+    private String my_per_conclusion_coin;
+    private String my_per_conclusion_price;
+    private String real_per_coin;
+    private String real_per_price;
     private boolean favorite_status;
 }
