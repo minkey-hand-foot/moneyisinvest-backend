@@ -71,18 +71,6 @@ public class FavoriteServiceImpl implements FavoriteService {
 
         return baseResponseDto;
     }
-        /*if(favorites != null && !favorites.isEmpty()) {
-
-            for(Favorite favorite : favorites) {
-                favorite.setUser(null);
-                favoriteRepository.delete(favorite);
-            }
-            baseResponseDto.setSuccess(true);
-            baseResponseDto.setMsg("관심 종목이 삭제 완료되었습니다.");
-        }else {
-            baseResponseDto.setSuccess(false);
-            baseResponseDto.setMsg("해당 관심 종목을 찾을 수 없습니다.");
-        }*/
     @Override
     public List<StockCompanyFavResponseDto> findUserFavoriteStockIds(String uid) {
         User user = userRepository.findByUid(uid);
