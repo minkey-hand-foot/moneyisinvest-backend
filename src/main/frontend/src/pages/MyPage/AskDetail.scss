@@ -1,0 +1,86 @@
+.askWriteContainer {
+    margin: 0;
+    .askWriteBox {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        .askWriteContent {
+            flex-grow: 1;
+            padding: auto;
+            margin: auto;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            margin-top: 3.12rem;
+            
+            .profile {
+                margin: 3.6212rem 1.94rem 0 0;
+                padding: 0;
+            }
+            .askWriteProfile {
+                display: flex;
+                flex-direction: column;
+                gap: 1.94rem;
+                .askWriteTitle {
+                    color: #000;
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                }
+                .askWriteInfo {
+                    .askDetailInfo-title {
+                        width: 49.0625rem;
+                        height: 3.5625rem;
+                        border-radius: 0.625rem 0.625rem 0rem 0rem;
+                        background: #F0F9F8;
+                        border: 0;
+                        outline: none;
+                        padding: 1rem 2.56rem;
+                        color: #000;
+                        font-size: 1rem;
+                        font-weight: 600;
+                        border: 0;
+                        background-color: none;
+                        outline: none;
+                        display: flex;
+                        text-align: center;
+                        justify-content: space-between;
+                        align-items: center;
+                        .askDetailInfo-date {
+                            color: #85D6D1;
+                            text-align: center;
+                            font-size: 0.875rem;
+                            font-weight: 500;
+                        }
+                        &:placeholder {
+                            color: #B0B0B0;
+                        }
+                    }
+                    .askDetailInfo-content {
+                        width: 49.0625rem;
+                        border-radius: 0rem 0rem 0.625rem 0.625rem;
+                        border: 2px solid #D1EFEE;
+                        margin-bottom: 1.75rem;
+                        align-items: center;
+                        padding: 2.25rem 2.56rem;
+                        color: #000;
+                        font-size: 0.875rem;
+                        font-weight: 500;
+                        scrollbar-width: none; /* Firefox에 대한 스크롤바 숨김 */
+                        -ms-overflow-style: none; /* IE 및 Edge에 대한 스크롤바 숨김 */
+                        height: auto; /* 높이가 자동으로 조정되도록 설정 */
+                        max-height: 32rem;
+                        &::-webkit-scrollbar {
+                            width: 0px;
+                            height: 0px;
+                        }
+                    }
+                    .askWriteInfo-button {
+                        display: flex;
+                        justify-content: center;
+                    }
+                }
+            }
+        }
+    }
+}
