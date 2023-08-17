@@ -3,7 +3,6 @@ package org.knulikelion.moneyisinvest.service.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
-import org.knulikelion.moneyisinvest.data.dto.request.TransactionToSystemRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.TransactionHistoryResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.WalletDetailResponseDto;
@@ -15,7 +14,6 @@ import org.knulikelion.moneyisinvest.data.repository.BlockRepository;
 import org.knulikelion.moneyisinvest.data.repository.StockCoinWalletRepository;
 import org.knulikelion.moneyisinvest.data.repository.StockCoinWalletPrivateKeyRepository;
 import org.knulikelion.moneyisinvest.data.repository.TransactionRepository;
-import org.knulikelion.moneyisinvest.service.StockCoinService;
 import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,10 +25,7 @@ import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service

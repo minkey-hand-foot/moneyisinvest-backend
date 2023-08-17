@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 
 /**
  *
@@ -36,6 +38,10 @@ public class StockCoinController {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
+    public static String formatNumberWithComma(int number) {
+        NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+        return nf.format(number);
+    }
 
     @PostConstruct
     public void initialize() {
@@ -51,10 +57,9 @@ public class StockCoinController {
     })
     @ApiOperation(value = "사용자의 로그인 토큰으로 지갑 잔액 조회")
     @GetMapping("/get/balance")
-    public double getWalletBalance(HttpServletRequest request) {
-        return stockCoinWalletService.getWalletBalanceByUsername(
-                jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN"))
-        );
+    public String getWalletBalance(HttpServletRequest request) {
+        double walletBalance = stockCoinWalletService.getWalletBalanceByUsername(jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")));
+        return formatNumberWithComma((int) walletBalance);
     }
 
 //    사용자의 로그인 Token으로 지갑 주소 조회
