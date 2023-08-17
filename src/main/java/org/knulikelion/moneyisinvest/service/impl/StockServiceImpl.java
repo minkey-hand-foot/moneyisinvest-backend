@@ -1099,5 +1099,10 @@ public class StockServiceImpl implements StockService {
 
         return stockTransactionHistoryResponseDtoList;
     }
+
+    @Override
+    public String calculateCoin(int amount, String price) {
+        return String.valueOf((amount * Integer.parseInt(price))/100);
+    }
 }
 

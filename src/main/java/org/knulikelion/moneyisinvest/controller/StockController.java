@@ -120,4 +120,8 @@ public class StockController {
         String uid = jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN"));
         return stockService.getStockTransactionHistory(uid);
     }
+    @GetMapping("/calculate")
+    public String calculateCoin(@RequestParam int amount, String price){
+        return stockService.calculateCoin(amount, price);
+    }
 }
