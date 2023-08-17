@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -218,7 +219,10 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
                     int coinPrice = (int) (stckPrprDouble / 100);
                     stockRank.setCoinPrice(String.valueOf(coinPrice));
                     stockRank.setRank(obj.getString("data_rank"));
-                    stockRank.setStockPrice(obj.getString("stck_prpr"));
+
+                    NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+                    String stockPrice = nf.format(Integer.parseInt(obj.getString("stck_prpr")));
+                    stockRank.setStockPrice(stockPrice);
                     stockRank.setPreparation_day_before_rate(obj.getString("prdy_ctrt"));
                     outputList.add(stockRank);
                 }
