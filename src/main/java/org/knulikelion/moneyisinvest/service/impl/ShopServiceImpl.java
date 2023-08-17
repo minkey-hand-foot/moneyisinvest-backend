@@ -19,9 +19,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -132,7 +134,9 @@ public class ShopServiceImpl implements ShopService {
             shopHistoryResponseDto.setItemName(temp.getShop().getItemName());
             shopHistoryResponseDto.setCreatedAt(temp.getCreatedAt());
             shopHistoryResponseDto.setUsed(temp.isUsed());
-            shopHistoryResponseDto.setPrice(temp.getShop().getPrice());
+
+            NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+            shopHistoryResponseDto.setPrice(nf.format(temp.getShop().getPrice()));
 
             shopHistoryResponseDtoList.add(shopHistoryResponseDto);
         }

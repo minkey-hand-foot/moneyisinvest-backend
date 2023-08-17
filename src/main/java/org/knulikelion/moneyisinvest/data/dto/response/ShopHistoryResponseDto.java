@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class ShopHistoryResponseDto {
     private String imageUrl;
     private String itemName;
-    private double price;
+    private String price;
     private LocalDateTime createdAt;
     private boolean isUsed;
 }
