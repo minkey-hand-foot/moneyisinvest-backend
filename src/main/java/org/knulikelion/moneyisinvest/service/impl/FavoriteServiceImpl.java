@@ -31,6 +31,14 @@ public class FavoriteServiceImpl implements FavoriteService {
 
         User getUser = userRepository.findByUid(uid);
 
+        Favorite existFavorite = favoriteRepository.findByUserAndStockId(getUser,stockId);
+
+        if(existFavorite != null) {
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("이미 관심 등록한 주식입니다.");
+            return baseResponseDto;
+        }
+
         Favorite favorite = new Favorite();
         favorite.setUser(getUser);
         favorite.setStockId(stockId);
@@ -47,9 +55,23 @@ public class FavoriteServiceImpl implements FavoriteService {
 
         User user = userRepository.findByUid(uid);
 
-        List<Favorite> favorites = favoriteRepository.findByUserAndStockId(user, stockId);
+        Favorite existFavorite = favoriteRepository.findByUserAndStockId(user, stockId);
 
-        if(favorites != null && !favorites.isEmpty()) {
+        if (existFavorite != null) {
+            existFavorite.setUser(null);
+            userRepository.save(user);
+
+            favoriteRepository.delete(existFavorite);
+            baseResponseDto.setSuccess(true);
+            baseResponseDto.setMsg("관심 종목이 삭제 완료되었습니다.");
+        } else {
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("해당 관심 종목을 찾을 수 없습니다.");
+        }
+
+        return baseResponseDto;
+    }
+        /*if(favorites != null && !favorites.isEmpty()) {
 
             for(Favorite favorite : favorites) {
                 favorite.setUser(null);
@@ -60,9 +82,7 @@ public class FavoriteServiceImpl implements FavoriteService {
         }else {
             baseResponseDto.setSuccess(false);
             baseResponseDto.setMsg("해당 관심 종목을 찾을 수 없습니다.");
-        }
-        return baseResponseDto;
-    }
+        }*/
     @Override
     public List<StockCompanyFavResponseDto> findUserFavoriteStockIds(String uid) {
         User user = userRepository.findByUid(uid);
