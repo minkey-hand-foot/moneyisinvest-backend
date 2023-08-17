@@ -55,6 +55,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/stock/**").permitAll()
                 .antMatchers("/api/v1/stock/buy").hasRole("USER")
                 .antMatchers("/api/v1/stock/sell").hasRole("USER")
+                .antMatchers("/api/v1/stock/get/users/**").hasRole("USER")
+
                 .antMatchers("/stock").permitAll()
                 .antMatchers("/stockRank").permitAll()
 //                코인 관련 임시 전체 허용
@@ -66,9 +68,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/payment/kakao/success").permitAll()
                 .antMatchers("/api/v1/payment/kakao/cancel").permitAll()
                 .antMatchers("/api/v1/payment/kakao/fail").permitAll()
-                .antMatchers("/api/v1/favorite/post").hasRole("USER")
-                .antMatchers("/api/v1/favorite/remove").hasRole("USER")
-                .antMatchers("/api/v1/favorite/get").hasRole("USER")
+//               관심 주식 기능 USER 허용
+                .antMatchers("/api/v1/favorite/**").hasRole("USER")
+//               문의 사항 기능 USER 허용
                 .antMatchers("/api/v1/support/**").hasRole("USER")
 
 //                이외 요청 Admin 권한 요청 가능
