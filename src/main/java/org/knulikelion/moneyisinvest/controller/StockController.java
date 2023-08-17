@@ -124,4 +124,8 @@ public class StockController {
     public String calculateCoin(@RequestParam int amount, String price){
         return stockService.calculateCoin(amount, price);
     }
+    @GetMapping("/stockRank")
+    public List<StockRankResponseDto> getStockRank() throws IOException {
+        return stockWebSocketService.getStockRank();
+    }
 }
