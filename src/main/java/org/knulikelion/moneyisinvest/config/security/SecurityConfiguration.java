@@ -72,7 +72,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/support/**").hasRole("USER")
 
 //                이외 요청 Admin 권한 요청 가능
-                .anyRequest().hasRole("ADMIN")
+                .anyRequest().permitAll()
 
                 .and()
                 .exceptionHandling().accessDeniedHandler(new CustomAccessDeniedHandler())

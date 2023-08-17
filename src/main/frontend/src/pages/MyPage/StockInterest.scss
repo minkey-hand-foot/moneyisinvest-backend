@@ -1,0 +1,150 @@
+.holdContainer {
+    margin: 0;
+    .holdBox {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        .holdContent {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            margin-top: 3.25rem;
+            .profile {
+                margin: 3.6925rem 1.87rem 0 0;
+                padding: 0;
+            }
+            .holdProfile {
+                display: flex;
+                flex-direction: column;
+                gap: 1.88rem;
+                .holdTitle {
+                    color: #000;
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                }    
+                .holdInfo {
+                    width: 49.0625rem;
+                    border-radius: 0rem 0rem 1.875rem 1.875rem;
+                    .holdInfo-top {
+                        height: 3.5625rem;
+                        border-radius: 0.625rem 0.625rem 0rem 0rem;
+                        background: #D1EFEE;
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        text-align: center;
+                        color: #3EB7AF;
+                        font-size: 1rem;
+                        font-weight: 600;
+                        justify-content: space-between;
+                        .holdInfo-title {
+                            display: flex;
+                            flex-direction: row;
+                            gap: 3rem;
+                            margin: auto 2.5rem;
+                            .holdInfo-image {
+                                width: 3.875rem; /* 버튼의 너비와 동일하게 설정 */
+                                height: 100%; /* 버튼의 높이와 동일하게 설정 */
+                                background-color: #D1EFEE; /* 빈 요소의 배경색을 설정해주세요 */
+                            }
+                            .holdInfo-event {
+                                width: 8rem;
+                            }
+                        }
+                        .holdInfo-content {
+                            display: flex;
+                            flex-direction: row;
+                            gap: 5.8rem;
+                            margin: auto 2.55rem;
+                            align-items: center;
+                            text-align: center;
+                            justify-content: space-between;
+                            .holdInfo-rate {
+                                display: flex;
+                                flex-direction: row;
+                                gap: 5.25rem;
+                            }
+                            .stockValue {
+                                display: flex;
+                                flex-direction: row;
+                                gap: 4.6rem;
+                            }
+                        }
+                    }
+                    .holdInfo-scrollable {
+                        max-height: 27.75rem; /* 원하는 높이로 조정 */
+                        overflow-y: scroll;
+                        scrollbar-width: none; /* Firefox에 대한 스크롤바 숨김 */
+                        -ms-overflow-style: none; /* IE 및 Edge에 대한 스크롤바 숨김 */
+                        &::-webkit-scrollbar {
+                            width: 0px;
+                            height: 0px;
+                        }
+                        .holdItems {
+                            height: 4.625rem;
+                            display: flex;
+                            flex-direction: row;
+                            align-items: center;
+                            text-align: center;
+                            justify-content: space-between;
+                            border-bottom: 0.0625rem solid #ABE2DF;
+                            .holdItem-title {
+                                display: flex;
+                                flex-direction: row;
+                                gap: 3.55rem;
+                                margin: auto 2.5rem;
+                                align-items: center;
+                                .holdItem-image {
+                                    width: 3.22056rem; /* 버튼의 너비와 동일하게 설정 */
+                                    height: 3.22056rem; /* 버튼의 높이와 동일하게 설정 */
+                                    border-radius: 50%;
+                                    background-color: #D1EFEE; /* 빈 요소의 배경색을 설정해주세요 */
+                                }
+                                .holdItem-events {
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: center;
+                                    width: 8rem;
+                                    .holdItem-event {
+                                        color: #000;
+                                        text-align: center;
+                                        font-size: 0.875rem;
+                                        font-weight: 500;
+                                    }
+                                    .holdItem-code {
+                                        color: #B0B0B0;
+                                        text-align: center;
+                                        font-size: 0.625rem;
+                                        font-weight: 500;
+                                    }
+                                }
+                            }
+                            .holdItem-content {
+                                display: flex;
+                                flex-direction: row;
+                                gap: 3.75rem;
+                                margin: auto 2.5rem;
+                                .holdItem-percent {
+                                    width: 3.1875rem;
+                                    color: #FF1C1C;
+                                    text-align: center;
+                                    font-size: 0.875rem;
+                                    font-weight: 500;
+                                }
+                                .holdItem-price {
+                                    width: 4.1875rem;
+                                    color: #797979;
+                                    text-align: center;
+                                    font-size: 0.875rem;
+                                    font-weight: 500;
+                                }
+                            }
+                        }
+                        }
+                }
+            }
+        }
+    }
+}

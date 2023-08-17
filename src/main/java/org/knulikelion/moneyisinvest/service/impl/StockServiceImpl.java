@@ -159,8 +159,13 @@ public class StockServiceImpl implements StockService {
         int width = 500;
         int height = 500;
 
-        // 텍스트에서 맨 앞 글자를 추출합니다.
-        String firstCharacter = text.substring(0, 1);
+        String firstCharacter;
+
+        if(text == null) {
+            firstCharacter = "M";
+        } else {
+            firstCharacter = text.substring(0, 1);
+        }
 
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = image.createGraphics();
@@ -170,7 +175,7 @@ public class StockServiceImpl implements StockService {
         g2d.fillRect(0, 0, width, height);
         g2d.setColor(Color.WHITE); // 하얀색 글씨 설정
 
-        Font font = new Font("Arial", Font.PLAIN, 170);
+        Font font = new Font("Liberation Sans", Font.PLAIN, 170);
         g2d.setFont(font);
         FontMetrics fontMetrics = g2d.getFontMetrics();
 
@@ -187,7 +192,7 @@ public class StockServiceImpl implements StockService {
             File file = new File(imagePath.toString());
             ImageIO.write(image, "png", file);
 
-            return "http://moneyisinvest.kr/api/v1/profile/images/" + stockId + ".png";
+            return "https://moneyisinvest.kr/api/v1/profile/images/" + stockId + ".png";
         } catch (IOException e) {
             e.printStackTrace();
             return null;
