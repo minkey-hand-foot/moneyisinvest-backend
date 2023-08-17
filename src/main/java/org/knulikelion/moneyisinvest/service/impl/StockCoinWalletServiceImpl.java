@@ -25,6 +25,7 @@ import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -57,6 +58,12 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
         } else {
             return Math.floor(num);
         }
+    }
+
+    public String transGetYearMonthDay(LocalDateTime dateTime) {
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String dateString = dateTime.format(dateTimeFormatter);
+        return dateString;
     }
 
 // 비공개 키 생성 및 저장
@@ -113,7 +120,7 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
             transactionHistoryResponseDto.setTotal(allTransaction.getAmount() + allTransaction.getFee());
 //            거래 시간 지정
             LocalDateTime currentDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(block.getTimeStamp()), ZoneId.systemDefault());
-            transactionHistoryResponseDto.setDatetime(String.valueOf(currentDateTime));
+            transactionHistoryResponseDto.setDatetime(transGetYearMonthDay(currentDateTime));
 
 //            리스트 삽입
             transactionHistoryResponseDtoList.add(transactionHistoryResponseDto);
