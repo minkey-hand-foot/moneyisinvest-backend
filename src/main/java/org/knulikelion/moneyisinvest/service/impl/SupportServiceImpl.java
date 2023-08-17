@@ -32,30 +32,39 @@ public class SupportServiceImpl implements SupportService {
     private UserService userService;
 
     @Override
-    public BaseResponseDto addSupport(SupportRequestDto supportRequestDto, String uid) {
-        BaseResponseDto baseResponseDto = new BaseResponseDto();
+    public SupportResponseDto addSupport(SupportRequestDto supportRequestDto, String uid) {
+        SupportResponseDto supportResponseDto = new SupportResponseDto();
 
         User getUser = userRepository.findByUid(uid);
 
-        if(getUser == null) {
-            baseResponseDto.setSuccess(false);
-            baseResponseDto.setMsg("사용자가 존재하지 않음");
-        }else{
-            Support support = new Support();
-            support.setUser(getUser);
-            support.setTitle(supportRequestDto.getTitle());
-            support.setStatus("답변 대기중");
-            support.setContents(supportRequestDto.getContents());
-            support.setCreatedAt(LocalDateTime.now());
-            support.setUpdatedAt(LocalDateTime.now());
-
-            supportRepository.save(support);
-
-            baseResponseDto.setSuccess(true);
-            baseResponseDto.setMsg("문의 사항 추가");
+        if (getUser == null) {
+            supportResponseDto.setMsg("사용자가 존재하지 않음");
+            return supportResponseDto;
         }
-        return baseResponseDto;
+
+        Support support = new Support();
+        support.setUser(getUser);
+        support.setTitle(supportRequestDto.getTitle());
+        support.setStatus("답변 대기중");
+        support.setContents(supportRequestDto.getContents());
+        support.setCreatedAt(LocalDateTime.now());
+        support.setUpdatedAt(LocalDateTime.now());
+
+        Support savedSupport = supportRepository.save(support); // 저장된 Support 객체를 반환받습니다.
+
+        // 필요한 객체의 필드들을 SupportResponseDto 객체로 복사합니다.
+        supportResponseDto.setSupportId(savedSupport.getId());
+        supportResponseDto.setUid(getUser.getUid());
+        supportResponseDto.setTitle(savedSupport.getTitle());
+        supportResponseDto.setContents(savedSupport.getContents());
+        supportResponseDto.setStatus(savedSupport.getStatus());
+        supportResponseDto.setCreatedAt(savedSupport.getCreatedAt().toString()); // LocalDateTime 객체를 문자열로 변환
+        supportResponseDto.setUpdatedAt(savedSupport.getUpdatedAt().toString()); // LocalDateTime 객체를 문자열로 변환
+        supportResponseDto.setMsg("문의 사항 추가");
+
+        return supportResponseDto;
     }
+
 
     @Override
     public SupportResponseDto getUserSupport(String uid, Long supprotId) {
@@ -71,6 +80,7 @@ public class SupportServiceImpl implements SupportService {
                 if (temp.getId().equals(supprotId)) {
                     responseDto = new SupportResponseDto();
 
+                    responseDto.setSupportId(temp.getId());
                     responseDto.setUid(temp.getUser().getUid());
                     responseDto.setTitle(temp.getTitle());
                     responseDto.setStatus(temp.getStatus());
@@ -95,6 +105,7 @@ public class SupportServiceImpl implements SupportService {
 
         for(Support getSupport : getSupports) {
             SupportResponseDto supportResponseDto = new SupportResponseDto();
+            supportResponseDto.setSupportId(getSupport.getId());
             supportResponseDto.setUid(getSupport.getUser().getUid());
             supportResponseDto.setTitle(getSupport.getTitle());
             supportResponseDto.setContents(getSupport.getContents());
