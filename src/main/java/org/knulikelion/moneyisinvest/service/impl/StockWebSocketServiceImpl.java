@@ -61,6 +61,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
                 try {
                     JSONObject body = createBody();
                     approvalToken = createApprovalToken(body);
+                    System.out.println(approvalToken);
                 } catch (JSONException | IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -166,7 +167,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
         HttpUrl.Builder urlBuilder = HttpUrl.parse("https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/volume-rank").newBuilder();
         urlBuilder.addQueryParameter("FID_COND_MRKT_DIV_CODE", "J");
         urlBuilder.addQueryParameter("FID_COND_SCR_DIV_CODE", "20171");
-        urlBuilder.addQueryParameter("FID_INPUT_ISCD", "0000");/*0000(전체) 기타(업종코드)*/
+        urlBuilder.addQueryParameter("FID_INPUT_ISCD", "0003");/*0000(전체) 기타(업종코드)*/
         urlBuilder.addQueryParameter("FID_DIV_CLS_CODE", "0");/*0(전체) 1(보통주) 2(우선주)*/
         urlBuilder.addQueryParameter("FID_BLNG_CLS_CODE", "1");/*0 : 평균거래량 1:거래증가율 2:평균거래회전율 3:거래금액순 4:평균거래금액회전율*/
         urlBuilder.addQueryParameter("FID_TRGT_CLS_CODE", "111111111");/*1 or 0 9자리 (차례대로 증거금 30% 40% 50% 60% 100% 신용보증금 30% 40% 50% 60%)*/
