@@ -23,6 +23,9 @@ public class StockPriceResponseDto {
     private String stock_price;
     /*주식 현재가 stck_prpr*/
 
+    private Integer stock_coin;
+    /*주식 스톡가*/
+
     private String preparation_day_before;
     /*전일 대비 예) -5600 prdy_vrss*/
 
