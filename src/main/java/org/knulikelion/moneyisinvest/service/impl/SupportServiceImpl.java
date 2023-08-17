@@ -58,30 +58,31 @@ public class SupportServiceImpl implements SupportService {
     }
 
     @Override
-    public List<SupportResponseDto> getUserSupport(String uid) {
-        if(uid == null) throw new RuntimeException("사용자 id가 없습니다.");
+    public SupportResponseDto getUserSupport(String uid, Long supprotId) {
+        if (uid == null) throw new RuntimeException("사용자 id가 없습니다.");
         User user = userRepository.findByUid(uid);
         List<Support> supportList = supportRepository.findByUser_Id(user.getId());
-        List<SupportResponseDto> supportResponseDtoList = new ArrayList<>();
 
-        if(supportList.isEmpty()){
+        SupportResponseDto responseDto = null;
+        if (supportList.isEmpty()) {
             return null;
-        }else {
-            for(Support temp : supportList) {
-                SupportResponseDto responseDto = new SupportResponseDto();
+        } else {
+            for (Support temp : supportList) {
+                if (temp.getId().equals(supprotId)) {
+                    responseDto = new SupportResponseDto();
 
-                responseDto.setUid(temp.getUser().getUid());
-                responseDto.setTitle(temp.getTitle());
-                responseDto.setStatus(temp.getStatus());
-                responseDto.setContents(temp.getContents());
-                responseDto.setCreatedAt(temp.getCreatedAt().toString());
-                responseDto.setUpdatedAt(temp.getUpdatedAt().toString());
+                    responseDto.setUid(temp.getUser().getUid());
+                    responseDto.setTitle(temp.getTitle());
+                    responseDto.setStatus(temp.getStatus());
+                    responseDto.setContents(temp.getContents());
+                    responseDto.setCreatedAt(temp.getCreatedAt().toString());
+                    responseDto.setUpdatedAt(temp.getUpdatedAt().toString());
 
-                supportResponseDtoList.add(responseDto);
-
+                    break;
+                }
             }
         }
-        return supportResponseDtoList;
+        return responseDto;
     }
 
     @Override

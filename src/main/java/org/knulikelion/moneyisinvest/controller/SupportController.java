@@ -35,8 +35,8 @@ public class SupportController {
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @GetMapping("/get/user-support")
-    public List<SupportResponseDto> getOneSupportById(HttpServletRequest request) {
-        return supportService.getUserSupport(jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")));
+    public SupportResponseDto getOneSupportById(HttpServletRequest request, Long support_id) {
+        return supportService.getUserSupport(jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")),support_id);
     }
 
     // 문의사항 전체 보기
