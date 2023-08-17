@@ -216,7 +216,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
 
         rank_price = rank_price.replace(",","");
         stockRankResponseDto1.setCoinPrice(String.valueOf(Integer.parseInt(rank_price) / 100));
-        stockRankResponseDto1.setRank(rank);
+        stockRankResponseDto1.setRank("1");
         stockRankResponseDto1.setPreparation_day_before_rate(rate);
         outputList.add(stockRankResponseDto1);
 
@@ -263,7 +263,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
 
         rank_price = rank_price.replace(",","");
         stockRankResponseDto2.setCoinPrice(String.valueOf(Integer.parseInt(rank_price) / 100));
-        stockRankResponseDto2.setRank(rank);
+        stockRankResponseDto2.setRank("2");
         stockRankResponseDto2.setPreparation_day_before_rate(rate);
         outputList.add(stockRankResponseDto2);
 
@@ -310,7 +310,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
 
         rank_price = rank_price.replace(",","");
         stockRankResponseDto3.setCoinPrice(String.valueOf(Integer.parseInt(rank_price) / 100));
-        stockRankResponseDto3.setRank(rank);
+        stockRankResponseDto3.setRank("3");
         stockRankResponseDto3.setPreparation_day_before_rate(rate);
         outputList.add(stockRankResponseDto3);
 
@@ -357,7 +357,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
 
         rank_price = rank_price.replace(",","");
         stockRankResponseDto4.setCoinPrice(String.valueOf(Integer.parseInt(rank_price) / 100));
-        stockRankResponseDto4.setRank(rank);
+        stockRankResponseDto4.setRank("4");
         stockRankResponseDto4.setPreparation_day_before_rate(rate);
         outputList.add(stockRankResponseDto4);
 
@@ -404,7 +404,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
 
         rank_price = rank_price.replace(",","");
         stockRankResponseDto5.setCoinPrice(String.valueOf(Integer.parseInt(rank_price) / 100));
-        stockRankResponseDto5.setRank(rank);
+        stockRankResponseDto5.setRank("5");
         stockRankResponseDto5.setPreparation_day_before_rate(rate);
         outputList.add(stockRankResponseDto5);
 
