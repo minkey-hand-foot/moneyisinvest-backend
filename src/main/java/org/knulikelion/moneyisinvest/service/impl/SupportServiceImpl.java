@@ -31,32 +31,6 @@ public class SupportServiceImpl implements SupportService {
     @Autowired
     private UserService userService;
 
-   /* @Override
-    public BaseResponseDto addSupport(SupportRequestDto supportRequestDto, String uid) {
-        BaseResponseDto baseResponseDto = new BaseResponseDto();
-
-        User getUser = userRepository.findByUid(uid);
-
-        if(getUser == null) {
-            baseResponseDto.setSuccess(false);
-            baseResponseDto.setMsg("사용자가 존재하지 않음");
-        }else{
-            Support support = new Support();
-            support.setUser(getUser);
-            support.setTitle(supportRequestDto.getTitle());
-            support.setStatus("답변 대기중");
-            support.setContents(supportRequestDto.getContents());
-            support.setCreatedAt(LocalDateTime.now());
-            support.setUpdatedAt(LocalDateTime.now());
-
-            supportRepository.save(support);
-
-            baseResponseDto.setSuccess(true);
-            baseResponseDto.setMsg("문의 사항 추가");
-        }
-        return baseResponseDto;
-    }*/
-
     @Override
     public SupportResponseDto addSupport(SupportRequestDto supportRequestDto, String uid) {
         SupportResponseDto supportResponseDto = new SupportResponseDto();
