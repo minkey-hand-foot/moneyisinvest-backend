@@ -22,6 +22,7 @@ import org.bitcoinj.script.Script.ScriptType;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
+import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -112,12 +113,13 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
             } else {
                 transactionHistoryResponseDto.setType("입금");
             }
+            NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
 //            수수료 지정
-            transactionHistoryResponseDto.setFee(allTransaction.getFee());
+            transactionHistoryResponseDto.setFee(nf.format(allTransaction.getFee()));
 //            거래 금액 지정
-            transactionHistoryResponseDto.setAmount(allTransaction.getAmount());
+            transactionHistoryResponseDto.setAmount(nf.format(allTransaction.getAmount()));
 //            거래 총 금액 지정
-            transactionHistoryResponseDto.setTotal(allTransaction.getAmount() + allTransaction.getFee());
+            transactionHistoryResponseDto.setTotal(nf.format(allTransaction.getAmount() + allTransaction.getFee()));
 //            거래 시간 지정
             LocalDateTime currentDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(block.getTimeStamp()), ZoneId.systemDefault());
             transactionHistoryResponseDto.setDatetime(transGetYearMonthDay(currentDateTime));
@@ -145,10 +147,11 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
     @Override
     public WalletDetailResponseDto getWalletDetail(String username) {
         WalletDetailResponseDto walletDetailResponseDto = new WalletDetailResponseDto();
+        NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
 
         walletDetailResponseDto.setAddress(getWalletAddress(username));
-        walletDetailResponseDto.setBalance(getWalletBalanceByUsername(username));
-        walletDetailResponseDto.setWon(getWalletBalanceByUsername(username) * 100);
+        walletDetailResponseDto.setBalance(nf.format(getWalletBalanceByUsername(username)));
+        walletDetailResponseDto.setWon(nf.format(getWalletBalanceByUsername(username) * 100));
         walletDetailResponseDto.setType("스톡");
         walletDetailResponseDto.setCreatedAt(stockCoinWalletRepository.findByAddress(getWalletAddress(username)).getCreatedAt().toString());
 

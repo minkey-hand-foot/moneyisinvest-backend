@@ -711,6 +711,7 @@ public class StockServiceImpl implements StockService {
 
     @Override /*주식 매수*/
     public BaseResponseDto buyStock(String uid, StockBuyRequestDto stockBuyRequestDto) throws JSONException, IOException {
+        stockBuyRequestDto.setConclusion_price(stockBuyRequestDto.getConclusion_price().replace(",", ""));
         log.info("[buyStock] 주식 매수 종목 코드 : {}", stockBuyRequestDto.getStockCode());
         BaseResponseDto baseResponseDto = new BaseResponseDto();
         TransactionToSystemRequestDto transactionToSystemRequestDto = new TransactionToSystemRequestDto();
@@ -852,6 +853,7 @@ public class StockServiceImpl implements StockService {
 
     @Override /*주식 매도*/
     public BaseResponseDto sellStock(String uid, StockSellRequestDto stockSellRequestDto) {
+        stockSellRequestDto.setSell_price(stockSellRequestDto.getSell_price().replace(",", ""));
         log.info("[sellStock] 주식 매수 종목 코드 : {}", stockSellRequestDto.getStockCode());
 
         BaseResponseDto baseResponseDto = new BaseResponseDto();
@@ -1104,7 +1106,13 @@ public class StockServiceImpl implements StockService {
 
     @Override
     public String calculateCoin(int amount, String price) {
-        return String.valueOf((amount * Integer.parseInt(price))/100);
+        String numberWithoutCommas = price.replace(",", "");
+        NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+        int result = (amount * Integer.parseInt(numberWithoutCommas)) / 100;
+
+        String formattedResult = nf.format(result) + " ";
+
+        return formattedResult;
     }
 }
 

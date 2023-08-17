@@ -23,7 +23,7 @@ public class StockPriceResponseDto {
     private String stock_price;
     /*주식 현재가 stck_prpr*/
 
-    private Integer stock_coin;
+    private String stock_coin;
     /*주식 스톡가*/
 
     private String preparation_day_before;
