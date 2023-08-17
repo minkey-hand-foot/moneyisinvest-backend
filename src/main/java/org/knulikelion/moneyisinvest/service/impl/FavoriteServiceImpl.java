@@ -80,11 +80,11 @@ public class FavoriteServiceImpl implements FavoriteService {
             for (Favorite temp : favorites) {
                 StockCompanyFavResponseDto stockCompanyFavResponseDto = new StockCompanyFavResponseDto();
                 stockCompanyFavResponseDto.setStockCode(temp.getStockId());
-                stockCompanyFavResponseDto.setStockLogoUrl(stockService.getCompanyInfoByStockId(temp.getStockId()).getStockLogoUrl());
-                stockCompanyFavResponseDto.setCompanyName(stockService.getStockNameByStockId(temp.getStockId()));
-                stockCompanyFavResponseDto.setPreparation_day_before_rate(Double.parseDouble(stockService.getDayBeforeRate(temp.getStockId())));
-                stockCompanyFavResponseDto.setPrice(Integer.parseInt(stockService.getCurrentPrice(temp.getStockId())));
-                stockCompanyFavResponseDto.setStockPrice(Integer.parseInt(stockService.getCurrentPrice(temp.getStockId()))/100);
+                stockCompanyFavResponseDto.setStockUrl(stockService.getCompanyInfoByStockId(temp.getStockId()).getStockLogoUrl());
+                stockCompanyFavResponseDto.setStockName(stockService.getStockNameByStockId(temp.getStockId()));
+                stockCompanyFavResponseDto.setRate(Double.parseDouble(stockService.getDayBeforeRate(temp.getStockId())));
+                stockCompanyFavResponseDto.setReal_per_price(Integer.parseInt(stockService.getCurrentPrice(temp.getStockId())));
+                stockCompanyFavResponseDto.setReal_per_coin(Integer.parseInt(stockService.getCurrentPrice(temp.getStockId()))/100);
                 outputList.add(stockCompanyFavResponseDto);
             }
         }
