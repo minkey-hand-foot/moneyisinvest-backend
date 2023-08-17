@@ -18,7 +18,7 @@ public class StockCompanyFavResponseDto {
 
     private double rate; // 전일 대비 등락율
 
-    private int real_per_price; // 현재 평 단가
+    private String real_per_price; // 현재 평 단가
 
-    private int real_per_coin; // 현재 평 스톡
+    private String real_per_coin; // 현재 평 스톡
 }

@@ -11,8 +11,10 @@ import org.knulikelion.moneyisinvest.service.FavoriteService;
 import org.knulikelion.moneyisinvest.service.StockService;
 import org.springframework.stereotype.Service;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 
 @Service
@@ -83,8 +85,10 @@ public class FavoriteServiceImpl implements FavoriteService {
                 stockCompanyFavResponseDto.setStockUrl(stockService.getCompanyInfoByStockId(temp.getStockId()).getStockLogoUrl());
                 stockCompanyFavResponseDto.setStockName(stockService.getStockNameByStockId(temp.getStockId()));
                 stockCompanyFavResponseDto.setRate(Double.parseDouble(stockService.getDayBeforeRate(temp.getStockId())));
-                stockCompanyFavResponseDto.setReal_per_price(Integer.parseInt(stockService.getCurrentPrice(temp.getStockId())));
-                stockCompanyFavResponseDto.setReal_per_coin(Integer.parseInt(stockService.getCurrentPrice(temp.getStockId()))/100);
+
+                NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+                stockCompanyFavResponseDto.setReal_per_price(nf.format(Integer.parseInt(stockService.getCurrentPrice(temp.getStockId()))));
+                stockCompanyFavResponseDto.setReal_per_coin(nf.format(Integer.parseInt(stockService.getCurrentPrice(temp.getStockId())) / 100));
                 outputList.add(stockCompanyFavResponseDto);
             }
         }

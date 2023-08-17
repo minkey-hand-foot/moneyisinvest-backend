@@ -26,7 +26,6 @@ import org.knulikelion.moneyisinvest.data.dto.response.*;
 import org.knulikelion.moneyisinvest.data.entity.*;
 import org.knulikelion.moneyisinvest.data.repository.*;
 import org.knulikelion.moneyisinvest.service.StockCoinService;
-import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.knulikelion.moneyisinvest.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
