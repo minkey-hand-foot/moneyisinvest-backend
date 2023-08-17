@@ -136,6 +136,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
                 stockPriceResponseDto.setStock_market_index((String) outputs.get("rprs_mrkt_kor_name"));
                 stockPriceResponseDto.setBusiness_type((String) outputs.get("bstp_kor_isnm"));
                 stockPriceResponseDto.setStock_price((String) outputs.get("stck_prpr"));
+                stockPriceResponseDto.setStock_coin(Integer.parseInt((String) outputs.get("stck_prpr"))/100);
                 stockPriceResponseDto.setPreparation_day_before((String) outputs.get("prdy_vrss"));
                 stockPriceResponseDto.setPreparation_day_before_sign((String) outputs.get("prdy_vrss_sign"));
                 stockPriceResponseDto.setPreparation_day_before_rate((String) outputs.get("prdy_ctrt"));
