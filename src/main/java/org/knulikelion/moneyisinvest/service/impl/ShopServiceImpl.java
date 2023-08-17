@@ -12,7 +12,13 @@ import org.knulikelion.moneyisinvest.service.ShopService;
 import org.knulikelion.moneyisinvest.service.StockCoinService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -22,6 +28,7 @@ import java.util.Optional;
 
 @Service
 public class ShopServiceImpl implements ShopService {
+    private final Path fileStorageLocation = Paths.get("./moneyisinvest/");
     private final ShopRepository shopRepository;
     private final UserRepository userRepository;
     private final StockCoinService stockCoinService;
@@ -39,6 +46,37 @@ public class ShopServiceImpl implements ShopService {
     @Override
     public List<Shop> getAllItems() {
         return shopRepository.findAll();
+    }
+
+    @Override
+    public BaseResponseDto uploadShopItems(MultipartFile file, String itemName, String itemCategory, double stockPrice) {
+        BaseResponseDto baseResponseDto = new BaseResponseDto();
+
+        String fileName = file.getOriginalFilename();
+
+        try {
+            Files.createDirectories(this.fileStorageLocation);
+
+            Path targetLocation = this.fileStorageLocation.resolve(fileName);
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+
+            Shop shop = Shop.builder()
+                    .itemName(itemName)
+                    .imageUrl("https://moneyisinvest.kr/api/v1/shop/images/" + fileName)
+                    .category(itemCategory)
+                    .price(stockPrice)
+                    .build();
+
+            shopRepository.save(shop);
+
+            baseResponseDto.setSuccess(true);
+            baseResponseDto.setMsg("상품 업로드가 완료되었습니다.");
+        } catch (IOException e) {
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("상품 업로드를 완료할 수 없습니다.");
+        }
+
+        return baseResponseDto;
     }
 
     @Override

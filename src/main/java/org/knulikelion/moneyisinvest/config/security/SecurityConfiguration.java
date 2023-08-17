@@ -51,6 +51,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/profile/images/**").permitAll()
                 .antMatchers("/api/v1/profile/get", "/api/v1/profile/upload").hasRole("USER")
                 .antMatchers("/api/v1/profile/user/detail").hasRole("USER")
+
+//                임시: 상점 상품 업로드
+                .antMatchers("/api/v1/shop/images/**").permitAll()
+                .antMatchers("/api/v1/shop/upload").permitAll()
+
 //                주식 관련 전체 허용
                 .antMatchers("/api/v1/stock/**").permitAll()
                 .antMatchers("/api/v1/stock/buy").hasRole("USER")
