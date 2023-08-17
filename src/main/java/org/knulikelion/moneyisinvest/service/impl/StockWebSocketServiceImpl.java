@@ -170,245 +170,72 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
 
     @Override /*종목 거래량 순위를 가져오는 코드 입니다.*/
     public List<StockRankResponseDto> getStockRank() throws IOException, JSONException {
-        String url = "https://finance.naver.com/sise/sise_quant_high.naver?sosok=1";
+        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/volume-rank").newBuilder();
+        urlBuilder.addQueryParameter("FID_COND_MRKT_DIV_CODE", "J");
+        urlBuilder.addQueryParameter("FID_COND_SCR_DIV_CODE", "20171");
+        urlBuilder.addQueryParameter("FID_INPUT_ISCD", "0000");/*0000(전체) 기타(업종코드)*/
+        urlBuilder.addQueryParameter("FID_DIV_CLS_CODE", "0");/*0(전체) 1(보통주) 2(우선주)*/
+        urlBuilder.addQueryParameter("FID_BLNG_CLS_CODE", "1");/*0 : 평균거래량 1:거래증가율 2:평균거래회전율 3:거래금액순 4:평균거래금액회전율*/
+        urlBuilder.addQueryParameter("FID_TRGT_CLS_CODE", "111111111");/*1 or 0 9자리 (차례대로 증거금 30% 40% 50% 60% 100% 신용보증금 30% 40% 50% 60%)*/
+        urlBuilder.addQueryParameter("FID_TRGT_EXLS_CLS_CODE", "000000");/*1 or 0 6자리 (차례대로 투자위험/경고/주의 관리종목 정리매매 불성실공시 우선주 거래정지)*/
+        urlBuilder.addQueryParameter("FID_INPUT_PRICE_1", "100"); /*가격 ~ ex) "0"*/
+        urlBuilder.addQueryParameter("FID_INPUT_PRICE_2", "1000000");/*~ 가격 ex) "1000000"*/
+        urlBuilder.addQueryParameter("FID_VOL_CNT", "100000");/*거래량 ~ ex) "100000"*/
+        urlBuilder.addQueryParameter("FID_INPUT_DATE_1", "");
+
+        String url = urlBuilder.build().toString();/*한국 현재 주식 순위 url*/
+
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .header("authorization", "Bearer " + approvalToken)
+                .header("appkey", app_Key)
+                .header("appsecret", app_Secret)
+                .header("tr_id", "FHPST01710000")
+                .header("custtype", "P")
+                .header("content-type", "application/json; charset=utf-8")
+                .build();
 
         List<StockRankResponseDto> outputList = new ArrayList<>();
 
-        Document doc = Jsoup.connect(url).get();
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful() && response.body() != null) {
+                JSONObject jsonObject = new JSONObject(response.body().string());
+                JSONArray outputs = jsonObject.getJSONArray("output");
 
-        // rank 1
-        String rank_name_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(3) > td:nth-child(3) > a";
-        Elements rank_name_element = doc.select(rank_name_selector);
-        String rank_name = rank_name_element.text();
+                int limit = Math.min(outputs.length(), 5);
+                for (int i = 0; i < limit; i++) { /*5등 까지만*/
+                    JSONObject obj = outputs.getJSONObject(i);
+                    System.out.println("obj result : "+obj.toString());
 
-        Element link = doc.select("a[href*=/item/main.naver?code=]").first(); // 요소 선택
-        String href = link.attr("href");
-        String code = href.split("code=")[1];
+                    StockRankResponseDto stockRank = new StockRankResponseDto();
+                    stockRank.setStockName(obj.getString("hts_kor_isnm"));
+                    stockRank.setStockUrl(stockService.getCompanyInfoByStockId(obj.getString("mksc_shrn_iscd")).getStockLogoUrl());
+                    stockRank.setStockCode(obj.getString("mksc_shrn_iscd"));
+                    double prdyCtrtDouble = Double.parseDouble(obj.getString("prdy_ctrt"));
+                    long prdyCtrt = Math.round(prdyCtrtDouble);
+                    if(prdyCtrt<0){
+                        stockRank.setDay_before_status(false);
+                    }else {
+                        stockRank.setDay_before_status(true);
+                    }
+                    double stckPrprDouble = Double.parseDouble(obj.getString("stck_prpr"));
+                    int coinPrice = (int) (stckPrprDouble / 100);
+                    stockRank.setCoinPrice(String.valueOf(coinPrice));
+                    stockRank.setRank(obj.getString("data_rank"));
 
-        String rank_price_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(3) > td:nth-child(4)";
-        Elements rank_price_element = doc.select(rank_price_selector);
-        String rank_price = rank_price_element.text();
+                    NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+                    String price = nf.format(Integer.parseInt(obj.getString("stck_prpr")));
+                    stockRank.setStockPrice(price);
+                    stockRank.setPreparation_day_before_rate(obj.getString("prdy_ctrt"));
 
-        String rank_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(3) > td.no";
-        Elements rank_element = doc.select(rank_selector);
-        String rank = rank_element.text();
-
-        String rate_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(3) > td:nth-child(6) > span";
-        Elements rate_element = doc.select(rate_selector);
-        String rate = rate_element.text();
-        rate = rate.trim();
-        if (rate.startsWith("+")) {
-            rate = rate.substring(1);
+                    outputList.add(stockRank);
+                }
+                return outputList;
+            }
+            return null;
         }
-        rate = rate.replace("%", "");
-
-        StockRankResponseDto stockRankResponseDto1 = new StockRankResponseDto();
-        stockRankResponseDto1.setStockName(rank_name);
-        stockRankResponseDto1.setStockUrl(stockService.getCompanyInfoByStockId(code).getStockLogoUrl());
-        stockRankResponseDto1.setStockCode(code);
-        double double_rate = Double.parseDouble(rate);
-        if(double_rate < 0){
-            stockRankResponseDto1.setDay_before_status(false);
-        }else{
-            stockRankResponseDto1.setDay_before_status(true);
-        }
-        stockRankResponseDto1.setStockPrice(rank_price);
-
-        rank_price = rank_price.replace(",","");
-        stockRankResponseDto1.setCoinPrice(String.valueOf(Integer.parseInt(rank_price) / 100));
-        stockRankResponseDto1.setRank("1");
-        stockRankResponseDto1.setPreparation_day_before_rate(rate);
-        outputList.add(stockRankResponseDto1);
-
-        // rank 2
-        rank_name_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(4) > td:nth-child(3) > a";
-        rank_name_element = doc.select(rank_name_selector);
-        rank_name = rank_name_element.text();
-
-        String html = "<a href=\"/item/main.naver?code=122350\" class=\"tltle\">삼기</a>";
-        doc = Jsoup.parse(html);
-        link = doc.select("a[href*=/item/main.naver?code=]").first(); // 요소 선택
-        href = link.attr("href");
-        code = href.split("code=")[1];
-
-        doc = Jsoup.connect(url).get();
-        rank_price_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(4) > td:nth-child(4)";
-        rank_price_element = doc.select(rank_price_selector);
-        rank_price = rank_price_element.text();
-
-        rank_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(4) > td.no";
-        rank_element = doc.select(rank_selector);
-        rank = rank_element.text();
-
-        rate_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(4) > td:nth-child(6) > span";
-        rate_element = doc.select(rate_selector);
-        rate = rate_element.text();
-        rate = rate.trim();
-        if (rate.startsWith("+")) {
-            rate = rate.substring(1);
-        }
-        rate = rate.replace("%", "");
-
-        StockRankResponseDto stockRankResponseDto2 = new StockRankResponseDto();
-        stockRankResponseDto2.setStockName(rank_name);
-        stockRankResponseDto2.setStockUrl(stockService.getCompanyInfoByStockId(code).getStockLogoUrl());
-        stockRankResponseDto2.setStockCode(code);
-        double_rate = Double.parseDouble(rate);
-        if(double_rate < 0){
-            stockRankResponseDto2.setDay_before_status(false);
-        }else{
-            stockRankResponseDto2.setDay_before_status(true);
-        }
-        stockRankResponseDto2.setStockPrice(rank_price);
-
-        rank_price = rank_price.replace(",","");
-        stockRankResponseDto2.setCoinPrice(String.valueOf(Integer.parseInt(rank_price) / 100));
-        stockRankResponseDto2.setRank("2");
-        stockRankResponseDto2.setPreparation_day_before_rate(rate);
-        outputList.add(stockRankResponseDto2);
-
-        // rank 3
-        rank_name_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(5) > td:nth-child(3) > a";
-        rank_name_element = doc.select(rank_name_selector);
-        rank_name = rank_name_element.text();
-
-        html = "<a href=\"/item/main.naver?code=036640\" class=\"tltle\">HRS</a>";
-        doc = Jsoup.parse(html);
-        link = doc.select("a[href*=/item/main.naver?code=]").first(); // 요소 선택
-        href = link.attr("href");
-        code = href.split("code=")[1];
-
-        doc = Jsoup.connect(url).get();
-        rank_price_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(5) > td:nth-child(4)";
-        rank_price_element = doc.select(rank_price_selector);
-        rank_price = rank_price_element.text();
-
-        rank_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(5) > td.no";
-        rank_element = doc.select(rank_selector);
-        rank = rank_element.text();
-
-        rate_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(5) > td:nth-child(6) > span";
-        rate_element = doc.select(rate_selector);
-        rate = rate_element.text();
-        rate = rate.trim();
-        if (rate.startsWith("+")) {
-            rate = rate.substring(1);
-        }
-        rate = rate.replace("%", "");
-
-        StockRankResponseDto stockRankResponseDto3 = new StockRankResponseDto();
-        stockRankResponseDto3.setStockName(rank_name);
-        stockRankResponseDto3.setStockUrl(stockService.getCompanyInfoByStockId(code).getStockLogoUrl());
-        stockRankResponseDto3.setStockCode(code);
-        double_rate = Double.parseDouble(rate);
-        if(double_rate < 0){
-            stockRankResponseDto3.setDay_before_status(false);
-        }else{
-            stockRankResponseDto3.setDay_before_status(true);
-        }
-        stockRankResponseDto3.setStockPrice(rank_price);
-
-        rank_price = rank_price.replace(",","");
-        stockRankResponseDto3.setCoinPrice(String.valueOf(Integer.parseInt(rank_price) / 100));
-        stockRankResponseDto3.setRank("3");
-        stockRankResponseDto3.setPreparation_day_before_rate(rate);
-        outputList.add(stockRankResponseDto3);
-
-        // rank 4
-        rank_name_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(6) > td:nth-child(3) > a";
-        rank_name_element = doc.select(rank_name_selector);
-        rank_name = rank_name_element.text();
-
-        html = "<a href=\"/item/main.naver?code=065350\" class=\"tltle\">신성델타테크</a>";
-        doc = Jsoup.parse(html);
-        link = doc.select("a[href*=/item/main.naver?code=]").first(); // 요소 선택
-        href = link.attr("href");
-        code = href.split("code=")[1];
-
-        doc = Jsoup.connect(url).get();
-        rank_price_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(6) > td:nth-child(4)";
-        rank_price_element = doc.select(rank_price_selector);
-        rank_price = rank_price_element.text();
-
-        rank_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(6) > td.no";
-        rank_element = doc.select(rank_selector);
-        rank = rank_element.text();
-
-        rate_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(6) > td:nth-child(6) > span";
-        rate_element = doc.select(rate_selector);
-        rate = rate_element.text();
-        rate = rate.trim();
-        if (rate.startsWith("+")) {
-            rate = rate.substring(1);
-        }
-        rate = rate.replace("%", "");
-
-        StockRankResponseDto stockRankResponseDto4 = new StockRankResponseDto();
-        stockRankResponseDto4.setStockName(rank_name);
-        stockRankResponseDto4.setStockUrl(stockService.getCompanyInfoByStockId(code).getStockLogoUrl());
-        stockRankResponseDto4.setStockCode(code);
-        double_rate = Double.parseDouble(rate);
-        if(double_rate < 0){
-            stockRankResponseDto4.setDay_before_status(false);
-        }else{
-            stockRankResponseDto4.setDay_before_status(true);
-        }
-        stockRankResponseDto4.setStockPrice(rank_price);
-
-        rank_price = rank_price.replace(",","");
-        stockRankResponseDto4.setCoinPrice(String.valueOf(Integer.parseInt(rank_price) / 100));
-        stockRankResponseDto4.setRank("4");
-        stockRankResponseDto4.setPreparation_day_before_rate(rate);
-        outputList.add(stockRankResponseDto4);
-
-        // rank 5
-        rank_name_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(7) > td:nth-child(3) > a";
-        rank_name_element = doc.select(rank_name_selector);
-        rank_name = rank_name_element.text();
-
-        html = "<a href=\"/item/main.naver?code=344860\" class=\"tltle\">이노진</a>";
-        doc = Jsoup.parse(html);
-        link = doc.select("a[href*=/item/main.naver?code=]").first(); // 요소 선택
-        href = link.attr("href");
-        code = href.split("code=")[1];
-
-        doc = Jsoup.connect(url).get();
-        rank_price_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(7) > td:nth-child(4)";
-        rank_price_element = doc.select(rank_price_selector);
-        rank_price = rank_price_element.text();
-
-        rank_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(7) > td.no";
-        rank_element = doc.select(rank_selector);
-        rank = rank_element.text();
-
-        rate_selector = "#contentarea > div.box_type_l > table > tbody > tr:nth-child(7) > td:nth-child(6) > span";
-        rate_element = doc.select(rate_selector);
-        rate = rate_element.text();
-        rate = rate.trim();
-        if (rate.startsWith("+")) {
-            rate = rate.substring(1);
-        }
-        rate = rate.replace("%", "");
-
-        StockRankResponseDto stockRankResponseDto5 = new StockRankResponseDto();
-        stockRankResponseDto5.setStockName(rank_name);
-        stockRankResponseDto5.setStockUrl(stockService.getCompanyInfoByStockId(code).getStockLogoUrl());
-        stockRankResponseDto5.setStockCode(code);
-        double_rate = Double.parseDouble(rate);
-        if(double_rate < 0){
-            stockRankResponseDto5.setDay_before_status(false);
-        }else{
-            stockRankResponseDto5.setDay_before_status(true);
-        }
-        stockRankResponseDto5.setStockPrice(rank_price);
-
-        rank_price = rank_price.replace(",","");
-        stockRankResponseDto5.setCoinPrice(String.valueOf(Integer.parseInt(rank_price) / 100));
-        stockRankResponseDto5.setRank("5");
-        stockRankResponseDto5.setPreparation_day_before_rate(rate);
-        outputList.add(stockRankResponseDto5);
-
-        return outputList;
     }
 
 
