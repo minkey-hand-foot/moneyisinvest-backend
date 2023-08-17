@@ -10,10 +10,15 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 public class StockCompanyFavResponseDto {
-    private String stockCode;
-    private String stockLogoUrl;
-    private String companyName;
-    private double preparation_day_before_rate;
-    private int price;
-    private int stockPrice;
+    private String stockCode; // 종목 코드
+
+    private String stockUrl; // 회사 로고 Url
+
+    private String stockName; // 회사 이름
+
+    private double rate; // 전일 대비 등락율
+
+    private int real_per_price; // 현재 평 단가
+
+    private int real_per_coin; // 현재 평 스톡
 }
