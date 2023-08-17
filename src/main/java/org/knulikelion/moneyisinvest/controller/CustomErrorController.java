@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class CustomErrorController implements ErrorController {
     @RequestMapping("/error")
     public String handleError() {
-        // 메인 페이지로 리디렉션
-        return "redirect:/";
+        // https://moneyisinvest.kr/로 리디렉션
+        return "redirect:https://moneyisinvest.kr/";
     }
 }
