@@ -39,12 +39,12 @@ public class KakaoPayService {
         parameters.add("partner_user_id", "0000000001");
         parameters.add("item_name", "투자가머니(프리미엄)");
         parameters.add("quantity", "1");
-        parameters.add("total_amount", "1000");
+        parameters.add("total_amount", "3300");
         parameters.add("vat_amount", "0");
         parameters.add("tax_free_amount", "0");
-        parameters.add("approval_url", "http://localhost:8080/api/v1/payment/kakao/success"); // 성공 시 redirect url
-        parameters.add("cancel_url", "http://localhost:8080/api/v1/payment/kakao/cancel"); // 취소 시 redirect url
-        parameters.add("fail_url", "http://localhost:8080/api/v1/payment/kakao/fail"); // 실패 시 redirect url
+        parameters.add("approval_url", "https://moneyisinvest.kr/messagePage"); // 성공 시 redirect url
+        parameters.add("cancel_url", "https://moneyisinvest.kr/messagePage"); // 취소 시 redirect url
+        parameters.add("fail_url", "https://moneyisinvest.kr/messagePage"); // 실패 시 redirect url
 
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(parameters, this.getHeaders());
 
