@@ -30,6 +30,8 @@ public class StockTransaction {
     @Column
     private double unitPrice;
     @Column
+    private Integer stockPrice; // 스톡가
+    @Column
     private boolean isPurchase; // 구매 여부 판단.
     @Column
     private LocalDateTime transactionDate;

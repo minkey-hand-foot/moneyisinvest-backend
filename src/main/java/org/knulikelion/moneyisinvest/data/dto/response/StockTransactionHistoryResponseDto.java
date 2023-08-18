@@ -13,6 +13,7 @@ public class StockTransactionHistoryResponseDto {
     private boolean status;
     private Integer unitPrice;
     private Integer quantity;
+    private Integer stockPrice; // 스톡가
     private String stockName;
     private String stockCode;
 }

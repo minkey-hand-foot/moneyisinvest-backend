@@ -838,6 +838,7 @@ public class StockServiceImpl implements StockService {
                     .isPurchase(true)
                     .transactionDate(LocalDateTime.now())
                     .unitPrice(Double.parseDouble(stockBuyRequestDto.getConclusion_price()))
+                    .stockPrice((int) (Double.parseDouble(stockBuyRequestDto.getConclusion_price()) * Integer.parseInt(stockBuyRequestDto.getStockAmount()) /100))
                     .user(userRepository.findByUid(uid))
                     .build();
 
@@ -935,6 +936,7 @@ public class StockServiceImpl implements StockService {
                             .isPurchase(false)
                             .transactionDate(LocalDateTime.now())
                             .unitPrice(Double.parseDouble(stockSellRequestDto.getSell_price()))
+                            .stockPrice((int) (Double.parseDouble(stockSellRequestDto.getSell_price()) * Integer.parseInt(stockSellRequestDto.getStockAmount())/100))
                             .user(userRepository.findByUid(uid))
                             .build();
 
@@ -1119,8 +1121,15 @@ public class StockServiceImpl implements StockService {
             stockTransactionHistoryResponseDto.setUnitPrice((int) temp.getUnitPrice());
             stockTransactionHistoryResponseDto.setStatus(temp.isPurchase());
             stockTransactionHistoryResponseDto.setQuantity(temp.getQuantity());
-            stockTransactionHistoryResponseDto.setStockLogo(getCompanyInfoByStockId(temp.getStockCode()).getStockLogoUrl());
 
+            Integer stockPriceInteger = (int) ((temp.getUnitPrice() * temp.getQuantity()) / 100);
+            if(stockPriceInteger != null) {
+                stockTransactionHistoryResponseDto.setStockPrice(stockPriceInteger);
+            }else {
+                stockTransactionHistoryResponseDto.setStockPrice(0);
+            }
+
+            stockTransactionHistoryResponseDto.setStockLogo(getCompanyInfoByStockId(temp.getStockCode()).getStockLogoUrl());
             stockTransactionHistoryResponseDtoList.add(stockTransactionHistoryResponseDto);
         }
 
