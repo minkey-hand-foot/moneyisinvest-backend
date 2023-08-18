@@ -13,62 +13,78 @@ const Store = () => {
   //상점에 등록된 모든 상품 조회
   const [productsList, setProductsList] = useState([
     
-      {
+      /*{
         id: 1,
         category: '카페',
         name: 'Product 1',
         price: 10000,
-        image: 'https://via.placeholder.com/68x68'
+        imageUrl": 'https://via.placeholder.com/68x68'
       },
       {
         id: 2,
         category: '카페',
         name: 'Product 2',
         price: 15000,
-        image: 'https://via.placeholder.com/68x68'
-      }
+        imageUrl": 'https://via.placeholder.com/68x68'
+      }*/
    
   ]);
+
   
-  /*useEffect(() => {
+  
+  useEffect(() => {
     const token = sessionStorage.getItem("token");
+
+    //상점에 등록된 모든 상품 조회
     const fetchData = async () => {
+      console.log("fetchData 호출"); 
+      if (!token || token.trim() === "") {
+        console.error("토큰이 누락되었습니다. 로그인 후 다시 시도해 주세요.");
+        return;
+      }
+  
       try {
-        const response = await axios.get('/api/v1/shop/get/items', {
+        const response = await axios.get("/api/v1/shop/get/items", {
           headers: {
-            "X-AUTH-TOKEN": token
-          }
+            "X-AUTH-TOKEN": token,
+          },
+          params: {
+            size: 5,
+            page: 0,
+          },
         });
         setProductsList(response.data);
-        console.log('success')
+        console.log("상점 상품 정보 load success");
+        console.log(response);
       } catch (error) {
         // 에러 처리
-        console.error('API 요청 중 에러가 발생했습니다:', error);
-      }
-      if (!token || token.trim() === '') {
-        console.error('토큰이 누락되었습니다. 로그인 후 다시 시도해 주세요.');
-        return;
+        console.error("API 요청 중 에러가 발생했습니다:", error);
       }
     };
   
     fetchData();
-  }, []); // 빈 배열을 넣어서 컴포넌트 마운트 시에만 실행되도록 합니다.  */
+  }, []); // 빈 배열을 넣어서 컴포넌트 마운트 시에만 실행되도록 합니다.
+  
 
   //상품의 고유 ID 값으로 상품 구매
   const navigate = useNavigate();
 
   const onBuy = () => {
+    const apiClient = axios.create({
+      baseURL: process.env.REACT_APP_API_URL,
+    });
     const token = sessionStorage.getItem("token");
 
     if (token !== null) {
-        axios.post('/api/v1/shop/buy/items/id',{
-          params: { id: 1 }, // id
+      apiClient.post('/api/v1/shop/buy/items/id',{
           headers: {
             "X-Auth-Token": token,
           },
             })
             .then((res) => {
                 console.log("구매 완료",res.data);
+                alert("구매가 완료되었습니다!");
+                setCart([]);
                 navigate("/buyList", {replace: true})
             })
             .catch((err) => {
@@ -88,6 +104,26 @@ const Store = () => {
         console.log("Token is null. Unable to send request.");
     }
 }
+
+   /* const apiClient = axios.create({
+      baseURL: process.env.REACT_APP_API_URL,
+    });
+
+    const token = sessionStorage.getItem("token");
+    const onBuy2 = () => {
+      apiClient.post("/api/v1/shop/buy/items/id",{}, {
+          params: { id: 1 }, // id
+          headers: {
+              'X-AUTH-TOKEN': token
+          }
+      }).then((res) => {
+          console.log(res.data);
+          const redirectUrl = res.data.next_redirect_pc_url;
+          window.location.href = redirectUrl;
+      },).catch((err)=> {
+          console.log(err);
+      })
+    } */
   
     const [cart, setCart] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
@@ -129,8 +165,8 @@ const Store = () => {
                 <ul className="cart-list">
                   {cart.map((item, index) => (
                     <li key={index}>
-                      <img className='item-img' src={item.image} alt={item.name} />
-                      {item.name} - {item.price.toLocaleString()} 스톡
+                      <img className='item-img' src={item.imageUrl} alt={item.name} />
+                      {item.itemName} - {item.price.toLocaleString()} 스톡
                     </li>
                   ))}
                 </ul>
@@ -197,9 +233,9 @@ const Store = () => {
                 {filteredProducts.map((product) => (
                 <tr key={product.id} className="product-item">
                     <td>
-                    <img className='product-img' src={product.image} alt={product.name} />
+                    <img className='product-img' src={product.imageUrl} alt={product.name} />
                     </td>
-                    <td>{product.name}</td>
+                    <td>{product.itemName}</td>
                     <td>{product.price.toLocaleString()}스톡</td>
                     <td className='td-btn'>
                     <div onClick={() => addToCart(product)}><Button state="basket" >장바구니</Button></div>

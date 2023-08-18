@@ -20,11 +20,15 @@
                 font-size: 1.5rem;
                 font-weight: 700;
             }
-
             .commentList {
                 .writeComment {
                     display: flex;
                     flex-direction: column;
+                    .formComment {
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                    }
                     .user {
                         display: flex;
                         .userName{
@@ -173,4 +177,11 @@
           color: #333;
         }
     }
+}
+
+.profileImg {
+    width: 2.25rem;
+    height: 2.25rem;
+    margin: auto 0.75rem auto 0;
+    border-radius: 50%;
 }

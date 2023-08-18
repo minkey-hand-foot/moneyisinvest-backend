@@ -6,8 +6,29 @@ import {ReactComponent as Banner} from "../../assets/images/프리미엄.svg";
 import {ReactComponent as Circle} from "../../assets/images/Ellipse 26.svg";
 import {ReactComponent as Kakao} from "../../assets/images/kakao.svg";
 import Button from "components/Button";
+import axios from "axios";
 
 export default function Payment() {
+
+    const apiClient = axios.create({
+        baseURL: process.env.REACT_APP_API_URL,
+    });
+
+    const token = sessionStorage.getItem("token");
+    const onClickPay = () => {
+        apiClient.post("/api/v1/payment/kakao/pay",{}, {
+            headers: {
+                'X-AUTH-TOKEN': token
+            }
+        }).then((res) => {
+            console.log(res.data);
+            const redirectUrl = res.data.next_redirect_pc_url;
+            window.location.href = redirectUrl;
+        },).catch((err)=> {
+            console.log(err);
+        })
+    }
+
     return (
         <div className="PayContainer">
             <Header/>
@@ -56,11 +77,13 @@ export default function Payment() {
                                 <div>총합</div>
                                 <div>3,300원</div>
                             </div>
+                            <div onClick={onClickPay}>
                             <Button state="shopping"/>
+                            </div>
                             <div className="paymentInfo">
                                 <div>구매시 카카오페이 사이트로 자동 연결됩니다 </div>
                                 <div> 또한, 구독 취소를 따로 하지 않을 시 매월
-정기적으로 구독료가 자동 결제됩니다 </div>
+                                정기적으로 구독료가 자동 결제됩니다 </div>
                             </div>
                         </div>
                     </div>

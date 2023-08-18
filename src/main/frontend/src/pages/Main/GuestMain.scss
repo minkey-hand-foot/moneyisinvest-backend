@@ -19,6 +19,11 @@
                 background-size: cover;
                 background-color: lightgray 50%;
                 background-position: center;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                gap: 4rem;
             }                                                                                                                                    
             .banner2 {
                 display: flex;

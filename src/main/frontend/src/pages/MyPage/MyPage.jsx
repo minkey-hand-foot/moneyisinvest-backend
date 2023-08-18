@@ -113,11 +113,11 @@ export default function MyPage({setIsLoggedIn}) {
 
     return (
         <div className="myPageContainer">
-            <Header />
+            <Header profileImg={profile}/>
             <div className="myPageBox">
                 <div className="myPageContent">
                     <div className="profile">
-                        <Profile/>
+                        <Profile img={profile}/>
                     </div>
                     <div className="myPageProfile">
                         <div className="myPageTitle">마이페이지</div>

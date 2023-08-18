@@ -1,11 +1,11 @@
-.holdContainer {
+.transContainer {
     margin: 0;
-    .holdBox {
+    .transBox {
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        .holdContent {
+        .transContent {
             flex-grow: 1;
             display: flex;
             flex-direction: row;
@@ -15,19 +15,19 @@
                 margin: 3.6925rem 1.87rem 0 0;
                 padding: 0;
             }
-            .holdProfile {
+            .transProfile {
                 display: flex;
                 flex-direction: column;
                 gap: 1.88rem;
-                .holdTitle {
+                .transTitle {
                     color: #000;
                     font-size: 1.5rem;
                     font-weight: 700;
                 }    
-                .holdInfo {
+                .transInfo {
                     width: 49.0625rem;
                     border-radius: 0rem 0rem 1.875rem 1.875rem;
-                    .holdInfo-top {
+                    .transInfo-top {
                         height: 3.5625rem;
                         border-radius: 0.625rem 0.625rem 0rem 0rem;
                         background: #D1EFEE;
@@ -39,41 +39,37 @@
                         font-size: 1rem;
                         font-weight: 600;
                         justify-content: space-between;
-                        .holdInfo-title {
+                        .transInfo-title {
                             display: flex;
                             flex-direction: row;
-                            gap: 3rem;
-                            margin: auto 2.5rem;
-                            .holdInfo-image {
+                            //gap: 3rem;
+                            margin: auto 2rem;
+                            .transInfo-image {
                                 width: 3.875rem; /* 버튼의 너비와 동일하게 설정 */
                                 height: 100%; /* 버튼의 높이와 동일하게 설정 */
                                 background-color: #D1EFEE; /* 빈 요소의 배경색을 설정해주세요 */
                             }
-                            .holdInfo-event {
+                            .transInfo-event {
                                 width: 8rem;
                             }
                         }
-                        .holdInfo-content {
+                        .transInfo-content {
                             display: flex;
                             flex-direction: row;
-                            gap: 5.8rem;
-                            margin: auto 2.55rem;
+                            //gap: 5.8rem;
+                            margin: auto 1rem;
                             align-items: center;
                             text-align: center;
                             justify-content: space-between;
-                            .holdInfo-rate {
-                                display: flex;
-                                flex-direction: row;
-                                gap: 5.25rem;
-                            }
                             .stockValue {
                                 display: flex;
                                 flex-direction: row;
-                                gap: 4.6rem;
+                                gap: 3.3rem;
+                                padding-right: 1rem;
                             }
                         }
                     }
-                    .holdInfo-scrollable {
+                    .transInfo-scrollable {
                         max-height: 27.75rem; /* 원하는 높이로 조정 */
                         overflow-y: scroll;
                         scrollbar-width: none; /* Firefox에 대한 스크롤바 숨김 */
@@ -82,7 +78,7 @@
                             width: 0px;
                             height: 0px;
                         }
-                        .interestItems {
+                       /* .transItems {
                             height: 4.625rem;
                             display: flex;
                             flex-direction: row;
@@ -90,30 +86,30 @@
                             text-align: center;
                             justify-content: space-between;
                             border-bottom: 0.0625rem solid #ABE2DF;
-                            .holdItem-title {
+                            .transItem-title {
                                 display: flex;
                                 flex-direction: row;
                                 gap: 3.55rem;
                                 margin: auto 2.5rem;
                                 align-items: center;
-                                .holdItem-image {
-                                    width: 3.22056rem; /* 버튼의 너비와 동일하게 설정 */
-                                    height: 3.22056rem; /* 버튼의 높이와 동일하게 설정 */
+                                .transItem-image {
+                                    width: 3.22056rem; // 버튼의 너비와 동일하게 설정 
+                                    height: 3.22056rem; // 버튼의 높이와 동일하게 설정 
                                     border-radius: 50%;
-                                    background-color: #D1EFEE; /* 빈 요소의 배경색을 설정해주세요 */
+                                    background-color: #D1EFEE; //빈 요소의 배경색을 설정해주세요 
                                 }
-                                .holdItem-events {
+                                .transItem-events {
                                     display: flex;
                                     flex-direction: column;
                                     align-items: center;
                                     width: 8rem;
-                                    .holdItem-event {
+                                    .transItem-event {
                                         color: #000;
                                         text-align: center;
                                         font-size: 0.875rem;
                                         font-weight: 500;
                                     }
-                                    .holdItem-code {
+                                    .transItem-code {
                                         color: #B0B0B0;
                                         text-align: center;
                                         font-size: 0.625rem;
@@ -121,19 +117,18 @@
                                     }
                                 }
                             }
-                            .holdItem-content {
+                            .transItem-content {
                                 display: flex;
                                 flex-direction: row;
                                 gap: 3.75rem;
                                 margin: auto 2.5rem;
-                                .holdItem-percent {
-                                    width: 3.1875rem;
-                                    color: #FF1C1C;
-                                    text-align: center;
-                                    font-size: 0.875rem;
-                                    font-weight: 500;
-                                }
-                                .holdItem-price {
+
+                                color: var(--sub-text, #797979);
+                                text-align: center;
+                                font-size: 0.875rem;
+                                font-weight: 500;
+                                
+                                .transItem-price {
                                     width: 4.1875rem;
                                     color: #797979;
                                     text-align: center;
@@ -141,10 +136,63 @@
                                     font-weight: 500;
                                 }
                             }
-                        }
+                        } */
                         }
                 }
             }
         }
+        .transItems {
+            height: 4.625rem;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            text-align: center;
+            //justify-content: space-between;
+            border-bottom: 0.0625rem solid #ABE2DF;
+            .transItem-title {
+                display: flex;
+                flex-direction: row;
+                //gap: 3.55rem; 이미지랑 종목 간격
+                margin: auto 1.7rem;
+                align-items: center;
+                .transItem-image {
+                    width: 3.22056rem; /* 버튼의 너비와 동일하게 설정 */
+                    height: 3.22056rem; /* 버튼의 높이와 동일하게 설정 */
+                    border-radius: 50%;
+                    background-color: #D1EFEE; // 빈 요소의 배경색을 설정해주세요
+                }
+                .transItem-events {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    width: 8rem;
+                    .transItem-event {
+                        color: #000;
+                        text-align: center;
+                        font-size: 0.875rem;
+                        font-weight: 500;
+                    }
+                    .transItem-code {
+                        color: #B0B0B0;
+                        text-align: center;
+                        font-size: 0.625rem;
+                        font-weight: 500;
+                    }
+                }
+            }
+            
+            .transItem-content {
+                display: flex;
+                flex-direction: row;
+                gap: 3.5rem; //회색글씨 간격
+                margin: auto 1.5rem; //종목이랑 회색 가격
+
+                color: var(--sub-text, #797979);
+                text-align: center;
+                font-size: 0.875rem;
+                font-weight: 500;
+                
+            } 
+        } 
     }
 }

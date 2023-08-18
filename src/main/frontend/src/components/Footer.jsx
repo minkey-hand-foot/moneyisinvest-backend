@@ -14,7 +14,6 @@ const footer = css`
         margin: auto;
         td {
         color: #929292;
-        font-family: Noto Sans;
         font-size: 0.625rem;
         font-weight: 400;
         border-left: 0.0625rem #929292 solid;

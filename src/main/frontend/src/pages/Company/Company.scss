@@ -5,6 +5,7 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        position: relative;
         .companyContent {
             flex-grow: 1;
             padding: 0;
@@ -58,6 +59,7 @@
                 margin-top: -0.5rem;
             }
             .companyInfo {
+                position: relative;
                 display: flex;
                 flex-direction: row;
                 border-bottom: 2px solid #D1EFEE;
@@ -146,7 +148,26 @@
                         }
                     }
                 }
-
+                .overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0, 0, 0, 0.5);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 1000;
+                  }
+                  .stockMessage {
+                    background-color: white;
+                    border-radius: 4px;
+                    padding: 2rem;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    position: absolute;
+                    z-index: 1000;
+                  }
             }
             .companyNews {
                 display: flex;
