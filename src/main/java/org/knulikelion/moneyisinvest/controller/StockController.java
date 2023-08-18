@@ -130,7 +130,7 @@ public class StockController {
         return stockService.getStockTransactionHistory(uid);
     }
     @GetMapping("/calculate")
-    public String calculateCoin(@RequestParam int amount, String price){
+    public BaseResponseDto calculateCoin(@RequestParam int amount, String price){
         return stockService.calculateCoin(amount, price);
     }
     @GetMapping("/get/stockRank")

@@ -1128,14 +1128,19 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public String calculateCoin(int amount, String price) {
+    public BaseResponseDto calculateCoin(int amount, String price) {
         String numberWithoutCommas = price.replace(",", "");
         NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
         int result = (amount * Integer.parseInt(numberWithoutCommas)) / 100;
 
         String formattedResult = nf.format(result) + " ";
 
-        return formattedResult;
+        BaseResponseDto baseResponseDto = new BaseResponseDto();
+
+        baseResponseDto.setSuccess(true);
+        baseResponseDto.setMsg(formattedResult);
+
+        return baseResponseDto;
     }
 }
 

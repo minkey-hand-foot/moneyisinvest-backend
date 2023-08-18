@@ -34,6 +34,6 @@ public interface StockService {
     List<OwnedStockResponseDto> getUserStock(String uid);
     String getDayBeforeRate(String stockCode);
     List<StockTransactionHistoryResponseDto> getStockTransactionHistory(String uid);
-    String calculateCoin(int amount, String price);
+    BaseResponseDto calculateCoin(int amount, String price);
 
 }
