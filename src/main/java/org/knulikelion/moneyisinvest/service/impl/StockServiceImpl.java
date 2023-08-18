@@ -1097,6 +1097,7 @@ public class StockServiceImpl implements StockService {
             stockTransactionHistoryResponseDto.setStockCode(temp.getStockCode());
             stockTransactionHistoryResponseDto.setStockName(temp.getStockName());
             stockTransactionHistoryResponseDto.setUnitPrice((int) temp.getUnitPrice());
+            stockTransactionHistoryResponseDto.setStatus(temp.isPurchase());
             stockTransactionHistoryResponseDto.setQuantity(temp.getQuantity());
             stockTransactionHistoryResponseDto.setStockLogo(getCompanyInfoByStockId(temp.getStockCode()).getStockLogoUrl());
 

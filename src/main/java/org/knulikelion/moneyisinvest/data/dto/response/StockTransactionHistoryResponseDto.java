@@ -10,6 +10,7 @@ import lombok.*;
 public class StockTransactionHistoryResponseDto {
     private String transactionDate;
     private String stockLogo;
+    private boolean status;
     private Integer unitPrice;
     private Integer quantity;
     private String stockName;
