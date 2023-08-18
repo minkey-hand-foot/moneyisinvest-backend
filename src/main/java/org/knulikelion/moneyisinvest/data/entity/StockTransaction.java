@@ -28,7 +28,7 @@ public class StockTransaction {
     @Column
     private int quantity;
     @Column
-    private double unitPrice;
+    private Integer unitPrice;
     @Column
     private Integer stockPrice; // 스톡가
     @Column
