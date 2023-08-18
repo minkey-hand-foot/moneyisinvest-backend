@@ -16,7 +16,7 @@ public class StockTransactionResponseDto {
     private String stockCode; // 주식 코드
     private String stockName; // 주식 이름
     private int quantity; // 거래 수량
-    private double unitPrice; // 단가
+    private Integer unitPrice; // 단가
     private Integer stockPrice; // 스톡가
     private LocalDateTime transactionDate; // 거래 일시
 

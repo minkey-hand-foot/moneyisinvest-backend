@@ -837,7 +837,7 @@ public class StockServiceImpl implements StockService {
                     .quantity(Integer.parseInt(stockBuyRequestDto.getStockAmount()))
                     .isPurchase(true)
                     .transactionDate(LocalDateTime.now())
-                    .unitPrice(Double.parseDouble(stockBuyRequestDto.getConclusion_price()))
+                    .unitPrice((int) (Double.parseDouble(stockBuyRequestDto.getConclusion_price()) * Integer.parseInt(stockBuyRequestDto.getStockAmount())))
                     .stockPrice((int) (Double.parseDouble(stockBuyRequestDto.getConclusion_price()) * Integer.parseInt(stockBuyRequestDto.getStockAmount()) /100))
                     .user(userRepository.findByUid(uid))
                     .build();
@@ -935,7 +935,7 @@ public class StockServiceImpl implements StockService {
                             .quantity(Integer.parseInt(stockSellRequestDto.getStockAmount()))
                             .isPurchase(false)
                             .transactionDate(LocalDateTime.now())
-                            .unitPrice(Double.parseDouble(stockSellRequestDto.getSell_price()))
+                            .unitPrice((int)(Double.parseDouble(stockSellRequestDto.getSell_price())*Integer.parseInt(stockSellRequestDto.getStockAmount())))
                             .stockPrice((int) (Double.parseDouble(stockSellRequestDto.getSell_price()) * Integer.parseInt(stockSellRequestDto.getStockAmount())/100))
                             .user(userRepository.findByUid(uid))
                             .build();
@@ -1118,7 +1118,7 @@ public class StockServiceImpl implements StockService {
             stockTransactionHistoryResponseDto.setTransactionDate(temp.getTransactionDate().toString());
             stockTransactionHistoryResponseDto.setStockCode(temp.getStockCode());
             stockTransactionHistoryResponseDto.setStockName(temp.getStockName());
-            stockTransactionHistoryResponseDto.setUnitPrice((int) temp.getUnitPrice());
+            stockTransactionHistoryResponseDto.setUnitPrice(temp.getUnitPrice() * temp.getQuantity());
             stockTransactionHistoryResponseDto.setStatus(temp.isPurchase());
             stockTransactionHistoryResponseDto.setQuantity(temp.getQuantity());
 
