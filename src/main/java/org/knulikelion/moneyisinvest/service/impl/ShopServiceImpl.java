@@ -46,15 +46,22 @@ public class ShopServiceImpl implements ShopService {
 
 
     @Override
-    public Page<ShopItemListResponseDto> getAllItems(Pageable pageable) {
-        Page<Shop> shopPage = shopRepository.findAll(pageable);
-        return shopPage.map(shop -> ShopItemListResponseDto.builder()
-                .id(shop.getId())
-                .itemName(shop.getItemName())
-                .category(shop.getCategory())
-                .imageUrl(shop.getImageUrl())
-                .price(NumberFormat.getInstance(Locale.getDefault()).format(shop.getPrice()))
-                .build());
+    public List<ShopItemListResponseDto> getAllItems() {
+        List<Shop> shop = shopRepository.findAll();
+        List<ShopItemListResponseDto> shopItemListResponseDtoList = new ArrayList<>();
+        for(Shop temp : shop) {
+            ShopItemListResponseDto shopItemListResponseDto = ShopItemListResponseDto.builder()
+                    .id(temp.getId())
+                    .price(NumberFormat.getInstance(Locale.getDefault()).format(temp.getPrice()))
+                    .itemName(temp.getItemName())
+                    .category(temp.getCategory())
+                    .imageUrl(temp.getImageUrl())
+                    .build();
+
+            shopItemListResponseDtoList.add(shopItemListResponseDto);
+        }
+
+        return shopItemListResponseDtoList;
     }
 
 

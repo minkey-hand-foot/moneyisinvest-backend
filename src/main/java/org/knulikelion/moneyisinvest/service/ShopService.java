@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ShopService {
-    Page<ShopItemListResponseDto> getAllItems(Pageable pageable);
+    List<ShopItemListResponseDto> getAllItems();
 
     BaseResponseDto uploadShopItems(MultipartFile file, String itemName, String itemCategory, double stockPrice);
 

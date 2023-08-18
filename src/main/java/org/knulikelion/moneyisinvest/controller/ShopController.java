@@ -70,15 +70,10 @@ public class ShopController {
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
     @GetMapping("/get/items")
-    public ResponseEntity<Page<ShopItemListResponseDto>> getAllItems(
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<ShopItemListResponseDto> items = shopService.getAllItems(pageable);
-        return new ResponseEntity<>(items, HttpStatus.OK);
+    public List<ShopItemListResponseDto> getAllItems() {
+        return shopService.getAllItems();
     }
-
-
+    
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
