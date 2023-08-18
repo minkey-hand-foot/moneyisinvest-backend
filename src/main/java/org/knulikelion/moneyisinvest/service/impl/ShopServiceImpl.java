@@ -79,7 +79,7 @@ public class ShopServiceImpl implements ShopService {
 
             Shop shop = Shop.builder()
                     .itemName(itemName)
-                    .imageUrl("https://moneyisinvest.kr/api/v1/shop/images/" + fileName)
+                    .imageUrl("http://moneyisinvest.kr/api/v1/shop/images/" + fileName)
                     .category(itemCategory)
                     .price(stockPrice * 70)
                     .build();

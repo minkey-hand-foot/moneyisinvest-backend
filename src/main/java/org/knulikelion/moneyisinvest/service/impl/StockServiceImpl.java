@@ -192,7 +192,7 @@ public class StockServiceImpl implements StockService {
             File file = new File(imagePath.toString());
             ImageIO.write(image, "png", file);
 
-            return "https://moneyisinvest.kr/api/v1/profile/images/" + stockId + ".png";
+            return "http://moneyisinvest.kr/api/v1/profile/images/" + stockId + ".png";
         } catch (IOException e) {
             e.printStackTrace();
             return null;
