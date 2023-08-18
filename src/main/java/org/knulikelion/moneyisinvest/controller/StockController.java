@@ -106,6 +106,15 @@ public class StockController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
+    @GetMapping("/get/users/stockquantity")
+    public BaseResponseDto getNewUsersStockQuantity(HttpServletRequest request, @RequestParam String stockId) {
+        String uid = jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN"));
+        return stockService.getNewUsersStockQuantity(uid, stockId);
+    }
+
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
     @GetMapping("/get/users/stocks")
     public List<OwnedStockResponseDto> getUserStocks(HttpServletRequest request) {
         String uid = jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN"));

@@ -1032,6 +1032,26 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
+    public BaseResponseDto getNewUsersStockQuantity(String uid, String stockId) {
+        BaseResponseDto baseResponseDto = new BaseResponseDto();
+        Long userId = userRepository.getByUid(uid).getId();
+        List<Stock> stock = stockRepository.findByUserId(userId);
+
+        Integer quantity = null;
+
+        for(Stock temp : stock) {
+            if(temp.getStockCode().equals(stockId)) {
+                quantity = temp.getStockAmount();
+            }
+        }
+
+        baseResponseDto.setSuccess(true);
+        baseResponseDto.setMsg(String.valueOf(quantity));
+
+        return baseResponseDto;
+    }
+
+    @Override
     public List<OwnedStockResponseDto> getUserStock(String uid) {
         User user = userRepository.findByUid(uid);
         List<Stock> stockList = stockRepository.findAllByUser(user);
