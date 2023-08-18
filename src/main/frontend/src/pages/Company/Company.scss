@@ -1,0 +1,364 @@
+.companyContainer {
+    margin: 0;
+    .companyBox {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        .companyContent {
+            flex-grow: 1;
+            padding: 0;
+            margin: 0;
+            .companyChart {
+                display: flex;
+                flex-direction: column;
+                position: relative;
+                .companyStockChart {
+                    width: 61.875rem;
+                    height: 28.6875rem;
+                    border-radius: 1.25rem;
+                    border: 2px solid #D1EFEE;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+            }
+            .companyHelp {
+                height: 2.5rem;
+                border-radius: 0.625rem;
+                background: #F0F9F8;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                padding: 0 1.25rem 0 0.62rem;
+                gap: 1rem;
+                color: #3EB7AF;
+                font-size: 0.875rem;
+                font-weight: 500;
+                justify-content: space-between;
+                margin-top: 0.75rem;
+                .companyHelpText {
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 1rem;
+                    .companyStockIcon {
+                        width: 1.5rem;
+                        height: 1.5rem;
+                    }
+                }
+                .companyStockDown {
+                    width: 1.25rem;
+                    height: 1.25rem;
+                }    
+            }
+            .companyEducation {
+                position: absolute;
+                z-index: 10;
+                margin-top: -0.5rem;
+            }
+            .companyInfo {
+                position: relative;
+                display: flex;
+                flex-direction: row;
+                border-bottom: 2px solid #D1EFEE;
+                padding-bottom: 0.85rem;
+                margin-top: 0.87rem;
+                margin-bottom: 2.87rem;
+                align-items: flex-end;
+                justify-content: space-between;
+                .companyInformation {
+                    display: flex;
+                    flex-direction: row;
+                    align-items: flex-end;
+                    .companyInfoTitle {
+                        display: flex;
+                        flex-direction: column;
+                        .companyName {
+                            color: #000;
+                            font-size: 1.5rem;
+                            font-weight: 700;
+                        }
+                        .companyStockDeal {
+                            display: flex;
+                            flex-direction: row;
+                            gap: 0.5rem;
+                            align-items: flex-end;
+                            .companyStockDeal-stock {
+                                color: #000;
+                                font-size: 1.875rem;
+                                font-weight: 700;
+                            }
+                            .companyStockDeal-price {
+                                color: #797979;
+                                font-size: 1.25rem;
+                                font-weight: 500;
+                            }
+                        }
+                    }
+                }
+                .companyInfoContent {
+                    display: flex;
+                        .companyStockTimeBox {
+                            display: flex;
+                            flex-direction: column;
+                            margin-left: 1rem;
+                            .companyStockTime {
+                                display: flex;
+                                color: #797979;
+                                font-size: 0.875rem;
+                                font-weight: 500;
+                                margin-bottom: 0.37rem;
+                            }
+                            .companyStockTimeInfo {
+                                color: #797979;
+                                font-size: 0.75rem;
+                                font-weight: 500;
+                                margin-bottom: 0.19rem;
+                            }
+                            .companyStockTimeBook {
+                                display: flex;
+                                flex-direction: row;
+                                gap: 0.19rem;
+                                color: #3EB7AF;
+                                font-size: 0.75rem;
+                                font-weight: 500;
+                                align-items: center;
+                                .companyStockTimeIcon {
+                                    width: 0.625rem;
+                                    height: 0.625rem;
+                                }
+                            }
+                        }
+                }
+                .companyStockBtn {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.25rem;
+                    align-items: flex-end;
+                    .companyStockDealBtn {
+                        display: flex;
+                        flex-direction: row;
+                        gap: 0.88rem;
+                        align-items: center;
+                        .companyStockHeart {
+                            width: 1.75rem;
+                            height: 1.75rem;
+                        }
+                    }
+                }
+                .overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0, 0, 0, 0.5);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 1000;
+                  }
+                  .stockMessage {
+                    background-color: white;
+                    border-radius: 4px;
+                    padding: 2rem;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    position: absolute;
+                    z-index: 1000;
+                  }
+            }
+            .companyNews {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+                margin-bottom: 5.88rem;
+                .companyNewsText {
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: space-between;
+                    align-items: flex-end;
+                    .companyNewsTitle {
+                        color: #000;
+                        font-size: 1.5rem;
+                        font-weight: 700;
+                    }
+                    .companyNewsSubtitle {
+                        color: #797979;
+                        font-size: 0.8125rem;
+                        font-weight: 500;
+                    }
+                }
+                .companyNewsList {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1.5rem;
+                    padding: 1.13rem 1.06rem 1.25rem 1.31rem;                     
+                    .companynewsList {
+                        height: 8rem;
+                        border-bottom: 1px solid #E4E4E4;      
+                        display: flex;
+                        flex-direction: row;
+                        justify-content: space-between;   
+                        .companynewsItems {
+                            display: flex;
+                            flex-direction: column;
+                            width: 33.9375rem;
+                            cursor: pointer;
+                            .companynewsItemCompany {
+                                color: #000;
+                                font-size: 0.875rem;
+                                font-weight: 500;
+                                margin-bottom: 0.25rem;
+                            }
+                            .companynewsItemTitle {
+                                color: #000;
+                                font-size: 1.125rem;
+                                font-weight: 600;
+                                margin-bottom: 0.94rem;
+                            }
+                            .companynewsItemContent {
+                                color: #797979;
+                                font-size: 0.875rem;
+                                font-weight: 500;
+                                overflow: hidden;  		// 을 사용해 영역을 감출 것
+                                text-overflow: ellipsis;  	// 로 ... 을 만들기 
+                            }
+                        }      
+                        .companynewsImage {
+                            width: 6rem;
+                            height: 6rem;
+                            border-radius: 0.625rem;
+                            background-color: #D9D9D9;
+                        }
+                    }
+                }
+            }
+            .companyCommunity {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+                margin-bottom: 5.88rem;;
+                .companyCommunityText {
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: space-between;
+                    align-items: flex-end;
+                    .companyCommunityTitle {
+                        color: #000;
+                        font-size: 1.5rem;
+                        font-weight: 700;
+                    }
+                    .companyCommunitySubtitle {
+                        color: #797979;
+                        font-size: 0.8125rem;
+                        font-weight: 500;
+                    }
+                }
+                .companyCommunityList {
+                    display: flex;
+                    flex-direction: column;
+                    padding: 1.13rem 1.06rem 1.25rem 1.31rem;                     
+                    .companycommunityList {
+                        height: 5rem;
+                        border-bottom: 1px solid #E4E4E4;      
+                        display: flex;
+                        flex-direction: row;
+                        justify-content: space-between;
+                        align-items: center;   
+                        .companycommunityProfile {
+                            display: flex;
+                            flex-direction: row;
+                            align-items: center;
+                            gap: 1.53rem;
+                            .companycommunityProfileImg {
+                                width: 3.25rem;
+                                height: 3.25rem;
+                            }
+                            .companycommunityName {
+                                color: #000;
+                                font-size: 1rem;
+                                font-weight: 600;
+                            }
+                        }
+                        .companycommunityComment {
+                            color: #000;
+                            font-size: 0.875rem;
+                            font-weight: 500;
+                        }
+                        .companycommunityReply {
+                            display: flex;
+                            flex-direction: row;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 1rem;
+                            .companycommunityIcons {
+                                display: flex;
+                                flex-direction: row;
+                                align-items: center;
+                                gap: 0.5rem;
+                                color: #B0B0B0;
+                                font-size: 0.875rem;
+                                font-weight: 600;
+                                .companycommunityIcon {
+                                    width: 1.25rem;
+                                    height: 1.25rem;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .companyTable {
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+                .companyTableTitle {
+                    color: #000;
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                }
+                table {
+                    border-collapse: collapse;
+                    thead {
+                        height: 4.5rem;
+                        background: #D1EFEE;
+                        th {
+                            color: #3EB7AF;
+                            text-align: center;
+                            font-size: 1rem;
+                            font-weight: 600;
+                        }
+                        th:first-child {
+                            border-top-left-radius: 0.625rem;
+                            border-right: 0.125rem solid #ABE2DF;
+                        }
+                        th:last-child {
+                            border-top-right-radius: 0.625rem;
+                        }
+                    }
+                    tbody {
+                        tr {
+                            border-bottom: 0.125rem solid #ABE2DF;
+                            height: 4.625rem;
+                            td {
+                                color: #000;
+                                text-align: center;
+                                font-size: 0.875rem;
+                                font-weight: 500;
+                            }
+                            td:first-child {
+                                border-right: 0.125rem solid #ABE2DF;
+                                color: #000;
+                                text-align: center;
+                                font-size: 1rem;
+                                font-weight: 600;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

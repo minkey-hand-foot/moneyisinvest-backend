@@ -1,0 +1,106 @@
+.signupContainer {
+    margin: 0;
+    .signupBox {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        .signupContent {
+            flex-grow: 1;
+            padding: auto;
+            margin: auto;
+            .signupTitle {
+                color: #000;
+                font-size: 1.5rem;
+                font-weight: 700;
+                letter-spacing: -0.0225rem;
+                margin: 10.19rem 0 3rem 0;
+            }
+            .signupInput {
+                color: #000;
+                font-size: 0.875rem;
+                font-weight: 500;
+                letter-spacing: -0.01313rem;
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;  
+                margin-bottom: 1.25rem;
+                input {
+                    height: 3.4375rem;
+                    border-radius: 0.625rem;
+                    border: 0.125rem solid #E4E4E4;
+                    letter-spacing: -0.01313rem;
+                    padding-left: 1rem;
+                    outline-color: #85D6D1;
+                    width: 23.625rem;
+                }
+            }
+            .signConfirm {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 0.81rem;
+            }
+            .pwInput {
+                color: #000;
+                font-size: 0.875rem;
+                font-weight: 500;
+                letter-spacing: -0.01313rem;
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;  
+                margin-bottom: 0.5rem;
+                input {
+                    height: 3.4375rem;
+                    border-radius: 0.625rem;
+                    border: 0.125rem solid #E4E4E4;
+                    letter-spacing: -0.01313rem;
+                    padding-left: 1rem;
+                    outline-color: #85D6D1;
+                }
+            }
+            .idRemember {
+                display: flex;
+                flex-direction: row;
+                text-align: center;
+                align-items: center;
+                gap: 0.46rem;
+                color: #797979;
+                font-size: 0.75rem;
+                font-weight: 500;
+                letter-spacing: -0.01125rem;
+                margin-bottom: 0.5rem;
+                input {
+                    appearance: none;
+                    width: 1.25rem;
+                    height: 1.25rem;
+                    border: 0.125rem solid #E4E4E4;
+                    border-radius: 0.2rem;
+                    accent-color: #E4E4E4;
+                    &:hover {
+                        cursor: pointer;
+                    }
+                    &:checked {
+                        background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M5.707 7.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4a1 1 0 0 0-1.414-1.414L7 8.586 5.707 7.293z'/%3e%3c/svg%3e");
+                        background-size: 100% 100%;
+                        background-position: 50%;
+                        background-repeat: no-repeat;
+                        background-color: #E4E4E4;
+                    }
+                }
+            }
+            .loginEmail {
+                text-align: center;
+                margin-top: 0.75rem;
+                color: #797979;
+                font-size: 0.75rem;
+                font-weight: 500;
+                letter-spacing: -0.01125rem;
+                margin-bottom: 10.06rem;
+                cursor: pointer;
+            }
+            .signButton {
+                margin-top: 2.5rem;
+            }
+        }
+    }
+}

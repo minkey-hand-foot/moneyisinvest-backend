@@ -1,0 +1,74 @@
+.newsContainer {
+  margin: 0;
+  .newsBox {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    .newsContent {
+      margin-top: 3.25rem;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      .newsTitle {
+        color: #000;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 2.12rem;
+      }
+      .newsInfo {
+        width: 52.875rem;
+        .newsInfo-scrollable {
+          max-height: 48.125rem; /* 원하는 높이로 조정 */
+          overflow-y: scroll;
+          scrollbar-width: none; /* Firefox에 대한 스크롤바 숨김 */
+          -ms-overflow-style: none; /* IE 및 Edge에 대한 스크롤바 숨김 */
+          .newsList {
+            width: 52.6875rem;
+            height: 8rem;
+            border-bottom: 1px solid #e4e4e4;
+            display: flex;
+            flex-direction: row;
+            padding: 1.13rem 1.94rem 1.19rem 1.81rem;
+            gap: 9rem;
+            .newsItems {
+              display: flex;
+              flex-direction: column;
+              width: 33.9375rem;
+              cursor: pointer;
+              .newsItemCompany {
+                color: #000;
+                font-size: 0.875rem;
+                font-weight: 500;
+                margin-bottom: 0.25rem;
+              }
+              .newsItemTitle {
+                color: #000;
+                font-size: 1.125rem;
+                font-weight: 600;
+                margin-bottom: 0.94rem;
+              }
+              .newsItemContent {
+                color: #797979;
+                font-size: 0.875rem;
+                font-weight: 500;
+                overflow: hidden; // 을 사용해 영역을 감출 것
+                text-overflow: ellipsis; // 로 ... 을 만들기
+              }
+            }
+            .newsImage {
+              width: 6rem;
+              height: 6rem;
+              border-radius: 0.625rem;
+              background-color: #d9d9d9;
+            }
+          }
+          &::-webkit-scrollbar {
+            width: 0px;
+            height: 0px;
+          }
+        }
+      }
+    }
+  }
+}

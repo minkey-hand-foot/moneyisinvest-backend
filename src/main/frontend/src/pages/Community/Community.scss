@@ -1,0 +1,187 @@
+.communityContainer {
+    margin: 0;
+    .communityBox {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        .communityContent {
+            .communityTop{
+                flex-grow: 1;
+                padding: auto;
+                margin: auto;
+                display: flex;
+                flex-direction: row;
+                margin-top: 3.25rem;
+                margin: 2.69rem 0 1.37rem 0; 
+            }
+            .communityTitle {
+                color: #000;
+                font-size: 1.5rem;
+                font-weight: 700;
+            }
+            .commentList {
+                .writeComment {
+                    display: flex;
+                    flex-direction: column;
+                    .formComment {
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                    }
+                    .user {
+                        display: flex;
+                        .userName{
+                            padding: 0.4375rem;
+                            color: #000;
+                            font-size: 1rem;
+                            font-weight: 600;
+                            line-height: normal;
+                        }
+                    }
+                    .commentText {
+                        width: 37.25rem;
+                        padding: 0.9375rem;
+                    }
+                    .group {
+                        display: flex;
+                        flex-direction: row;
+                        border-bottom: 1px solid var(--line, #ABE2DF);
+                        padding-bottom: 1rem;
+                        margin-bottom: 1rem;
+                    }
+                    .likeCount, replyCount {
+                        margin-right: 0.5rem; 
+                    }
+                    .repliesContainer {
+                        margin-left: 2.5rem;
+                        padding: 0.625rem;
+                        justify-content: space-between;
+                        align-items: center;
+                        .reply {
+                            display: flex;
+                            flex-direction: row;
+                            align-items: center;
+                            padding: 1rem;
+                            .replyText {
+                                width: 30rem;
+                                padding: 0.3125rem;
+                            }
+                            .replyUserName {
+                                display: flex;
+                                color: #000;
+                                font-size: 1rem;
+                                font-weight: 600;
+                                padding-left: 0.3125rem;
+                                
+                            }
+                        }
+                        .inputReplyForm {
+                            align-items: center;
+                            margin-top: 2rem;
+                            .replyUserName {
+                                padding-left: 0.3125rem;
+                                color: #000;
+                                font-size: 1rem;
+                                font-weight: 600;
+                            }
+                            .inputReply {
+                                width: 30.5rem;
+                                padding: 0.3125rem;
+                            }
+                            .replybtn {
+                                margin-left:0.5rem
+                            }
+                        }
+                    }
+                }
+                div {
+                    margin-right: 0.625rem;
+                }
+            }
+            .newComment {
+                display: flex;
+                flex-direction: row;
+                .postComment {
+                    display: flex;
+                    align-items: center;
+                    .postUserName {
+                        color: #000;
+                        font-size: 1rem;
+                        font-weight: 600;
+                        padding-left: 0.3125rem;
+                    }
+                    .inputComment {
+                        width: 37.25rem;
+                        height: 5.75rem;
+                    }
+                    .postBtn {
+                        width: 2rem;
+                        height: 5.75rem;
+                        justify-content: center;
+                        align-items: center;
+                        gap: 0.625rem;
+                        border-radius: 0.4375rem;
+                        background: #85D6D1;
+                        border-style: none;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+.inputComment {
+    width: 37.25rem;
+    height: 5.75rem;
+    margin: 0.625rem;
+    border-radius: 0.625rem;
+    border: none;
+    background: #F0F9F8;
+    font-size: 0.875rem;
+    padding: 0.625rem;
+    outline-color: #85D6D1;
+    resize: none;
+}
+
+.inputReplyForm {
+    display: flex;
+    align-items: center;
+    
+    .inputReply {
+        resize: none;
+        outline-color: #F0F9F8;
+        width: 25rem;
+        border: none;
+    }
+}
+
+.pagination {
+    display: flex;
+    flex-direction: row;
+    gap: 2.38rem;
+    justify-content: center;
+    button {
+        color: #a9a9a9;
+        font-family: Noto Sans;
+        font-size: 0.875rem;
+        font-weight: 400;
+        letter-spacing: -0.0175rem;
+        border: 0;
+        background-color: transparent;
+        cursor: pointer;
+    
+        &:hover {
+          color: #333;
+        }
+    }
+}
+
+.profileImg {
+    width: 2.25rem;
+    height: 2.25rem;
+    margin: auto 0.75rem auto 0;
+    border-radius: 50%;
+}
