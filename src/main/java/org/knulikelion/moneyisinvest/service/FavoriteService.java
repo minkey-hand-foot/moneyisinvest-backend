@@ -10,5 +10,6 @@ public interface FavoriteService {
     BaseResponseDto addFavorite(String uid, String stockId);
     BaseResponseDto removeFavorite(String uid, String stockId);
     List<StockCompanyFavResponseDto> findUserFavoriteStockIds(String uid);
+    boolean getFavoriteStatus(String uid, String stockCode);
 
 }
