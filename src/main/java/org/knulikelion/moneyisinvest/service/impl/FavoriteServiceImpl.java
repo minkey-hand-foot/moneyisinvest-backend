@@ -95,4 +95,16 @@ public class FavoriteServiceImpl implements FavoriteService {
 
         return outputList;
     }
+
+    @Override
+    public boolean getFavoriteStatus(String uid, String stockCode) {
+        User user = userRepository.findByUid(uid);
+        Favorite favorite = favoriteRepository.findByUserAndStockId(user,stockCode);
+
+        if(favorite == null){
+            return false;
+        }else {
+            return true;
+        }
+    }
 }

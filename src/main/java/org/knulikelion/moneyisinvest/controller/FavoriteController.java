@@ -46,4 +46,11 @@ public class FavoriteController {
     public List<StockCompanyFavResponseDto> getUserFavoriteStock(HttpServletRequest request) {
         return favoriteService.findUserFavoriteStockIds(jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")));
     }
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
+    @GetMapping("/get/status")
+    public boolean getFavoriteStatus(HttpServletRequest request, @RequestParam String stockCode){
+        return favoriteService.getFavoriteStatus(jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")),stockCode);
+    }
 }
