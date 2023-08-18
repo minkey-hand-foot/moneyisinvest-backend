@@ -31,7 +31,6 @@ export default function AskWrite() {
 
         if (token !== null) {
             apiClient.post('/api/v1/support/post', {
-                    uid: sessionStorage.getItem("id"),
                     title: title,
                     contents: content
                 }, {

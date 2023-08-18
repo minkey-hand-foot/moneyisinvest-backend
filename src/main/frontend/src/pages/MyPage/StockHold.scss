@@ -102,6 +102,10 @@
                                     font-size: 0.875rem;
                                     font-weight: 500;
                                     margin-bottom: 0.12rem;
+                                    word-break: break-word;
+                                    width: 3.0625rem;
+                                    height: 1rem;
+                                    overflow: hidden;
                                 }
                                 .HoldItems-Code {
                                     color: #B0B0B0;
@@ -120,6 +124,7 @@
                                     display: flex;
                                     flex-direction: column;
                                     gap: 0.06rem;
+                                    width: 3.95rem;
                                     .HoldItems-Stock {
                                         color: #797979;
                                         text-align: center;

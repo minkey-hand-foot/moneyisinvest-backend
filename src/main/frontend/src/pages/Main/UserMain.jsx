@@ -11,51 +11,14 @@ import { useSelector, useDispatch } from 'react-redux';
 import { updateRanking, updateKOSPIData, updateKOSDAQData } from './redux/action';
 import StockChartCard from "./redux/StockChartCard";
 import axios from "axios";
+import { ReactComponent as Computer } from "../../assets/images/메인 배너(컴퓨터).svg";
+import { ReactComponent as Text } from "../../assets/images/메인 배너(타이틀).svg";
 
 export default function UserMain() {
 
     const apiClient = axios.create({
         baseURL: process.env.REACT_APP_API_URL,
     });
-    
-    const [ranking] = useState([
-        {
-            company: "삼성전자",
-            code: "005930",
-            rate: "99.9",
-            price: "500,000",
-            value: "5,000"
-        },
-        {
-            company: "삼성전자",
-            code: "005930",
-            rate: "99.9",
-            price: "500,000",
-            value: "5,000"
-        },
-        {
-            company: "삼성전자",
-            code: "005930",
-            rate: "99.9",
-            price: "500,000",
-            value: "5,000"
-        },
-        {
-            company: "삼성전자",
-            code: "005930",
-            rate: "99.9",
-            price: "500,000",
-            value: "5,000"
-        },
-        {
-            company: "삼성전자",
-            code: "005930",
-            rate: "99.9",
-            price: "500,000",
-            value: "5,000"
-        },
-
-    ])
 
     const [holdStock, setHoldStock] = useState([]);
     const [interestStock, setInterestStock] = useState([]);
@@ -156,6 +119,11 @@ export default function UserMain() {
             console.log("Token is null. Unable to send request.");
         }
 
+        /*apiClient.get("/api/v1/stock/get/stockRank").then((res) => {
+            dispatch(updateRanking(res.data));
+            console.log(res.data);
+        })*/
+
         // 주식 랭킹 웹소켓 열기
         const stockRankSocket = new WebSocket(stockRankWebSocketUrl);
         stockRankSocket.onopen = () => {
@@ -180,13 +148,13 @@ export default function UserMain() {
 
     // 받아온 값 자르기 예시
     const numberOfItemsToShow = 3;
-    const filteredData = ranking.slice(0, numberOfItemsToShow);
-    const filteredDataFavorite = filteredData.slice(0, numberOfItemsToShow);
-    const userStock = filteredData.map((item, index) => (
+    const filteredData = holdStock.slice(0, numberOfItemsToShow);
+    const filteredDataFavorite = interestStock.slice(0, numberOfItemsToShow);
+    const userStock = (filteredData || []).map((item, index) => (
         <UserCard item={item} index={index} key={index} isHold={true}/>
     ));
-
-    const favoriteStock = filteredDataFavorite.map((item, index) => (
+    
+    const favoriteStock = (filteredDataFavorite || []).map((item, index) => (
         <UserCard item={item} index={index} key={index} isHold={false}/>
     ));
 
@@ -203,7 +171,10 @@ export default function UserMain() {
             <Header/>
             <div className="MainBox">
                 <div className="MainContent">
-                    <div className="MainBannerImage"/>
+                <div className="MainBannerImage">
+                    <Text/>
+                    <Computer/>
+                    </div>
                     <div className="mainStock">
                         <div className="mainStockContent">
                             <div className="mainStockTitle" {...useScrollFadeIn('up', 1, 0)}>주요 지수</div>

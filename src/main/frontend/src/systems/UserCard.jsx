@@ -10,12 +10,13 @@ const UserCard = ({ item, index, isHold }) => {
         <div className="animated-card" key={index} {...useScrollFadeIn('left', 1, (index + 1) * 0.2)}>
             <Card 
                 isVisible={false}
-                company={item.companyName}
+                company={item.stockName}
                 code={item.stockCode}
-                rate={item.preparation_day_before_rate}
-                price={item.price}
-                stock={item.stockPrice}
+                rate={item.rate}
+                price={item.real_per_price}
+                stock={item.real_per_coin}
                 isHold={isHold}
+                img={item.stockUrl}
             />
         </div>
     );

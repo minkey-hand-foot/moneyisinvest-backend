@@ -11,11 +11,15 @@
             .MainBannerImage {
                 width: 100vw;
                 height: 100vh;
-                background-image: url('../../assets/images/MainBanner.svg');
+                background-image: url('../../assets/images/메인 배너(배경).svg');
                 background-repeat: no-repeat;
                 background-size: cover;
                 background-color: lightgray 50%;
                 background-position: center;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
             }                    
             .mainStock {
                 display: flex;

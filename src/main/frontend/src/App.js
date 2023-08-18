@@ -6,6 +6,7 @@ import SignUp from "./pages/SignUp/SignUp";
 import MyPage from "pages/MyPage/MyPage";
 import AskPage from "pages/MyPage/AskPage";
 import AskWrite from "pages/MyPage/AskWrite";
+import StockTransaction from "pages/MyPage/Transactions"
 import News from "pages/News/News";
 import Store from "./pages/Store/Store";
 import AllNews from "pages/News/AllNews";
@@ -21,9 +22,10 @@ import TbDetail3 from "pages/Education/TbDetail3";
 import AskDetail from "pages/MyPage/AskDetail";
 import Company from "pages/Company/Company";
 import Community from "pages/Community/Community";
-import Payment from "pages/Payment/Payment";
 import MessagePage from "components/MessagePage";
+import Payment from "pages/Payment/Payment";
 import MyWallet from "pages/MyPage/MyWallet";
+
 
 function App() {
   const [companyName, setCompanyName] = React.useState("");
@@ -51,6 +53,7 @@ function App() {
       <Route path="/askpage" element={<AskPage />} />
       <Route path="/askwrite" element={<AskWrite />} />
       <Route path="/askpage/:supportId" element={<AskDetail />} />
+      <Route path="/transactions" element={<StockTransaction />} />
       <Route
         path="/news/:stockId"
         element={<News companyName={companyName} />}
@@ -69,10 +72,12 @@ function App() {
         path="/company/:stockId"
         element={<Company handleSetCompanyName={handleSetCompanyName} />}
       />
-      <Route path="/Community" element={<Community />} />
+      <Route path="/Community/:stockId" element={<Community />} />
+      <Route path="/messagePage" element={<MessagePage />} />
       <Route path="/pay" element={<Payment />} />
       <Route path="/MessagePage" element={<MessagePage />} />
       <Route path="/myWallet" element={<MyWallet />} />
+      <Route path="/pay" element={<Payment />} />
     </Routes>
   );
 }

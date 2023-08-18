@@ -4,6 +4,7 @@ import { css } from "@emotion/react";
 import Header from "systems/Header";
 import Footer from "./Footer";
 import Button from "./Button";
+import { useNavigate } from 'react-router-dom';
 
 export default function MessagePage() {
 
@@ -60,6 +61,12 @@ export default function MessagePage() {
     margin-bottom: 2.19rem;
     `;
 
+  let navigate = useNavigate(); // useHistory 를 사용하여 라우팅 할 수 있는 history를 얻습니다.
+
+  const handleClick = () => {
+    navigate('/'); // 이 함수를 실행하면 루트 경로('/')로 이동하게 됩니다.
+  };
+
 
     return (
         <div css={messageContainer}>
@@ -69,7 +76,9 @@ export default function MessagePage() {
                     <div css={MessageContainer}>
                         <div css={MessageText}>결제가 완료되었어요</div>
                         <div css={MessageInfo}>프리미엄 서비스로 인해 더 발전한 투자를 하러 갈까요?</div>
+                        <div onClick={handleClick}>
                         <Button state={"paydone"}/>
+                        </div>
                     </div>
                 </div>
                 <Footer />
