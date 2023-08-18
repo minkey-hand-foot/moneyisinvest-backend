@@ -41,14 +41,6 @@ public class ShopController {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    @PostMapping("/upload")
-    public BaseResponseDto uploadShopItems(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam String itemName, String itemCategory, double stockPrice
-    ) {
-        return shopService.uploadShopItems(file, itemName, itemCategory, stockPrice);
-    }
-
     @GetMapping("/images/{fileName:.+}")
     public ResponseEntity<Resource> getShopPicture(@PathVariable String fileName) {
         Resource file = profileService.loadFileAsResource(fileName);
