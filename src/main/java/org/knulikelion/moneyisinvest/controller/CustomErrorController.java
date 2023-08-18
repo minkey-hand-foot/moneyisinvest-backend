@@ -9,6 +9,6 @@ public class CustomErrorController implements ErrorController {
     @RequestMapping("/error")
     public String handleError() {
         // https://moneyisinvest.kr/로 리디렉션
-        return "redirect:https://moneyisinvest.kr/";
+        return "redirect:/";
     }
 }

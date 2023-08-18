@@ -29,7 +29,7 @@ public interface StockService {
     String getCurrentPrice(String stockCode);
     BaseResponseDto sellStock(String uid,StockSellRequestDto stockSellRequestDto);
     List<StocksByDayResponseDto> getStockByDay(StocksByDayRequestDto stocksByDayRequestDto) throws IOException;
-    Integer getUsersStockQuantity(String uid, String stockId);
+    String getUsersStockQuantity(String uid, String stockId);
     List<OwnedStockResponseDto> getUserStock(String uid);
     String getDayBeforeRate(String stockCode);
     List<StockTransactionHistoryResponseDto> getStockTransactionHistory(String uid);

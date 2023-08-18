@@ -1016,7 +1016,7 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public Integer getUsersStockQuantity(String uid, String stockId) {
+    public String getUsersStockQuantity(String uid, String stockId) {
         Long userId = userRepository.getByUid(uid).getId();
         List<Stock> stock = stockRepository.findByUserId(userId);
 
@@ -1028,7 +1028,7 @@ public class StockServiceImpl implements StockService {
             }
         }
 
-        return quantity;
+        return String.valueOf(quantity);
     }
 
     @Override
