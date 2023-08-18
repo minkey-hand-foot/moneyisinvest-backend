@@ -657,7 +657,7 @@ public class StockServiceImpl implements StockService {
             if (response.isSuccessful() && response.body() != null) {
                 JSONObject jsonObject = new JSONObject(response.body().string());
                 JSONObject outputs = jsonObject.getJSONObject("output");
-                stockPriceResponseDto.setCurrnet_time(String.valueOf(LocalDateTime.now()));
+                stockPriceResponseDto.setCurrent_time(String.valueOf(LocalDateTime.now()));
                 String price = (String) outputs.get("stck_prpr");
 
                 return price;
@@ -694,7 +694,7 @@ public class StockServiceImpl implements StockService {
             if (response.isSuccessful() && response.body() != null) {
                 JSONObject jsonObject = new JSONObject(response.body().string());
                 JSONObject outputs = jsonObject.getJSONObject("output");
-                stockPriceResponseDto.setCurrnet_time(String.valueOf(LocalDateTime.now()));
+                stockPriceResponseDto.setCurrent_time(String.valueOf(LocalDateTime.now()));
                 String rate = (String) outputs.get("prdy_ctrt");
 
                 return rate;

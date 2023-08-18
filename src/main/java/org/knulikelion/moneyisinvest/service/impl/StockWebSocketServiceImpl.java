@@ -8,7 +8,6 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.knulikelion.moneyisinvest.data.dto.response.*;
 import org.knulikelion.moneyisinvest.service.StockService;
@@ -134,7 +133,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
             if (response.isSuccessful() && response.body() != null) {
                 JSONObject jsonObject = new JSONObject(response.body().string());
                 JSONObject outputs = jsonObject.getJSONObject("output");
-                stockPriceResponseDto.setCurrnet_time(String.valueOf(LocalDateTime.now()));
+                stockPriceResponseDto.setCurrent_time(String.valueOf(LocalDateTime.now()));
                 stockPriceResponseDto.setStock_status_code((String) outputs.get("iscd_stat_cls_code"));
                 stockPriceResponseDto.setStock_market_index((String) outputs.get("rprs_mrkt_kor_name"));
                 stockPriceResponseDto.setBusiness_type((String) outputs.get("bstp_kor_isnm"));

@@ -8,7 +8,7 @@ import lombok.*;
 @ToString
 @Builder
 public class StockPriceResponseDto {
-    private String currnet_time;
+    private String current_time;
     /*현재 시간*/
 
     private String stock_status_code;
