@@ -206,30 +206,42 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
                 int limit = Math.min(outputs.length(), 5);
                 for (int i = 0; i < limit; i++) { /*5등 까지만*/
                     JSONObject obj = outputs.getJSONObject(i);
-                    System.out.println("obj result : "+obj.toString());
-
                     StockRankResponseDto stockRank = new StockRankResponseDto();
-                    stockRank.setStockName(obj.getString("hts_kor_isnm"));
-                    stockRank.setStockUrl(stockService.getCompanyInfoByStockId(obj.getString("mksc_shrn_iscd")).getStockLogoUrl());
-                    stockRank.setStockCode(obj.getString("mksc_shrn_iscd"));
-                    double prdyCtrtDouble = Double.parseDouble(obj.getString("prdy_ctrt"));
-                    long prdyCtrt = Math.round(prdyCtrtDouble);
-                    if(prdyCtrt<0){
-                        stockRank.setDay_before_status(false);
-                    }else {
+                    if(obj.isEmpty()) {
+                        log.info("주식 랭킹 정보 조회 불가능");
+                        stockRank.setStockName("업데이트 중");
+                        stockRank.setStockCode("-----");
+                        stockRank.setCoinPrice("- ");
+                        stockRank.setStockPrice("- ");
                         stockRank.setDay_before_status(true);
+                        stockRank.setRank(String.valueOf(i));
+                        stockRank.setPreparation_day_before_rate("- ");
+                        stockRank.setStockUrl(stockService.getCompanyInfoByStockId("005930").getStockLogoUrl());
+
+                        outputList.add(stockRank);
+                    } else {
+                        stockRank.setStockName(obj.getString("hts_kor_isnm"));
+                        stockRank.setStockUrl(stockService.getCompanyInfoByStockId(obj.getString("mksc_shrn_iscd")).getStockLogoUrl());
+                        stockRank.setStockCode(obj.getString("mksc_shrn_iscd"));
+                        double prdyCtrtDouble = Double.parseDouble(obj.getString("prdy_ctrt"));
+                        long prdyCtrt = Math.round(prdyCtrtDouble);
+                        if(prdyCtrt<0){
+                            stockRank.setDay_before_status(false);
+                        }else {
+                            stockRank.setDay_before_status(true);
+                        }
+                        double stckPrprDouble = Double.parseDouble(obj.getString("stck_prpr"));
+                        int coinPrice = (int) (stckPrprDouble / 100);
+                        stockRank.setCoinPrice(String.valueOf(coinPrice));
+                        stockRank.setRank(obj.getString("data_rank"));
+
+                        NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+                        String price = nf.format(Integer.parseInt(obj.getString("stck_prpr")));
+                        stockRank.setStockPrice(price);
+                        stockRank.setPreparation_day_before_rate(obj.getString("prdy_ctrt"));
+
+                        outputList.add(stockRank);
                     }
-                    double stckPrprDouble = Double.parseDouble(obj.getString("stck_prpr"));
-                    int coinPrice = (int) (stckPrprDouble / 100);
-                    stockRank.setCoinPrice(String.valueOf(coinPrice));
-                    stockRank.setRank(obj.getString("data_rank"));
-
-                    NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
-                    String price = nf.format(Integer.parseInt(obj.getString("stck_prpr")));
-                    stockRank.setStockPrice(price);
-                    stockRank.setPreparation_day_before_rate(obj.getString("prdy_ctrt"));
-
-                    outputList.add(stockRank);
                 }
                 return outputList;
             }
