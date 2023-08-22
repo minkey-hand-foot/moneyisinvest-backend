@@ -209,16 +209,6 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
                     System.out.println("obj result : "+obj.toString());
 
                     StockRankResponseDto stockRank = new StockRankResponseDto();
-<<<<<<< Updated upstream
-                    stockRank.setStockName(obj.getString("hts_kor_isnm"));
-                    stockRank.setStockUrl(stockService.getCompanyInfoByStockId(obj.getString("mksc_shrn_iscd")).getStockLogoUrl());
-                    stockRank.setStockCode(obj.getString("mksc_shrn_iscd"));
-                    double prdyCtrtDouble = Double.parseDouble(obj.getString("prdy_ctrt"));
-                    long prdyCtrt = Math.round(prdyCtrtDouble);
-                    if(prdyCtrt<0){
-                        stockRank.setDay_before_status(false);
-                    }else {
-=======
 //                    종목 이름이 존재하지 않을 때
                     if(obj.isNull("hts_kor_isnm")) {
                         log.info("주식 랭킹 정보 조회 불가능");
@@ -226,7 +216,6 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
                         stockRank.setStockCode("-----");
                         stockRank.setCoinPrice("- ");
                         stockRank.setStockPrice("- ");
->>>>>>> Stashed changes
                         stockRank.setDay_before_status(true);
                     }
                     double stckPrprDouble = Double.parseDouble(obj.getString("stck_prpr"));
