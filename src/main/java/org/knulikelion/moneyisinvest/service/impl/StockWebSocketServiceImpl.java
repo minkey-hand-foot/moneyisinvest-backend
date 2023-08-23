@@ -217,17 +217,28 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
                         stockRank.setCoinPrice("- ");
                         stockRank.setStockPrice("- ");
                         stockRank.setDay_before_status(true);
+                    } else {
+                        stockRank.setStockName(obj.getString("hts_kor_isnm"));
+                        stockRank.setStockUrl(stockService.getCompanyInfoByStockId(obj.getString("mksc_shrn_iscd")).getStockLogoUrl());
+                        stockRank.setStockCode(obj.getString("mksc_shrn_iscd"));
+                        double prdyCtrtDouble = Double.parseDouble(obj.getString("prdy_ctrt"));
+                        long prdyCtrt = Math.round(prdyCtrtDouble);
+                        if(prdyCtrt<0){
+                            stockRank.setDay_before_status(false);
+                        }else {
+                            stockRank.setDay_before_status(true);
+                        }
+
+                        double stckPrprDouble = Double.parseDouble(obj.getString("stck_prpr"));
+                        int coinPrice = (int) (stckPrprDouble / 100);
+                        stockRank.setCoinPrice(String.valueOf(coinPrice));
+                        stockRank.setRank(obj.getString("data_rank"));
+
+                        NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+                        String price = nf.format(Integer.parseInt(obj.getString("stck_prpr")));
+                        stockRank.setStockPrice(price);
+                        stockRank.setPreparation_day_before_rate(obj.getString("prdy_ctrt"));
                     }
-                    double stckPrprDouble = Double.parseDouble(obj.getString("stck_prpr"));
-                    int coinPrice = (int) (stckPrprDouble / 100);
-                    stockRank.setCoinPrice(String.valueOf(coinPrice));
-                    stockRank.setRank(obj.getString("data_rank"));
-
-                    NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
-                    String price = nf.format(Integer.parseInt(obj.getString("stck_prpr")));
-                    stockRank.setStockPrice(price);
-                    stockRank.setPreparation_day_before_rate(obj.getString("prdy_ctrt"));
-
                     outputList.add(stockRank);
                 }
                 return outputList;
