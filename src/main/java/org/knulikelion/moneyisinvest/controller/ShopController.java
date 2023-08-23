@@ -41,23 +41,6 @@ public class ShopController {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    @GetMapping("/images/{fileName:.+}")
-    public ResponseEntity<Resource> getShopPicture(@PathVariable String fileName) {
-        Resource file = profileService.loadFileAsResource(fileName);
-
-        String contentType;
-        try {
-            contentType = Files.probeContentType(file.getFile().toPath());
-        } catch (IOException e) {
-            throw new RuntimeException("파일을 찾을 수 없음");
-        }
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getFilename() + "\"")
-                .body(file);
-    }
-
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
