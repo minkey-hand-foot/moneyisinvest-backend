@@ -50,23 +50,6 @@ public class ProfileController {
         return profileService.getUserDetail(request.getHeader("X-AUTH-TOKEN"));
     }
 
-    @GetMapping("/images/{fileName:.+}")
-    public ResponseEntity<Resource> getProfilePicture(@PathVariable String fileName) {
-        Resource file = profileService.loadFileAsResource(fileName);
-
-        String contentType;
-        try {
-            contentType = Files.probeContentType(file.getFile().toPath());
-        } catch (IOException e) {
-            throw new RuntimeException("Could not determine file type for " + fileName, e);
-        }
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getFilename() + "\"")
-                .body(file);
-    }
-
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
