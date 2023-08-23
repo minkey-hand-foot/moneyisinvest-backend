@@ -38,19 +38,7 @@ public class ProfileServiceImpl implements ProfileService {
         MypageResponseDto mypageResponseDto = new MypageResponseDto();
         mypageResponseDto.setName(user.getName());
         mypageResponseDto.setUid(user.getUid());
-
-        try {
-            Resource file = loadFileAsResource(user.getProfileUrl());
-
-            if (file != null && file.exists()) {
-                String picUrl = "http://moneyisinvest.kr/api/v1/profile/images/" + file.getFilename();
-                mypageResponseDto.setProfileUrl(picUrl);
-            } else {
-                mypageResponseDto.setProfileUrl(null);
-            }
-        } catch (RuntimeException e) {
-            mypageResponseDto.setProfileUrl(null);
-        }
+        mypageResponseDto.setProfileUrl(user.getProfileUrl());
 
         return mypageResponseDto;
     }
