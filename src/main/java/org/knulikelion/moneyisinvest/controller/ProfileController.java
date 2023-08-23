@@ -74,10 +74,7 @@ public class ProfileController {
     public ProfilePictureUrlResponseDto getUserProfilePicUrl(HttpServletRequest request) {
         ProfilePictureUrlResponseDto profilePictureUrlResponseDto = new ProfilePictureUrlResponseDto();
         String pictureUrl = userRepository.getByUid(jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN"))).getProfileUrl();
-        Resource file = profileService.loadFileAsResource(pictureUrl);
-
-        String picUrl = "http://moneyisinvest.kr/api/v1/profile/images/" + file.getFilename();
-        profilePictureUrlResponseDto.setUrl(picUrl);
+        profilePictureUrlResponseDto.setUrl(pictureUrl);
 
         return profilePictureUrlResponseDto;
     }
