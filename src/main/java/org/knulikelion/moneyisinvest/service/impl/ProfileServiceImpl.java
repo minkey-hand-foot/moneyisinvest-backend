@@ -1,5 +1,9 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.MypageResponseDto;
@@ -7,26 +11,25 @@ import org.knulikelion.moneyisinvest.data.entity.User;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 @Service
 public class ProfileServiceImpl implements ProfileService {
-    private final Path fileStorageLocation = Paths.get("./moneyisinvest/");
+    private final AmazonS3 amazonS3Client;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
+    private static final String BUCKET_NAME = "moneyisinvest";
 
     @Autowired
-    public ProfileServiceImpl(JwtTokenProvider jwtTokenProvider, UserRepository userRepository) {
+    public ProfileServiceImpl(AmazonS3 amazonS3Client, JwtTokenProvider jwtTokenProvider, UserRepository userRepository) {
+        this.amazonS3Client = amazonS3Client;
         this.jwtTokenProvider = jwtTokenProvider;
         this.userRepository = userRepository;
     }
@@ -46,44 +49,35 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public BaseResponseDto storeFile(MultipartFile file, String uid) {
         BaseResponseDto baseResponseDto = new BaseResponseDto();
-
-        // Normalize file name
-        String fileName = file.getOriginalFilename();
-
-        try {
-            // Creating directories
-            Files.createDirectories(this.fileStorageLocation);
-
-            // Copy file to the target location
-            Path targetLocation = this.fileStorageLocation.resolve(fileName);
-            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-
-            User user = userRepository.getByUid(uid);
-            user.setProfileUrl(fileName);
-            userRepository.save(user);
-
-            baseResponseDto.setSuccess(true);
-            baseResponseDto.setMsg("프로필 사진 업로드가 완료되었습니다.");
-        } catch (IOException e) {
+        User user = userRepository.getByUid(uid);
+        if(user == null) {
             baseResponseDto.setSuccess(false);
-            baseResponseDto.setMsg("Failed to store file " + fileName);
-        }
+            baseResponseDto.setMsg("사용자를 찾을 수 없습니다.");
 
-        return baseResponseDto;
-    }
+            return baseResponseDto;
+        } else {
+            try {
+                ObjectMetadata metadata = new ObjectMetadata();
+                metadata.setContentLength(file.getSize());
+                PutObjectRequest putObjectRequest = new PutObjectRequest(BUCKET_NAME,
+                        file.getOriginalFilename(), file.getInputStream(), metadata)
+                        .withCannedAcl(CannedAccessControlList.PublicRead);
 
-    @Override
-    public Resource loadFileAsResource(String fileName) {
-        try {
-            Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
-            Resource resource = new UrlResource(filePath.toUri());
-            if (resource.exists()) {
-                return resource;
-            } else {
-                throw new RuntimeException("File not found " + fileName);
+                amazonS3Client.putObject(putObjectRequest);
+
+                baseResponseDto.setSuccess(true);
+                baseResponseDto.setMsg(amazonS3Client.getUrl(BUCKET_NAME, file.getOriginalFilename()).toString());
+
+                user.setProfileUrl(amazonS3Client.getUrl(BUCKET_NAME, file.getOriginalFilename()).toString());
+                userRepository.save(user);
+
+                return baseResponseDto;
+            } catch (Exception e) {
+                baseResponseDto.setSuccess(false);
+                baseResponseDto.setMsg(HttpStatus.INTERNAL_SERVER_ERROR.toString());
+
+                return baseResponseDto;
             }
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("File not found " + fileName, e);
         }
     }
 }

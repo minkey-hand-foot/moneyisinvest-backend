@@ -9,5 +9,4 @@ public interface ProfileService {
     MypageResponseDto getUserDetail(String token);
 
     BaseResponseDto storeFile(MultipartFile file, String uid);
-    Resource loadFileAsResource(String fileName);
 }
