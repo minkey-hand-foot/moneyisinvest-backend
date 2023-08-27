@@ -1110,23 +1110,25 @@ public class StockServiceImpl implements StockService {
     @Override
     public List<StockTransactionHistoryResponseDto> getStockTransactionHistory(String uid) {
         List<StockTransactionHistoryResponseDto> stockTransactionHistoryResponseDtoList = new ArrayList<>();
+        NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         List<StockTransaction> stockTransactions = stockTransactionRepository.findByUserId(userRepository.getByUid(uid).getId());
 
         for(StockTransaction temp : stockTransactions) {
             StockTransactionHistoryResponseDto stockTransactionHistoryResponseDto = new StockTransactionHistoryResponseDto();
-            stockTransactionHistoryResponseDto.setTransactionDate(temp.getTransactionDate().toString());
+            stockTransactionHistoryResponseDto.setTransactionDate(temp.getTransactionDate().format(formatter));
             stockTransactionHistoryResponseDto.setStockCode(temp.getStockCode());
             stockTransactionHistoryResponseDto.setStockName(temp.getStockName());
-            stockTransactionHistoryResponseDto.setUnitPrice(temp.getUnitPrice() * temp.getQuantity());
+            stockTransactionHistoryResponseDto.setUnitPrice(nf.format(temp.getUnitPrice() * temp.getQuantity()));
             stockTransactionHistoryResponseDto.setStatus(temp.isPurchase());
             stockTransactionHistoryResponseDto.setQuantity(temp.getQuantity());
 
-            Integer stockPriceInteger = (int) ((temp.getUnitPrice() * temp.getQuantity()) / 100);
-            if(stockPriceInteger != null) {
-                stockTransactionHistoryResponseDto.setStockPrice(stockPriceInteger);
-            }else {
-                stockTransactionHistoryResponseDto.setStockPrice(0);
+            String stockPriceFormat = nf.format((int) ((temp.getUnitPrice() * temp.getQuantity()) / 100));
+            if(stockPriceFormat != null) {
+                stockTransactionHistoryResponseDto.setStockPrice(stockPriceFormat);
+            } else {
+                stockTransactionHistoryResponseDto.setStockPrice("0");
             }
 
             stockTransactionHistoryResponseDto.setStockLogo(getCompanyInfoByStockId(temp.getStockCode()).getStockLogoUrl());
