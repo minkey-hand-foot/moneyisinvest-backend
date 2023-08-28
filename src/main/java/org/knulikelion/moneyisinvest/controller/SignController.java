@@ -2,13 +2,15 @@ package org.knulikelion.moneyisinvest.controller;
 
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
-import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.request.ChangePasswdRequestDto;
-import org.knulikelion.moneyisinvest.data.dto.request.SignInRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
+import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
+import org.knulikelion.moneyisinvest.data.dto.request.SignInRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.request.TokenRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignInResultDto;
 import org.knulikelion.moneyisinvest.data.dto.request.SignUpRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignUpResultDto;
+import org.knulikelion.moneyisinvest.data.dto.response.TokenResponseDto;
 import org.knulikelion.moneyisinvest.service.SignService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +20,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,9 +43,15 @@ public class SignController {
 
         if (signInResultDto.getCode() == 0) {
             LOGGER.info("[signIn] 정상적으로 로그인되었습니다. id : {}, token : {}", signInRequestDto.getUid(),
-                    signInResultDto.getToken());
+                    signInResultDto.getAccessToken());
         }
         return signInResultDto;
+    }
+
+    @PostMapping(value = "/refresh-token")
+    public ResponseEntity<?> refreshToken(@RequestBody TokenRequestDto tokenRequestDto){
+        String accessToken = jwtTokenProvider.refreshToken(tokenRequestDto.getRefreshToken(), jwtTokenProvider.getUsername(tokenRequestDto.getRefreshToken()));
+        return ResponseEntity.ok(new TokenResponseDto(accessToken));
     }
 
     @PostMapping(value = "/sign-up")
