@@ -44,7 +44,7 @@ public class SignController {
 
         if (signInResultDto.getCode() == 0) {
             LOGGER.info("[signIn] 정상적으로 로그인되었습니다. id : {}, token : {}", signInRequestDto.getUid(),
-                    signInResultDto.getAccessToken());
+                    signInResultDto.getToken());
         }
         return signInResultDto;
     }
