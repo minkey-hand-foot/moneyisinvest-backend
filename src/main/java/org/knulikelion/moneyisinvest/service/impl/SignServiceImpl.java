@@ -2,13 +2,10 @@ package org.knulikelion.moneyisinvest.service.impl;
 
 import org.knulikelion.moneyisinvest.common.CommonResponse;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
-import org.knulikelion.moneyisinvest.data.dto.request.ChangePasswdRequestDto;
-import org.knulikelion.moneyisinvest.data.dto.request.SignInRequestDto;
-import org.knulikelion.moneyisinvest.data.dto.request.TransactionToSystemRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.request.*;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.MypageResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignInResultDto;
-import org.knulikelion.moneyisinvest.data.dto.request.SignUpRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignUpResultDto;
 import org.knulikelion.moneyisinvest.data.entity.User;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
@@ -118,6 +115,10 @@ public class SignServiceImpl implements SignService {
         }
         LOGGER.info("[getSignInResult] 패스워드 일치");
 
+        if(!user.isUseAble()) {
+            throw new RuntimeException();
+        }
+
         LOGGER.info("[getSignInResult] SignInResultDto 객체 생성");
         SignInResultDto signInResultDto = SignInResultDto.builder()
                 .token(jwtTokenProvider.createAccessToken(String.valueOf(user.getUid()), user.getRoles()))
@@ -166,6 +167,27 @@ public class SignServiceImpl implements SignService {
 
         baseResponseDto.setSuccess(true);
         baseResponseDto.setMsg("비밀번호 변경이 완료되었습니다.");
+
+        return baseResponseDto;
+    }
+
+    @Override
+    public BaseResponseDto unRegister(UnRegisterRequestDto unRegisterRequestDto, String uid) {
+        BaseResponseDto baseResponseDto = new BaseResponseDto();
+        User foundUser = userRepository.getByUid(uid);
+
+        if(!passwordEncoder.matches(unRegisterRequestDto.getCurrentPasswd(), foundUser.getPassword())) {
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("비밀번호가 일치하지 않습니다.");
+
+            return baseResponseDto;
+        }
+
+        foundUser.setUseAble(false);
+        userRepository.save(foundUser);
+
+        baseResponseDto.setSuccess(true);
+        baseResponseDto.setMsg("회원 탈퇴가 완료되었습니다.");
 
         return baseResponseDto;
     }
