@@ -29,11 +29,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         LOGGER.info("[doFilterInternal] token 값 유효성 체크 시작");
         if (token != null && jwtTokenProvider.validateToken(token)) {
-            Authentication authentication = jwtTokenProvider.getAuthentication(token);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            LOGGER.info("[doFilterInternal] token 값 유효성 체크 완료");
+            try {
+                Authentication authentication = jwtTokenProvider.getAuthentication(token);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                LOGGER.info("[doFilterInternal] token 값 유효성 체크 완료");
+            } catch (RuntimeException e) {
+                // User is not active - handle the exception here
+                LOGGER.error("[doFilterInternal] User is not active");
+            }
         }
 
         filterChain.doFilter(servletRequest, servletResponse);
     }
+
 }

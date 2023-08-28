@@ -2,13 +2,10 @@ package org.knulikelion.moneyisinvest.controller;
 
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
-import org.knulikelion.moneyisinvest.data.dto.request.ChangePasswdRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.request.*;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
-import org.knulikelion.moneyisinvest.data.dto.request.SignInRequestDto;
-import org.knulikelion.moneyisinvest.data.dto.request.TokenRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignInResultDto;
-import org.knulikelion.moneyisinvest.data.dto.request.SignUpRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignUpResultDto;
 import org.knulikelion.moneyisinvest.data.dto.response.TokenResponseDto;
 import org.knulikelion.moneyisinvest.service.SignService;
@@ -77,6 +74,17 @@ public class SignController {
     public BaseResponseDto changePasswd(@RequestBody ChangePasswdRequestDto changePasswdRequestDto, HttpServletRequest request) {
         return signService.changePasswd(
                 changePasswdRequestDto,
+                jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN"))
+        );
+    }
+
+    @PostMapping(value = "/un-register")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
+    public BaseResponseDto unRegister(@RequestBody UnRegisterRequestDto unRegisterRequestDto, HttpServletRequest request) {
+        return signService.unRegister(
+                unRegisterRequestDto,
                 jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN"))
         );
     }

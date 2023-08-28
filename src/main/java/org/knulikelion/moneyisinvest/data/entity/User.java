@@ -13,6 +13,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -46,6 +47,10 @@ public class User implements UserDetails {
 
     @Column
     private String profileUrl;
+
+    @Column
+    @ColumnDefault("true")
+    private boolean useAble;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Builder.Default

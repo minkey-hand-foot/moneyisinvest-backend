@@ -5,6 +5,8 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
+import org.knulikelion.moneyisinvest.data.entity.User;
+import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
 public class JwtTokenProvider {
     private final Logger LOGGER = LoggerFactory.getLogger(JwtTokenProvider.class);
     private final UserDetailsService userDetailsService; // Spring Security 에서 제공하는 서비스 레이어
+    private final UserRepository userRepository;
 
     @Value("${springboot.jwt.secret}")
     private String secretKey = "secretKey";
@@ -92,6 +95,9 @@ public class JwtTokenProvider {
 
     // JWT 토큰으로 인증 정보 조회
     public Authentication getAuthentication(String token) {
+        if(!validateUseAble(token)) {
+            throw new RuntimeException();
+        }
         LOGGER.info("[getAuthentication] 토큰 인증 정보 조회 시작");
         UserDetails userDetails = userDetailsService.loadUserByUsername(this.getUsername(token));
         LOGGER.info("[getAuthentication] 토큰 인증 정보 조회 완료, UserDetails UserName : {}",
@@ -123,6 +129,10 @@ public class JwtTokenProvider {
     // JWT 토큰의 유효성 + 만료일 체크
     public boolean validateToken(String token) {
         LOGGER.info("[validateToken] 토큰 유효 체크 시작");
+        if(!validateUseAble(token)) {
+            return false;
+        }
+
         try {
             Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
             LOGGER.info("[validateToken] 토큰 유효 체크 완료");
@@ -131,5 +141,11 @@ public class JwtTokenProvider {
             LOGGER.info("[validateToken] 토큰 유효 체크 예외 발생");
             return false;
         }
+    }
+
+    public boolean validateUseAble(String token) {
+        User user = userRepository.getByUid(getUsername(token));
+        System.out.println(user.isUseAble());
+        return user.isUseAble();
     }
 }
