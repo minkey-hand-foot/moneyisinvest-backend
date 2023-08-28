@@ -2,6 +2,7 @@ package org.knulikelion.moneyisinvest.service.impl;
 
 import org.knulikelion.moneyisinvest.common.CommonResponse;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
+import org.knulikelion.moneyisinvest.data.dto.request.ChangePasswdRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.SignInRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.TransactionToSystemRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
@@ -129,6 +130,44 @@ public class SignServiceImpl implements SignService {
         setSuccessResult(signInResultDto);
 
         return signInResultDto;
+    }
+
+    @Override
+    public BaseResponseDto changePasswd(ChangePasswdRequestDto changePasswdRequestDto, String uid) {
+        User foundUser = userRepository.getByUid(uid);
+        BaseResponseDto baseResponseDto = new BaseResponseDto();
+
+//        발견된 사용자가 없을 시
+        if(foundUser == null) {
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("사용자를 찾을 수 없습니다.");
+
+            return baseResponseDto;
+        }
+
+//        현재 패스워드와 입력된 현재 패스워드가 일치하지 않을 시
+        if(!passwordEncoder.matches(changePasswdRequestDto.getCurrentPasswd(), foundUser.getPassword())) {
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("기존 비밀번호가 일치하지 않습니다.");
+
+            return baseResponseDto;
+        }
+
+//        새 패스워드와 입력된 새 패스워드 재입력 값이 일치하지 않을 시
+        if(!changePasswdRequestDto.getNewPasswd().equals(changePasswdRequestDto.getNewPasswdRe())) {
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("새로운 비밀번호와 새로운 비밀번호 재입력이 일치하지 않습니다.");
+
+            return baseResponseDto;
+        }
+
+        foundUser.setPassword(passwordEncoder.encode(changePasswdRequestDto.getNewPasswd()));
+        userRepository.save(foundUser);
+
+        baseResponseDto.setSuccess(true);
+        baseResponseDto.setMsg("비밀번호 변경이 완료되었습니다.");
+
+        return baseResponseDto;
     }
 
     // 결과 모델에 api 요청 성공 데이터를 세팅해주는 메소드
