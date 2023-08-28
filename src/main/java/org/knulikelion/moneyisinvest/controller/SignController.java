@@ -1,6 +1,9 @@
 package org.knulikelion.moneyisinvest.controller;
 
-
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import org.knulikelion.moneyisinvest.data.dto.request.ChangePasswdRequestDto;
+import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.request.SignInRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.TokenRequestDto;
@@ -64,6 +67,17 @@ public class SignController {
         }
 
         return signUpResultDto;
+    }
+
+    @PostMapping(value = "/change-passwd")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
+    public BaseResponseDto changePasswd(@RequestBody ChangePasswdRequestDto changePasswdRequestDto, HttpServletRequest request) {
+        return signService.changePasswd(
+                changePasswdRequestDto,
+                jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN"))
+        );
     }
 
     @GetMapping(value = "/exception")
