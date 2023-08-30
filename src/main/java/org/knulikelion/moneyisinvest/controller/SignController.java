@@ -78,6 +78,17 @@ public class SignController {
         );
     }
 
+    @PostMapping("/change-name")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
+    public BaseResponseDto changeName(@RequestBody ChangeNameRequestDto changeNameRequestDto, HttpServletRequest request) {
+        return signService.changeName(
+                changeNameRequestDto,
+                jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN"))
+        );
+    }
+
     @PostMapping(value = "/un-register")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")

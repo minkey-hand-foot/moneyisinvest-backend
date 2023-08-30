@@ -172,6 +172,34 @@ public class SignServiceImpl implements SignService {
     }
 
     @Override
+    public BaseResponseDto changeName(ChangeNameRequestDto changeNameRequestDto, String uid) {
+        User foundUser = userRepository.getByUid(uid);
+        BaseResponseDto baseResponseDto = new BaseResponseDto();
+
+//        사용자의 비밀번호가 일치하지 않을 때
+        if(!passwordEncoder.matches(changeNameRequestDto.getCurrentPasswd(), foundUser.getPassword())) {
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("기존 비밀번호가 일치하지 않습니다.");
+
+            return baseResponseDto;
+        }
+
+//        새로운 이름을 입력하지 않았을 때
+        if(changeNameRequestDto.getNewName().isEmpty()) {
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("새 이름이 입력되지 않았습니다.");
+        }
+
+        foundUser.setName(changeNameRequestDto.getNewName());
+        userRepository.save(foundUser);
+
+        baseResponseDto.setSuccess(true);
+        baseResponseDto.setMsg("이름 변경이 완료되었습니다.");
+
+        return baseResponseDto;
+    }
+
+    @Override
     public BaseResponseDto unRegister(UnRegisterRequestDto unRegisterRequestDto, String uid) {
         BaseResponseDto baseResponseDto = new BaseResponseDto();
         User foundUser = userRepository.getByUid(uid);
