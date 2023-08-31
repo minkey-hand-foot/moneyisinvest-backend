@@ -65,6 +65,7 @@ public class SignServiceImpl implements SignService {
                     .uid(signUpRequestDto.getUid())
                     .name(signUpRequestDto.getName())
                     .plan("basic")
+                    .useAble(true)
                     .profileUrl("https://kr.object.ncloudstorage.com/moneyisinvest/default-profile.png")
                     .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
                     .roles(Collections.singletonList("ROLE_USER"))
