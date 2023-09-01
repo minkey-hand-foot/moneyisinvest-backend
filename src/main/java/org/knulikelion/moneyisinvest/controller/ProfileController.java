@@ -11,6 +11,7 @@ import org.knulikelion.moneyisinvest.service.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +41,18 @@ public class ProfileController {
     @PostMapping("/upload")
     public BaseResponseDto uploadProfilePicture(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
         return profileService.storeFile(file, jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")));
+    }
+
+    @GetMapping("/reset")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
+    public ResponseEntity<BaseResponseDto> resetProfile(HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.OK).body(
+                profileService.resetProfile(
+                        jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN"))
+                )
+        );
     }
 
     @ApiImplicitParams({

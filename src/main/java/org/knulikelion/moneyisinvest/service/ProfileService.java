@@ -7,6 +7,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface ProfileService {
     MypageResponseDto getUserDetail(String token);
-
+    BaseResponseDto resetProfile(String uid);
     BaseResponseDto storeFile(MultipartFile file, String uid);
 }
