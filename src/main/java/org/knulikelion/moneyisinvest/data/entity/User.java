@@ -2,6 +2,8 @@ package org.knulikelion.moneyisinvest.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -47,6 +49,12 @@ public class User implements UserDetails {
 
     @Column
     private String profileUrl;
+
+    @Column
+    private LocalDateTime createdAt;
+
+    @Column
+    private LocalDateTime recentLoggedIn;
 
     @Column
     @ColumnDefault("true")
