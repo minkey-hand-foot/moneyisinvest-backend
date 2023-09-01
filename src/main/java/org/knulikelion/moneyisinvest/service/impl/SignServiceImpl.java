@@ -15,6 +15,8 @@ import org.knulikelion.moneyisinvest.service.StockCoinService;
 import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.LocalDateTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,6 +67,7 @@ public class SignServiceImpl implements SignService {
                     .uid(signUpRequestDto.getUid())
                     .name(signUpRequestDto.getName())
                     .plan("basic")
+                    .createdAt(LocalDateTime.now())
                     .useAble(true)
                     .profileUrl("https://kr.object.ncloudstorage.com/moneyisinvest/default-profile.png")
                     .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
@@ -119,6 +122,10 @@ public class SignServiceImpl implements SignService {
         if(!user.isUseAble()) {
             throw new RuntimeException();
         }
+
+//        최근 로그인 일시 저장
+        user.setRecentLoggedIn(LocalDateTime.now());
+        userRepository.save(user);
 
         LOGGER.info("[getSignInResult] SignInResultDto 객체 생성");
         SignInResultDto signInResultDto = SignInResultDto.builder()
