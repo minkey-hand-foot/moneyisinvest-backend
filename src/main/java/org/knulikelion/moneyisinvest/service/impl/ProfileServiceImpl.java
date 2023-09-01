@@ -47,6 +47,25 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
+    public BaseResponseDto resetProfile(String uid) {
+        User user = userRepository.getByUid(uid);
+        BaseResponseDto baseResponseDto = new BaseResponseDto();
+        String DEFAULT_PROFILE = "https://kr.object.ncloudstorage.com/moneyisinvest/default-profile.png";
+
+        if(user.getProfileUrl().equals(DEFAULT_PROFILE)) {
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("이미 기본 프로필로 설정되어 있습니다.");
+        } else {
+            user.setProfileUrl(DEFAULT_PROFILE);
+            userRepository.save(user);
+            baseResponseDto.setSuccess(true);
+            baseResponseDto.setMsg("기본 프로필로 변경되었습니다.");
+        }
+
+        return baseResponseDto;
+    }
+
+    @Override
     public BaseResponseDto storeFile(MultipartFile file, String uid) {
         BaseResponseDto baseResponseDto = new BaseResponseDto();
         User user = userRepository.getByUid(uid);
