@@ -129,7 +129,7 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
         }
 
         return transactionHistoryResponseDtoList.stream()
-                .sorted(Comparator.comparing(TransactionHistoryResponseDto::getDatetime))
+                .sorted(Comparator.comparing(TransactionHistoryResponseDto::getDatetime).reversed())
                 .collect(Collectors.toList());
     }
 
