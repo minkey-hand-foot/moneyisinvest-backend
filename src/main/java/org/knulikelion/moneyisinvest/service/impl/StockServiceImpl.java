@@ -863,7 +863,7 @@ public class StockServiceImpl implements StockService {
 
         TransactionToSystemRequestDto transactionToSystemRequestDto = new TransactionToSystemRequestDto();
 
-        if (stockRepository.findByStockCode(stockSellRequestDto.getStockCode()) == null) {
+        if (stockRepository.findByUserIdAndStockCode(userRepository.getByUid(uid).getId(), stockSellRequestDto.getStockCode()) == null) {
             baseResponseDto.setMsg("보유하지 않은 종목입니다.");
             baseResponseDto.setSuccess(false);
         } else {
@@ -873,7 +873,10 @@ public class StockServiceImpl implements StockService {
             BaseResponseDto transactionResult = stockCoinService.sellStock(transactionToSystemRequestDto);
             if (transactionResult.isSuccess()) {
                 log.info("[sellStock] stock 거래 성공 후 DB 저장");
-                Stock findStock = stockRepository.findByStockCode(stockSellRequestDto.getStockCode());
+                Stock findStock = stockRepository.findByUserIdAndStockCode(
+                        userRepository.getByUid(uid).getId(),
+                        stockSellRequestDto.getStockCode()
+                );
 
                 Integer savedAmount = findStock.getStockAmount();
                 Integer sellAmount = Integer.parseInt(stockSellRequestDto.getStockAmount());
