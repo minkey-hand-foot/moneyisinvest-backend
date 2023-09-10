@@ -48,6 +48,9 @@ public class User implements UserDetails {
     private String plan;
 
     @Column
+    private Boolean kakao = false;
+
+    @Column
     private String profileUrl;
 
     @Column
