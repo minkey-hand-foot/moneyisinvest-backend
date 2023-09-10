@@ -19,6 +19,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 @Service
 public class ProfileServiceImpl implements ProfileService {
@@ -42,6 +46,12 @@ public class ProfileServiceImpl implements ProfileService {
         mypageResponseDto.setName(user.getName());
         mypageResponseDto.setUid(user.getUid());
         mypageResponseDto.setProfileUrl(user.getProfileUrl());
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd.E", Locale.KOREAN);
+
+        ZonedDateTime zdt = user.getRecentLoggedIn().atZone(ZoneId.systemDefault());
+
+        mypageResponseDto.setRecentLoggedIn(formatter.format(zdt));
 
         return mypageResponseDto;
     }
