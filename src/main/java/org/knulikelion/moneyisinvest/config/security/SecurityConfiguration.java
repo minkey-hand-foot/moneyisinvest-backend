@@ -68,6 +68,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/coin/**").permitAll()
 //                코인 get 요청 User 허용
                 .antMatchers("/api/v1/coin/get/**").hasRole("USER")
+                .antMatchers("/api/v1/social/kakao").permitAll()
 //                카카오페이 결제 전체 허용
                 .antMatchers("/api/v1/payment/kakao/pay").hasRole("USER")
                 .antMatchers("/api/v1/payment/kakao/success").permitAll()
