@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,6 +51,11 @@ public class SignController {
     public ResponseEntity<?> refreshToken(@RequestBody TokenRequestDto tokenRequestDto){
         String accessToken = jwtTokenProvider.refreshToken(tokenRequestDto.getRefreshToken(), jwtTokenProvider.getUsername(tokenRequestDto.getRefreshToken()));
         return ResponseEntity.ok(new TokenResponseDto(accessToken));
+    }
+
+    @PostMapping(value = "/social/kakao")
+    public ResponseEntity<SignInResultDto> kakaoLogin(@RequestParam String code) throws IOException, InterruptedException {
+        return ResponseEntity.ok(signService.kakaoLogin(code));
     }
 
     @PostMapping(value = "/sign-up")

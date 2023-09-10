@@ -1,12 +1,13 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
+import org.json.JSONObject;
 import org.knulikelion.moneyisinvest.common.CommonResponse;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.request.*;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
-import org.knulikelion.moneyisinvest.data.dto.response.MypageResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignInResultDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignUpResultDto;
+import org.knulikelion.moneyisinvest.data.entity.KakaoUser;
 import org.knulikelion.moneyisinvest.data.entity.User;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.ProfileService;
@@ -16,11 +17,17 @@ import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -49,6 +56,12 @@ public class SignServiceImpl implements SignService {
         this.stockCoinWalletService = stockCoinWalletService;
         this.stockCoinService = stockCoinService;
     }
+
+    @Value("${KAKAO.CLIENT.ID}")
+    private String kakaoClientId;
+
+    @Value("${KAKAO.REDIRECT.URI}")
+    private String kakaoRedirectUri;
 
     private static final String EMAIL_REGEX = "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$";
 
@@ -139,6 +152,133 @@ public class SignServiceImpl implements SignService {
         setSuccessResult(signInResultDto);
 
         return signInResultDto;
+    }
+
+//    카카오 로그인 시 사용자 토큰 받기
+    public String createKakaoToken(String code) throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://kauth.kakao.com/oauth/token"))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(
+                        "grant_type=" + "authorization_code" +
+                                "&client_id=" + kakaoClientId +
+                                "&redirect_uri=" + kakaoRedirectUri +
+                                "&code=" + code
+                ))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        JSONObject jsonObject = new JSONObject(response.body());
+
+        return jsonObject.getString("access_token");
+    }
+
+//    카카오 로그인 시 사용자 토큰으로 사용자 정보 가져오기
+    public KakaoUser getKakaoInfo(String accessToken) throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://kapi.kakao.com/v2/user/me"))
+                .header("Content-Type", "application/x-www-form-urlencoded;charset=utf-8")
+                .header("Authorization", "Bearer " + accessToken)
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        JSONObject jsonObject = new JSONObject(response.body());
+
+        // Accessing the nested JSON Objects
+        JSONObject kakao_account = jsonObject.getJSONObject("kakao_account");
+        JSONObject profile = kakao_account.getJSONObject("profile");
+
+        KakaoUser kakaoUser = new KakaoUser();
+        kakaoUser.setEmail(kakao_account.getString("email"));
+        kakaoUser.setNickname(profile.getString("nickname"));
+        kakaoUser.setProfileImageUrl(profile.getString("profile_image_url"));
+
+        return kakaoUser;
+    }
+
+    @Override
+    public SignInResultDto kakaoLogin(String code) throws RuntimeException, IOException, InterruptedException {
+        String kakaoUserToken = createKakaoToken(code);
+        KakaoUser kakaoUser = getKakaoInfo(kakaoUserToken);
+
+//        카카오톡 로그인 시, 이미 가입된 회원이라면
+        if(userRepository.getByUid(kakaoUser.getEmail()) != null) {
+            User user = userRepository.getByUid(kakaoUser.getEmail());
+
+            user.setRecentLoggedIn(LocalDateTime.now());
+            userRepository.save(user);
+
+            SignInResultDto signInResultDto = SignInResultDto.builder()
+                    .token(jwtTokenProvider.createAccessToken(String.valueOf(user.getUid()), user.getRoles()))
+                    .refreshToken(jwtTokenProvider.createRefreshToken(String.valueOf(user.getUid())))
+                    .uid(user.getUid())
+                    .name(user.getName())
+                    .build();
+
+            setSuccessResult(signInResultDto);
+
+            return signInResultDto;
+        } else {
+//            가입된 회원이 아니라면
+            String CHAR_LOWER = "abcdefghijklmnopqrstuvwxyz";
+            String CHAR_UPPER = CHAR_LOWER.toUpperCase();
+            String NUMBER = "0123456789";
+
+            String DATA_FOR_RANDOM_STRING = CHAR_LOWER + CHAR_UPPER + NUMBER;
+            SecureRandom random = new SecureRandom();
+
+            StringBuilder sb = new StringBuilder(16);
+            for (int i = 0; i < 16; i++) {
+                int rndCharAt = random.nextInt(DATA_FOR_RANDOM_STRING.length());
+                char rndChar = DATA_FOR_RANDOM_STRING.charAt(rndCharAt);
+
+                sb.append(rndChar);
+            }
+
+            if(kakaoUser.getProfileImageUrl() == null) {
+                kakaoUser.setProfileImageUrl("https://kr.object.ncloudstorage.com/moneyisinvest/default-profile.png");
+            }
+
+            User user = User.builder()
+                    .uid(kakaoUser.getEmail())
+                    .name(kakaoUser.getNickname())
+                    .plan("basic")
+                    .createdAt(LocalDateTime.now())
+                    .useAble(true)
+                    .profileUrl(kakaoUser.getProfileImageUrl())
+                    .password(passwordEncoder.encode(sb.toString()))
+                    .roles(Collections.singletonList("ROLE_USER"))
+                    .build();
+
+            BaseResponseDto walletResult = stockCoinWalletService.createWallet(user.getUid());
+
+            if(walletResult.isSuccess()) {
+                stockCoinService.giveSignUpCoin(walletResult.getMsg());
+            }
+
+            if(!validateUid(user.getUid())) {
+                throw new RuntimeException("이메일 주소가 존재하지 않습니다.");
+            } else if(userRepository.getByUid(kakaoUser.getEmail()) != null) {
+                throw new RuntimeException("이미 존재하는 회원입니다.");
+            } else {
+                userRepository.save(user);
+            }
+
+            SignInResultDto signInResultDto = SignInResultDto.builder()
+                    .token(jwtTokenProvider.createAccessToken(String.valueOf(user.getUid()), user.getRoles()))
+                    .refreshToken(jwtTokenProvider.createRefreshToken(String.valueOf(user.getUid())))
+                    .uid(user.getUid())
+                    .name(user.getName())
+                    .build();
+
+            setSuccessResult(signInResultDto);
+
+            return signInResultDto;
+        }
     }
 
     @Override
