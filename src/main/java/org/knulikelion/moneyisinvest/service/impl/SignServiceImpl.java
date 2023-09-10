@@ -250,6 +250,7 @@ public class SignServiceImpl implements SignService {
                     .createdAt(LocalDateTime.now())
                     .useAble(true)
                     .profileUrl(kakaoUser.getProfileImageUrl())
+                    .kakao(true)
                     .password(passwordEncoder.encode(sb.toString()))
                     .roles(Collections.singletonList("ROLE_USER"))
                     .build();
