@@ -9,6 +9,7 @@ import org.knulikelion.moneyisinvest.data.dto.response.SignInResultDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignUpResultDto;
 import org.knulikelion.moneyisinvest.data.entity.KakaoUser;
 import org.knulikelion.moneyisinvest.data.entity.User;
+import org.knulikelion.moneyisinvest.data.enums.RegisterType;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.ProfileService;
 import org.knulikelion.moneyisinvest.service.SignService;
@@ -82,6 +83,7 @@ public class SignServiceImpl implements SignService {
                     .plan("basic")
                     .createdAt(LocalDateTime.now())
                     .useAble(true)
+                    .registerType(RegisterType.WEB)
                     .profileUrl("https://kr.object.ncloudstorage.com/moneyisinvest/default-profile.png")
                     .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
                     .roles(Collections.singletonList("ROLE_USER"))
@@ -249,8 +251,8 @@ public class SignServiceImpl implements SignService {
                     .plan("basic")
                     .createdAt(LocalDateTime.now())
                     .useAble(true)
+                    .registerType(RegisterType.KAKAO)
                     .profileUrl(kakaoUser.getProfileImageUrl())
-                    .kakao(true)
                     .password(passwordEncoder.encode(sb.toString()))
                     .roles(Collections.singletonList("ROLE_USER"))
                     .build();
