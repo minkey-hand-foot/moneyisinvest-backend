@@ -500,11 +500,7 @@ public class StockServiceImpl implements StockService {
                     } else {
                         Element imgElement = dtElement.select("img").first();
                         if (imgElement != null) {
-                            if(imgElement.attr("src").isEmpty()) {
-                                thumbnail = "https://kr.object.ncloudstorage.com/moneyisinvest/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202023-09-12%20%EC%98%A4%EC%A0%84%203.13.20.png";
-                            } else {
-                                thumbnail = imgElement.attr("src");
-                            }
+                            thumbnail = imgElement.attr("src");
                         }
                     }
                 }
@@ -527,7 +523,11 @@ public class StockServiceImpl implements StockService {
                 StockCompanyNewsResponseDto stockCompanyNewsResponseDto = new StockCompanyNewsResponseDto();
                 stockCompanyNewsResponseDto.setNewsUrl(link);
                 stockCompanyNewsResponseDto.setNewsTitle(title);
-                stockCompanyNewsResponseDto.setNewsThumbnail(thumbnail);
+                if(thumbnail == null) {
+                    stockCompanyNewsResponseDto.setNewsThumbnail("https://kr.object.ncloudstorage.com/moneyisinvest/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202023-09-12%20%EC%98%A4%EC%A0%84%203.13.20.png");
+                } else {
+                    stockCompanyNewsResponseDto.setNewsThumbnail(thumbnail);
+                }
                 stockCompanyNewsResponseDto.setNewsPreview(lede);
                 stockCompanyNewsResponseDto.setNewsCreatedAt(date);
                 stockCompanyNewsResponseDto.setNewsCompany(writing);
