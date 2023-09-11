@@ -495,7 +495,11 @@ public class StockServiceImpl implements StockService {
                 for (Element dtElement : liElement.select("dl > dt")) {
                     if (!dtElement.hasClass("photo")) {
                         Element aElement = dtElement.select("a").first();
-                        link = aElement.attr("href");
+                        if(aElement.attr("href").isEmpty()) {
+                            link = "https://kr.object.ncloudstorage.com/moneyisinvest/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202023-09-12%20%EC%98%A4%EC%A0%84%203.13.20.png";
+                        } else {
+                            link = aElement.attr("href");
+                        }
                         title = aElement.text();
                     } else {
                         Element imgElement = dtElement.select("img").first();
