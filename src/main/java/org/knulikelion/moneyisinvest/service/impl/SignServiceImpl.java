@@ -66,6 +66,8 @@ public class SignServiceImpl implements SignService {
 
     private static final String EMAIL_REGEX = "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$";
 
+    private final String DEFAULT_PROFILE = "https://kr.object.ncloudstorage.com/moneyisinvest/default-profile.png";
+
     // 주어진 이메일 주소가 유효한지 검증하는 메서드
     public static boolean validateUid(String email) {
         Pattern pattern = Pattern.compile(EMAIL_REGEX);
@@ -84,7 +86,7 @@ public class SignServiceImpl implements SignService {
                     .createdAt(LocalDateTime.now())
                     .useAble(true)
                     .registerType(RegisterType.WEB)
-                    .profileUrl("https://kr.object.ncloudstorage.com/moneyisinvest/default-profile.png")
+                    .profileUrl(DEFAULT_PROFILE)
                     .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
                     .roles(Collections.singletonList("ROLE_USER"))
                     .build();
@@ -202,6 +204,26 @@ public class SignServiceImpl implements SignService {
         return kakaoUser;
     }
 
+//    카카오 로그인 시 랜덤 비밀번호 생성
+    public String getRandomPassword() {
+        String CHAR_LOWER = "abcdefghijklmnopqrstuvwxyz";
+        String CHAR_UPPER = CHAR_LOWER.toUpperCase();
+        String NUMBER = "0123456789";
+
+        String DATA_FOR_RANDOM_STRING = CHAR_LOWER + CHAR_UPPER + NUMBER;
+        SecureRandom random = new SecureRandom();
+
+        StringBuilder sb = new StringBuilder(16);
+        for (int i = 0; i < 16; i++) {
+            int rndCharAt = random.nextInt(DATA_FOR_RANDOM_STRING.length());
+            char rndChar = DATA_FOR_RANDOM_STRING.charAt(rndCharAt);
+
+            sb.append(rndChar);
+        }
+
+        return sb.toString();
+    }
+
     @Override
     public SignInResultDto kakaoLogin(String code) throws RuntimeException, IOException, InterruptedException {
         String kakaoUserToken = createKakaoToken(code);
@@ -225,24 +247,13 @@ public class SignServiceImpl implements SignService {
 
             return signInResultDto;
         } else {
-//            가입된 회원이 아니라면
-            String CHAR_LOWER = "abcdefghijklmnopqrstuvwxyz";
-            String CHAR_UPPER = CHAR_LOWER.toUpperCase();
-            String NUMBER = "0123456789";
-
-            String DATA_FOR_RANDOM_STRING = CHAR_LOWER + CHAR_UPPER + NUMBER;
-            SecureRandom random = new SecureRandom();
-
-            StringBuilder sb = new StringBuilder(16);
-            for (int i = 0; i < 16; i++) {
-                int rndCharAt = random.nextInt(DATA_FOR_RANDOM_STRING.length());
-                char rndChar = DATA_FOR_RANDOM_STRING.charAt(rndCharAt);
-
-                sb.append(rndChar);
+//            카카오 프로필 이미지를 가져올 수 없을 때, 서비스 기본 프로필 사용
+            if(kakaoUser.getProfileImageUrl() == null) {
+                kakaoUser.setProfileImageUrl(DEFAULT_PROFILE);
             }
 
-            if(kakaoUser.getProfileImageUrl() == null) {
-                kakaoUser.setProfileImageUrl("https://kr.object.ncloudstorage.com/moneyisinvest/default-profile.png");
+            if(kakaoUser.getEmail() == null || kakaoUser.getNickname() == null) {
+                throw new RuntimeException("카카오 정보에서 이메일 또는 닉네임을 가져올 수 없습니다");
             }
 
             User user = User.builder()
@@ -253,7 +264,7 @@ public class SignServiceImpl implements SignService {
                     .useAble(true)
                     .registerType(RegisterType.KAKAO)
                     .profileUrl(kakaoUser.getProfileImageUrl())
-                    .password(passwordEncoder.encode(sb.toString()))
+                    .password(passwordEncoder.encode(getRandomPassword()))
                     .roles(Collections.singletonList("ROLE_USER"))
                     .build();
 
@@ -264,13 +275,14 @@ public class SignServiceImpl implements SignService {
             }
 
             if(!validateUid(user.getUid())) {
-                throw new RuntimeException("이메일 주소가 존재하지 않습니다.");
+                throw new RuntimeException("이메일 주소 형식이 아닙니다.");
             } else if(userRepository.getByUid(kakaoUser.getEmail()) != null) {
                 throw new RuntimeException("이미 존재하는 회원입니다.");
             } else {
                 userRepository.save(user);
             }
 
+//            회원가입 후 로그인 정보 반환
             SignInResultDto signInResultDto = SignInResultDto.builder()
                     .token(jwtTokenProvider.createAccessToken(String.valueOf(user.getUid()), user.getRoles()))
                     .refreshToken(jwtTokenProvider.createRefreshToken(String.valueOf(user.getUid())))
