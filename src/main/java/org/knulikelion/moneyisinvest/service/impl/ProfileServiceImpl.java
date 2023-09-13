@@ -12,6 +12,7 @@ import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -53,6 +54,12 @@ public class ProfileServiceImpl implements ProfileService {
 
         mypageResponseDto.setRecentLoggedIn(formatter.format(zdt));
 
+        if(user.getPhoneNum() == null) {
+            mypageResponseDto.setPhoneNum(null);
+        } else {
+            mypageResponseDto.setPhoneNum(user.getPhoneNum());
+        }
+        
         return mypageResponseDto;
     }
 
@@ -73,6 +80,50 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         return baseResponseDto;
+    }
+
+    @Override
+    public ResponseEntity<?> setUserPhoneNum(String phoneNum, String uid) {
+        User user = userRepository.getByUid(uid);
+
+        String PHONE_REG = "^01(?:0|1|[6-9])[.-]?(\\d{3}|\\d{4})[.-]?(\\d{4})$";
+
+        if(phoneNum.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    BaseResponseDto.builder()
+                            .success(false)
+                            .msg("입력된 값이 없습니다.")
+                    .build()
+            );
+        }
+
+        if(user == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    BaseResponseDto.builder()
+                            .success(false)
+                            .msg("해당 사용자를 찾을 수 없습니다.")
+                    .build()
+            );
+        }
+
+        if(!phoneNum.matches(PHONE_REG)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    BaseResponseDto.builder()
+                            .success(false)
+                            .msg("휴대폰 번호는 '010-XXXX-XXXX' 형식으로 입력되어야 합니다.")
+                            .build()
+            );
+        }
+
+        user.setPhoneNum(phoneNum);
+        userRepository.save(user);
+
+        return ResponseEntity.status(HttpStatus.OK).body(
+                BaseResponseDto.builder()
+                        .success(true)
+                        .msg("휴대폰 번호 등록이 완료되었습니다.")
+                .build()
+        );
     }
 
     @Override

@@ -66,6 +66,14 @@ public class ProfileController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
+    @PutMapping("/set/num")
+    public ResponseEntity<?> setUserPhoneNum(@RequestParam String phoneNum, HttpServletRequest request) {
+        return profileService.setUserPhoneNum(phoneNum, jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")));
+    }
+
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
     @GetMapping("/get")
     public ProfilePictureUrlResponseDto getUserProfilePicUrl(HttpServletRequest request) {
         ProfilePictureUrlResponseDto profilePictureUrlResponseDto = new ProfilePictureUrlResponseDto();
@@ -74,5 +82,4 @@ public class ProfileController {
 
         return profilePictureUrlResponseDto;
     }
-
 }

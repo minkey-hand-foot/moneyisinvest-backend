@@ -55,6 +55,9 @@ public class User implements UserDetails {
     @Column
     private String profileUrl;
 
+    @Column(nullable = false)
+    private String phoneNum;
+
     @Column
     private LocalDateTime createdAt;
 

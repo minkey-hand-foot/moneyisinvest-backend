@@ -14,4 +14,5 @@ public class MypageResponseDto {
     private String name;
     private String profileUrl;
     private String recentLoggedIn;
+    private String phoneNum;
 }
