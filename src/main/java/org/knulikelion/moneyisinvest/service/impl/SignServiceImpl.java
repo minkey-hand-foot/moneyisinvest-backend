@@ -86,6 +86,7 @@ public class SignServiceImpl implements SignService {
                     .createdAt(LocalDateTime.now())
                     .useAble(true)
                     .registerType(RegisterType.WEB)
+                    .phoneNum(signUpRequestDto.getPhoneNum())
                     .profileUrl(DEFAULT_PROFILE)
                     .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
                     .roles(Collections.singletonList("ROLE_USER"))
