@@ -257,8 +257,21 @@ public class StockCoinServiceImpl implements StockCoinService {
     }
 
     private boolean isValidTransaction(Transaction transaction) {
-        // Implement your criteria to validate a transaction
-        // Return true if it's valid and false if it's not
+//        발신자 또는 수신자의 입력 값이 비어있는지 검증
+        if(transaction.getFrom() == null || transaction.getTo() == null) {
+            return false;
+        }
+
+//        발신자와 수신자가 같은지 검증
+        if(transaction.getFrom().equals(transaction.getTo())) {
+            return false;
+        }
+
+//        전송 금액이 0보다 큰지 검증
+        if(transaction.getAmount() < 0) {
+            return false;
+        }
+
         return true;
     }
 
