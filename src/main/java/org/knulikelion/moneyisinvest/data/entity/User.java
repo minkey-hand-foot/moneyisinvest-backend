@@ -27,7 +27,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "users")
+@Table
 public class User implements UserDetails {
     private static final long serialVersionUID = 6014984039564979062L;
 
