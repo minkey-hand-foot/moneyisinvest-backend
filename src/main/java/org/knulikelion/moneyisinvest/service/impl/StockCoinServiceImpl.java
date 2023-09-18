@@ -148,6 +148,7 @@ public class StockCoinServiceImpl implements StockCoinService {
     public BaseResponseDto sellStock(TransactionToSystemRequestDto transactionToSystemRequestDto, String stockAmount) {
         BaseResponseDto baseResponseDto = new BaseResponseDto();
         User foundUser = userRepository.getByUid(transactionToSystemRequestDto.getTargetUid());
+        StockCoinBenefit stockCoinBenefit = stockCoinBenefitRepository.getStockCoinBenefitByUser(foundUser);
 
 //        스톡 코인 거래
         if(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()) != null) {
@@ -170,15 +171,7 @@ public class StockCoinServiceImpl implements StockCoinService {
                         stockCoinWalletService.updateWalletBalances(transaction);
 
 //                    베이직 플랜 손해 저장
-                        if(stockCoinBenefitRepository.getStockCoinBenefitByUser(foundUser) != null) {
-                            StockCoinBenefit stockCoinBenefit = stockCoinBenefitRepository.getStockCoinBenefitByUser(foundUser);
-                            stockCoinBenefit.setLoss(
-                                    stockCoinBenefit.getLoss() + (transactionToSystemRequestDto.getAmount() * 0.015)
-                            );
-                            stockCoinBenefit.setLoseAmount(stockCoinBenefit.getBenefitAmount() +
-                                    Double.parseDouble(stockAmount));
-                            stockCoinBenefitRepository.save(stockCoinBenefit);
-                        } else {
+                        if(stockCoinBenefit == null) {
                             stockCoinBenefitRepository.save(
                                     StockCoinBenefit.builder()
                                             .user(foundUser)
@@ -188,6 +181,11 @@ public class StockCoinServiceImpl implements StockCoinService {
                                             .build()
                             );
                         }
+
+                        stockCoinBenefit.setLoss(stockCoinBenefit.getLoss() + (transactionToSystemRequestDto.getAmount() * 0.015));
+                        stockCoinBenefit.setLoseAmount(stockCoinBenefit.getLoseAmount() + Double.parseDouble(stockAmount));
+
+                        stockCoinBenefitRepository.save(stockCoinBenefit);
 
                         baseResponseDto.setSuccess(true);
                         baseResponseDto.setMsg("보유 주식을 매도하여 " + transaction.getAmount() + " 스톡 코인을 얻었습니다.");
@@ -221,14 +219,7 @@ public class StockCoinServiceImpl implements StockCoinService {
                     stockCoinWalletService.updateWalletBalances(bonusTransaction);
 
 //                    프리미엄 플랜 이득 저장
-                    if(stockCoinBenefitRepository.getStockCoinBenefitByUser(foundUser) != null) {
-                        StockCoinBenefit stockCoinBenefit = stockCoinBenefitRepository.getStockCoinBenefitByUser(foundUser);
-                        stockCoinBenefit.setBenefit(
-                                stockCoinBenefit.getBenefit() + (transactionToSystemRequestDto.getAmount() * 0.015)
-                        );
-                        stockCoinBenefit.setBenefitAmount(stockCoinBenefit.getBenefitAmount() + Double.parseDouble(stockAmount));
-                        stockCoinBenefitRepository.save(stockCoinBenefit);
-                    } else {
+                    if(stockCoinBenefit == null) {
                         stockCoinBenefitRepository.save(
                                 StockCoinBenefit.builder()
                                         .user(foundUser)
@@ -238,6 +229,12 @@ public class StockCoinServiceImpl implements StockCoinService {
                                         .build()
                         );
                     }
+
+                    stockCoinBenefit.setBenefit(
+                            stockCoinBenefit.getBenefit() + (transactionToSystemRequestDto.getAmount() * 0.015)
+                    );
+                    stockCoinBenefit.setBenefitAmount(stockCoinBenefit.getBenefitAmount() + Double.parseDouble(stockAmount));
+                    stockCoinBenefitRepository.save(stockCoinBenefit);
 
                     baseResponseDto.setSuccess(true);
                     baseResponseDto.setMsg("[프리미엄] 보유 주식을 매도하여 " + (transaction.getAmount() + bonusTransaction.getAmount())  + " 스톡 코인을 얻었습니다.");
