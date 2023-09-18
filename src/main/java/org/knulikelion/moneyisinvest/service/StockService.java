@@ -35,5 +35,5 @@ public interface StockService {
     String getDayBeforeRate(String stockCode);
     List<StockTransactionHistoryResponseDto> getStockTransactionHistory(String uid);
     BaseResponseDto calculateCoin(int amount, String price);
-
+    StockBenefitResponseDto getPremiumInfo(String uid);
 }

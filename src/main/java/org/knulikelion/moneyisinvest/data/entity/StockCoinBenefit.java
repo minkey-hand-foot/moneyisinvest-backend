@@ -27,5 +27,8 @@ public class StockCoinBenefit {
     private User user;
 
     @Column(nullable = false)
-    private double stockAmount = 0;
+    private double benefitAmount = 0;
+
+    @Column(nullable = false)
+    private double loseAmount = 0;
 }
