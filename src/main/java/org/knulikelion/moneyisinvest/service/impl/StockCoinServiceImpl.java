@@ -146,7 +146,6 @@ public class StockCoinServiceImpl implements StockCoinService {
 
     @Override
     public BaseResponseDto sellStock(TransactionToSystemRequestDto transactionToSystemRequestDto, String stockAmount) {
-        BaseResponseDto baseResponseDto = new BaseResponseDto();
         User foundUser = userRepository.getByUid(transactionToSystemRequestDto.getTargetUid());
         StockCoinBenefit stockCoinBenefit = stockCoinBenefitRepository.getStockCoinBenefitByUser(foundUser);
         stockCoinBenefit.setUser(foundUser);
@@ -154,8 +153,10 @@ public class StockCoinServiceImpl implements StockCoinService {
 //        스톡 코인 거래
         if(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()) != null) {
             if(foundUser == null) {
-                baseResponseDto.setSuccess(false);
-                baseResponseDto.setMsg("사용자를 찾을 수 없습니다.");
+                return BaseResponseDto.builder()
+                        .success(false)
+                        .msg("사용자를 찾을 수 없습니다.")
+                    .build();
             } else {
 //                베이직 플랜일 때
                 if(foundUser.getPlan().equals("basic")) {
@@ -175,11 +176,17 @@ public class StockCoinServiceImpl implements StockCoinService {
                         stockCoinBenefit.setLoss(stockCoinBenefit.getLoss() + (transactionToSystemRequestDto.getAmount() * 0.015));
                         stockCoinBenefit.setLoseAmount(stockCoinBenefit.getLoseAmount() + Double.parseDouble(stockAmount));
 
-                        baseResponseDto.setSuccess(true);
-                        baseResponseDto.setMsg("보유 주식을 매도하여 " + transaction.getAmount() + " 스톡 코인을 얻었습니다.");
+                        stockCoinBenefitRepository.save(stockCoinBenefit);
+                        
+                        return BaseResponseDto.builder()
+                                .success(true)
+                                .msg("보유 주식을 매도하여 " + transaction.getAmount() + " 스톡 코인을 얻었습니다.")
+                            .build();
                     } else {
-                        baseResponseDto.setSuccess(false);
-                        baseResponseDto.setMsg("보유한 스톡 코인이 부족합니다.");
+                        return BaseResponseDto.builder()
+                                .success(false)
+                                .msg("보유한 스톡 코인이 부족합니다.")
+                            .build();
                     }
                 } else {
                     Transaction transaction = Transaction.builder()
@@ -210,19 +217,20 @@ public class StockCoinServiceImpl implements StockCoinService {
                     stockCoinBenefit.setBenefit(stockCoinBenefit.getBenefit() + (transactionToSystemRequestDto.getAmount() * 0.015));
                     stockCoinBenefit.setBenefitAmount(stockCoinBenefit.getBenefitAmount() + Double.parseDouble(stockAmount));
 
-                    baseResponseDto.setSuccess(true);
-                    baseResponseDto.setMsg("[프리미엄] 보유 주식을 매도하여 " + (transaction.getAmount() + bonusTransaction.getAmount())  + " 스톡 코인을 얻었습니다.");
+                    stockCoinBenefitRepository.save(stockCoinBenefit);
+
+                    return BaseResponseDto.builder()
+                            .success(true)
+                            .msg("[프리미엄] 보유 주식을 매도하여" + (transaction.getAmount() + bonusTransaction.getAmount())  + " 스톡 코인을 얻었습니다.")
+                        .build();
                 }
-
-                stockCoinBenefitRepository.save(stockCoinBenefit);
             }
-
         } else {
-            baseResponseDto.setSuccess(false);
-            baseResponseDto.setMsg("보유한 지갑이 없습니다.");
+            return BaseResponseDto.builder()
+                    .success(false)
+                    .msg("보유한 스톡 코인이 부족합니다.")
+                .build();
         }
-
-        return baseResponseDto;
     }
 
     @Override
