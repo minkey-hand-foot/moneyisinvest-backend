@@ -874,7 +874,7 @@ public class StockServiceImpl implements StockService {
             transactionToSystemRequestDto.setTargetUid(uid);
             transactionToSystemRequestDto.setAmount(Double.parseDouble(stockSellRequestDto.getSell_price()) / 100);
 
-            BaseResponseDto transactionResult = stockCoinService.sellStock(transactionToSystemRequestDto);
+            BaseResponseDto transactionResult = stockCoinService.sellStock(transactionToSystemRequestDto, stockSellRequestDto.getStockAmount());
             if (transactionResult.isSuccess()) {
                 log.info("[sellStock] stock 거래 성공 후 DB 저장");
                 Stock findStock = stockRepository.findByUserIdAndStockCode(

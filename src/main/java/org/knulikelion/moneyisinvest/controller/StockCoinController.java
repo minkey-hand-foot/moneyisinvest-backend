@@ -113,7 +113,7 @@ public class StockCoinController {
 //    주식 매도
     @PostMapping("/stock/sell")
     public BaseResponseDto sellStock(@RequestBody TransactionToSystemRequestDto transactionToSystemRequestDto) {
-        return stockCoinService.sellStock(transactionToSystemRequestDto);
+        return stockCoinService.sellStock(transactionToSystemRequestDto, null);
     }
 
     @PostMapping("/stock/buy")
