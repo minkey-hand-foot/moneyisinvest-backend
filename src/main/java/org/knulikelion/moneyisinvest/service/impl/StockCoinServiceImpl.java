@@ -149,6 +149,7 @@ public class StockCoinServiceImpl implements StockCoinService {
         BaseResponseDto baseResponseDto = new BaseResponseDto();
         User foundUser = userRepository.getByUid(transactionToSystemRequestDto.getTargetUid());
         StockCoinBenefit stockCoinBenefit = stockCoinBenefitRepository.getStockCoinBenefitByUser(foundUser);
+        stockCoinBenefit.setUser(foundUser);
 
 //        스톡 코인 거래
         if(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()) != null) {
@@ -171,21 +172,8 @@ public class StockCoinServiceImpl implements StockCoinService {
                         stockCoinWalletService.updateWalletBalances(transaction);
 
 //                    베이직 플랜 손해 저장
-                        if(stockCoinBenefit == null) {
-                            stockCoinBenefitRepository.save(
-                                    StockCoinBenefit.builder()
-                                            .user(foundUser)
-                                            .benefit(0)
-                                            .loseAmount(Double.parseDouble(stockAmount))
-                                            .loss(transactionToSystemRequestDto.getAmount() * 0.015)
-                                            .build()
-                            );
-                        }
-
                         stockCoinBenefit.setLoss(stockCoinBenefit.getLoss() + (transactionToSystemRequestDto.getAmount() * 0.015));
                         stockCoinBenefit.setLoseAmount(stockCoinBenefit.getLoseAmount() + Double.parseDouble(stockAmount));
-
-                        stockCoinBenefitRepository.save(stockCoinBenefit);
 
                         baseResponseDto.setSuccess(true);
                         baseResponseDto.setMsg("보유 주식을 매도하여 " + transaction.getAmount() + " 스톡 코인을 얻었습니다.");
@@ -219,26 +207,14 @@ public class StockCoinServiceImpl implements StockCoinService {
                     stockCoinWalletService.updateWalletBalances(bonusTransaction);
 
 //                    프리미엄 플랜 이득 저장
-                    if(stockCoinBenefit == null) {
-                        stockCoinBenefitRepository.save(
-                                StockCoinBenefit.builder()
-                                        .user(foundUser)
-                                        .benefit(transactionToSystemRequestDto.getAmount() * 0.015)
-                                        .benefitAmount(Double.parseDouble(stockAmount))
-                                        .loss(0)
-                                        .build()
-                        );
-                    }
-
-                    stockCoinBenefit.setBenefit(
-                            stockCoinBenefit.getBenefit() + (transactionToSystemRequestDto.getAmount() * 0.015)
-                    );
+                    stockCoinBenefit.setBenefit(stockCoinBenefit.getBenefit() + (transactionToSystemRequestDto.getAmount() * 0.015));
                     stockCoinBenefit.setBenefitAmount(stockCoinBenefit.getBenefitAmount() + Double.parseDouble(stockAmount));
-                    stockCoinBenefitRepository.save(stockCoinBenefit);
 
                     baseResponseDto.setSuccess(true);
                     baseResponseDto.setMsg("[프리미엄] 보유 주식을 매도하여 " + (transaction.getAmount() + bonusTransaction.getAmount())  + " 스톡 코인을 얻었습니다.");
                 }
+
+                stockCoinBenefitRepository.save(stockCoinBenefit);
             }
 
         } else {
