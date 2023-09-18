@@ -18,7 +18,7 @@ public interface StockCoinService {
 
     BaseResponseDto buyStock(TransactionToSystemRequestDto transactionToSystemRequestDto);
 
-    BaseResponseDto sellStock(TransactionToSystemRequestDto transactionToSystemRequestDto);
+    BaseResponseDto sellStock(TransactionToSystemRequestDto transactionToSystemRequestDto, String stockAmount);
 
     String createSystemTransaction(String username, double amount);
 
