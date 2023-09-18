@@ -64,15 +64,23 @@ public class StockServiceImpl implements StockService {
     private final StockCoinService stockCoinService;
     private final UserRepository userRepository;
     private final FavoriteRepository favoriteRepository;
+    private final StockCoinBenefitRepository stockCoinBenefitRepository;
     private final StockTransactionRepository stockTransactionRepository;
 
     @Autowired
-    public StockServiceImpl(StockHolidayRepository stockHolidayRepository, StockRepository stockRepository, StockCoinService stockCoinService, UserRepository userRepository, FavoriteRepository favoriteRepository, StockTransactionRepository stockTransactionRepository) {
+    public StockServiceImpl(StockHolidayRepository stockHolidayRepository,
+                            StockRepository stockRepository,
+                            StockCoinService stockCoinService,
+                            UserRepository userRepository,
+                            FavoriteRepository favoriteRepository,
+                            StockCoinBenefitRepository stockCoinBenefitRepository,
+                            StockTransactionRepository stockTransactionRepository) {
         this.stockHolidayRepository = stockHolidayRepository;
         this.stockRepository = stockRepository;
         this.stockCoinService = stockCoinService;
         this.userRepository = userRepository;
         this.favoriteRepository = favoriteRepository;
+        this.stockCoinBenefitRepository = stockCoinBenefitRepository;
         this.stockTransactionRepository = stockTransactionRepository;
     }
 
@@ -1159,6 +1167,28 @@ public class StockServiceImpl implements StockService {
         baseResponseDto.setMsg(formattedResult);
 
         return baseResponseDto;
+    }
+
+    @Override
+    public StockBenefitResponseDto getPremiumInfo(String uid) {
+        User user = userRepository.getByUid(uid);
+        StockCoinBenefit stockCoinBenefit = stockCoinBenefitRepository.getStockCoinBenefitByUser(user);
+
+        if(stockCoinBenefit == null) {
+            return StockBenefitResponseDto.builder()
+                    .benefitAmount(null)
+                    .benefitPrice(null)
+                    .losePrice(null)
+                    .lostAmount(null)
+                .build();
+        }
+
+        return StockBenefitResponseDto.builder()
+                .benefitAmount(String.valueOf(stockCoinBenefit.getBenefitAmount()))
+                .benefitPrice(String.valueOf(stockCoinBenefit.getBenefit()))
+                .lostAmount(String.valueOf(stockCoinBenefit.getLoseAmount()))
+                .losePrice(String.valueOf(stockCoinBenefit.getLoss()))
+            .build();
     }
 }
 
