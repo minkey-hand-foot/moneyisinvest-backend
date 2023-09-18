@@ -177,7 +177,7 @@ public class StockCoinServiceImpl implements StockCoinService {
                         stockCoinBenefit.setLoseAmount(stockCoinBenefit.getLoseAmount() + Double.parseDouble(stockAmount));
 
                         stockCoinBenefitRepository.save(stockCoinBenefit);
-                        
+
                         return BaseResponseDto.builder()
                                 .success(true)
                                 .msg("보유 주식을 매도하여 " + transaction.getAmount() + " 스톡 코인을 얻었습니다.")
