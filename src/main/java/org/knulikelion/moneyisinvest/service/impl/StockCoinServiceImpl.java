@@ -147,9 +147,7 @@ public class StockCoinServiceImpl implements StockCoinService {
     @Override
     public BaseResponseDto sellStock(TransactionToSystemRequestDto transactionToSystemRequestDto, String stockAmount) {
         BaseResponseDto baseResponseDto = new BaseResponseDto();
-
         User foundUser = userRepository.getByUid(transactionToSystemRequestDto.getTargetUid());
-        StockCoinBenefit stockCoinBenefit = stockCoinBenefitRepository.getStockCoinBenefitByUserId(foundUser.getId());
 
 //        스톡 코인 거래
         if(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()) != null) {
@@ -168,18 +166,19 @@ public class StockCoinServiceImpl implements StockCoinService {
                             .build();
 
 //                    베이직 플랜 손해 저장
-                    if(stockCoinBenefit != null) {
+                    if(stockCoinBenefitRepository.getStockCoinBenefitByUserId(foundUser.getId()) != null) {
+                        StockCoinBenefit stockCoinBenefit = stockCoinBenefitRepository.getStockCoinBenefitByUserId(foundUser.getId());
                         stockCoinBenefit.setLoss(
                                 stockCoinBenefit.getLoss() + (transactionToSystemRequestDto.getAmount() * 0.015)
                         );
-                        stockCoinBenefit.setStockAmount(Double.parseDouble(stockAmount));
+                        stockCoinBenefit.setStockAmount(Double.parseDouble(stockAmount) + stockCoinBenefit.getStockAmount());
                         stockCoinBenefitRepository.save(stockCoinBenefit);
                     } else {
                         stockCoinBenefitRepository.save(
                                 StockCoinBenefit.builder()
                                         .user(foundUser)
                                         .benefit(0)
-                                        .stockAmount(stockCoinBenefit.getStockAmount() + Double.parseDouble(stockAmount))
+                                        .stockAmount(Double.parseDouble(stockAmount))
                                         .loss(transactionToSystemRequestDto.getAmount() * 0.015)
                                 .build()
                         );
@@ -221,18 +220,19 @@ public class StockCoinServiceImpl implements StockCoinService {
                     stockCoinWalletService.updateWalletBalances(bonusTransaction);
 
 //                    베이직 플랜 손해 저장
-                    if(stockCoinBenefit != null) {
+                    if(stockCoinBenefitRepository.getStockCoinBenefitByUserId(foundUser.getId()) != null) {
+                        StockCoinBenefit stockCoinBenefit = stockCoinBenefitRepository.getStockCoinBenefitByUserId(foundUser.getId());
                         stockCoinBenefit.setBenefit(
                                 stockCoinBenefit.getBenefit() + (transactionToSystemRequestDto.getAmount() * 0.015)
                         );
-                        stockCoinBenefit.setStockAmount(Double.parseDouble(stockAmount));
+                        stockCoinBenefit.setStockAmount(stockCoinBenefit.getStockAmount() + Double.parseDouble(stockAmount));
                         stockCoinBenefitRepository.save(stockCoinBenefit);
                     } else {
                         stockCoinBenefitRepository.save(
                                 StockCoinBenefit.builder()
                                         .user(foundUser)
                                         .benefit(transactionToSystemRequestDto.getAmount() * 0.015)
-                                        .stockAmount(stockCoinBenefit.getStockAmount() + Double.parseDouble(stockAmount))
+                                        .stockAmount(Double.parseDouble(stockAmount))
                                         .loss(0)
                                         .build()
                         );
