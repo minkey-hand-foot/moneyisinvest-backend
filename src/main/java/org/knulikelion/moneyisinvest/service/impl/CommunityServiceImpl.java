@@ -195,4 +195,53 @@ public class CommunityServiceImpl implements CommunityService {
         }
         return baseResponseDto;
     }
+
+    @Override
+    public BaseResponseDto updateReplyComment(ReplyCommentRequestDto replyCommentRequestDto, String token) {
+        CommunityReply communityReply = communityReplyRepository.getById(replyCommentRequestDto.getTargetCommentId());
+        User user = userRepository.getByUid(jwtTokenProvider.getUsername(token));
+
+//        커뮤니티 답글을 등록한 사용자와 업데이트를 요청하는 사용자가 일치하지 않을 때
+        if(!communityReply.getUser().equals(user)) {
+            return BaseResponseDto.builder()
+                    .success(false)
+                    .msg("답글을 게시한 사용자가 아닙니다.")
+                .build();
+        }
+
+        communityReply.setComment(replyCommentRequestDto.getComment());
+        communityReply.setUpdatedAt(LocalDateTime.now());
+
+        return BaseResponseDto.builder()
+                .success(true)
+                .msg("대댓글 업데이트가 완료되었습니다.")
+                .build();
+    }
+
+    @Override
+    public BaseResponseDto removeReplyComment(Long replyId, String token) {
+        CommunityReply communityReply = communityReplyRepository.getById(replyId);
+        User user = userRepository.getByUid(jwtTokenProvider.getUsername(token));
+
+        if(communityReply == null) {
+            return BaseResponseDto.builder()
+                    .success(false)
+                    .msg("삭제할 대댓글을 찾지 못 했습니다.")
+                    .build();
+        }
+
+        if(!communityReply.getUser().equals(user)) {
+            return BaseResponseDto.builder()
+                    .success(false)
+                    .msg("해당 대댓글을 게시한 사용자가 아닙니다.")
+                    .build();
+        }
+
+        communityReplyRepository.delete(communityReply);
+
+        return BaseResponseDto.builder()
+                .success(true)
+                .msg("대댓글 삭제가 완료되었습니다.")
+                .build();
+    }
 }

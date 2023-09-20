@@ -16,4 +16,6 @@ public interface CommunityService {
     List<CommentDetailResponseDto> getAllCommentByStockIdContainsAllReply(String stockId);
     BaseResponseDto removeComment(Long id);
     BaseResponseDto updateComment(CommentUpdateRequestDto commentUpdateRequestDto);
+    BaseResponseDto updateReplyComment(ReplyCommentRequestDto replyCommentRequestDto, String token);
+    BaseResponseDto removeReplyComment(Long replyId, String token);
 }

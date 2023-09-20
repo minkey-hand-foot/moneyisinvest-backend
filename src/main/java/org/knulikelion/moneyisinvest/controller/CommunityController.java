@@ -20,7 +20,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/community")
 public class CommunityController {
-    private final Logger LOGGER = LoggerFactory.getLogger(SignController.class);
     private final CommunityService communityService;
 
     @Autowired
@@ -31,17 +30,17 @@ public class CommunityController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
-    @PostMapping("/post")
+    @PostMapping("/")
     public BaseResponseDto postComment(@RequestBody CommentRequestDto commentRequestDto, HttpServletRequest request) {
         return communityService.postComment(commentRequestDto, request.getHeader("X-AUTH-TOKEN"));
     }
 
-    @GetMapping("/get")
+    @GetMapping("/")
     public List<CommentResponseDto> getAllCommentByStockId(String stockId) {
         return communityService.getAllCommentByStockId(stockId);
     }
 
-    @GetMapping("/get/detail")
+    @GetMapping("/detail")
     public List<CommentDetailResponseDto> getAllCommentByStockIdContainsAllReply(String stockId) {
         return communityService.getAllCommentByStockIdContainsAllReply(stockId);
     }
@@ -49,7 +48,7 @@ public class CommunityController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
-    @DeleteMapping("/remove")
+    @DeleteMapping("/")
     public BaseResponseDto removeCommentById(Long id) {
         return communityService.removeComment(id);
     }
@@ -57,7 +56,7 @@ public class CommunityController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
-    @PutMapping("/update")
+    @PutMapping("/")
     public BaseResponseDto updateCommentById(@RequestBody CommentUpdateRequestDto commentUpdateRequestDto) {
         return communityService.updateComment(commentUpdateRequestDto);
     }
@@ -68,5 +67,22 @@ public class CommunityController {
     @PostMapping("/reply")
     public BaseResponseDto replyComment(@RequestBody ReplyCommentRequestDto replyCommentRequestDto, HttpServletRequest request) {
         return communityService.replyComment(replyCommentRequestDto, request.getHeader("X-AUTH-TOKEN"));
+    }
+
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
+    @PutMapping("/reply")
+    public BaseResponseDto updateReplyComment(@RequestBody ReplyCommentRequestDto replyCommentRequestDto,
+                                              HttpServletRequest request) {
+        return communityService.updateReplyComment(replyCommentRequestDto, request.getHeader("X-AUTH-TOKEN"));
+    }
+
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
+    @DeleteMapping("/reply")
+    public BaseResponseDto removeReplyComment(@RequestParam Long replyId, HttpServletRequest request) {
+        return communityService.removeReplyComment(replyId, request.getHeader("X-AUTH-TOKEN"));
     }
 }
