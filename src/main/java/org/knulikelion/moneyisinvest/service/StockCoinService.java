@@ -24,5 +24,5 @@ public interface StockCoinService {
 
     String giveSignUpCoin(String address);
 
-    void processTransaction(Transaction transaction);
+    boolean processTransaction(Transaction transaction);
 }

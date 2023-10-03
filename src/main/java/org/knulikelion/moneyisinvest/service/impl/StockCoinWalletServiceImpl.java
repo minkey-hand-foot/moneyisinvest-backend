@@ -217,8 +217,8 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
         return walletAddress.toString();
     }
 
-    //    지갑 잔액 업데이트
     @Override
+    @Transactional
     public void updateWalletBalances(Transaction transaction) {
         StockCoinWallet senderWallet = stockCoinWalletRepository.findByAddress(transaction.getFrom());
         StockCoinWallet recipientWallet = stockCoinWalletRepository.findByAddress(transaction.getTo());
@@ -230,14 +230,11 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
             log.info("수신자 지갑 잔액 설정: " + recipientNewBalance);
         } else {
 //          발신자의 발송 후 잔액
-
             double senderNewBalance = senderWallet.getBalance() - (transaction.getAmount() - transaction.getFee());
             senderWallet.setBalance(senderNewBalance);
             stockCoinWalletRepository.save(senderWallet);
             log.info("발신자 지갑 잔액 설정: " + senderNewBalance);
-
 //          수신자의 수신 후 잔액
-
             double recipientNewBalance = recipientWallet.getBalance() + transaction.getAmount();
             recipientWallet.setBalance(recipientNewBalance);
             stockCoinWalletRepository.save(recipientWallet);
@@ -245,7 +242,8 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
         }
     }
 
-//    지갑 주소로 잔액 조회
+
+    //    지갑 주소로 잔액 조회
     @Override
     public double getWalletBalance(String address) {
         StockCoinWallet selectedWallet = stockCoinWalletRepository.findByAddress(address);

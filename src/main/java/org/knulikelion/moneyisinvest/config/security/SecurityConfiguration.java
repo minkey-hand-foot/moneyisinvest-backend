@@ -39,6 +39,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/sign-in", "/api/v1/sign-up", "/api/v1/refresh-token").permitAll()
 //                상점 기능 User 허용
                 .antMatchers("/api/v1/shop/**").hasRole("USER")
+                .antMatchers("/api/v1/redis").permitAll()
 //                커뮤니티 기능 User 허용
                 .antMatchers("/api/v1/community/post").hasRole("USER")
                 .antMatchers("/api/v1/community/remove").hasRole("USER")

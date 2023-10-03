@@ -35,15 +35,15 @@ public class SupportServiceImpl implements SupportService {
     public SupportResponseDto addSupport(SupportRequestDto supportRequestDto, String uid) {
         SupportResponseDto supportResponseDto = new SupportResponseDto();
 
-        User getUser = userRepository.findByUid(uid);
+        Optional<User> getUser = userRepository.findByUid(uid);
 
-        if (getUser == null) {
+        if (!getUser.isPresent()) {
             supportResponseDto.setMsg("사용자가 존재하지 않음");
             return supportResponseDto;
         }
 
         Support support = new Support();
-        support.setUser(getUser);
+        support.setUser(getUser.get());
         support.setTitle(supportRequestDto.getTitle());
         support.setStatus("답변 대기중");
         support.setContents(supportRequestDto.getContents());
@@ -54,7 +54,7 @@ public class SupportServiceImpl implements SupportService {
 
         // 필요한 객체의 필드들을 SupportResponseDto 객체로 복사합니다.
         supportResponseDto.setSupportId(savedSupport.getId());
-        supportResponseDto.setUid(getUser.getUid());
+        supportResponseDto.setUid(getUser.get().getUid());
         supportResponseDto.setTitle(savedSupport.getTitle());
         supportResponseDto.setContents(savedSupport.getContents());
         supportResponseDto.setStatus(savedSupport.getStatus());
@@ -68,9 +68,13 @@ public class SupportServiceImpl implements SupportService {
 
     @Override
     public SupportResponseDto getUserSupport(String uid, Long supprotId) {
-        if (uid == null) throw new RuntimeException("사용자 id가 없습니다.");
-        User user = userRepository.findByUid(uid);
-        List<Support> supportList = supportRepository.findByUser_Id(user.getId());
+        Optional<User> user = userRepository.findByUid(uid);
+
+        if(!user.isPresent()) {
+            throw new RuntimeException("사용자를 찾을 수 없습니다.");
+        }
+
+        List<Support> supportList = supportRepository.findByUser_Id(user.get().getId());
 
         SupportResponseDto responseDto = null;
         if (supportList.isEmpty()) {
