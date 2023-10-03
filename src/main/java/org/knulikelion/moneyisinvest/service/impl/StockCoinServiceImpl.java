@@ -322,13 +322,13 @@ public class StockCoinServiceImpl implements StockCoinService {
                     + ";" + Long.toString(block.getTimeStamp())
                     + ";" + transactionsAsString;
 
-            System.out.println("Input string: " + input);
+            log.info("[StockCoinServiceImpl: calculateHash] 입력된 해시 값: {}", input);
 
             byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
             String result = bytesToHex(hash);
 
-            System.out.println("Calculated hash: " + result);
-
+            log.info("[StockCoinServiceImpl: calculateHash] 계산된 해시 값: {}", result);
+            
             return result;
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
