@@ -743,7 +743,7 @@ public class StockServiceImpl implements StockService {
         BaseResponseDto transactionResult = stockCoinService.buyStock(transactionToSystemRequestDto);
 
         if (transactionResult.isSuccess()) {
-            log.info("[StockServiceImpl: buyStock] (3/7) 코인 거래 성공");
+            log.info("[StockServiceImpl: buyStock] (3/7) Transaction 요청 완료");
             log.info("[StockServiceImpl: buyStock] (4/7) 주식 거래 정보 저장 진행");
             Stock foundStock = stockRepository.findByUserIdAndStockCode(foundUser.getId(), stockBuyRequestDto.getStockCode());
             if(foundStock == null) {

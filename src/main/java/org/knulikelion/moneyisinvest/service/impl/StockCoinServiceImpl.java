@@ -328,7 +328,7 @@ public class StockCoinServiceImpl implements StockCoinService {
             String result = bytesToHex(hash);
 
             log.info("[StockCoinServiceImpl: calculateHash] 계산된 해시 값: {}", result);
-            
+
             return result;
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
