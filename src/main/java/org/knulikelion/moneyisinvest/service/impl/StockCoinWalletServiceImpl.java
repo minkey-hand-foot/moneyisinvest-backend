@@ -224,21 +224,23 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
         StockCoinWallet recipientWallet = stockCoinWalletRepository.findByAddress(transaction.getTo());
 
         if(getWalletAddress("SYSTEM").equals(senderWallet.getAddress())) {
+            log.info("[Update Wallet Info] SYSTEM 계정으로 발신된 코인, 발신자 지갑 정보 업데이트 제외됨");
             double recipientNewBalance = recipientWallet.getBalance() + transaction.getAmount();
             recipientWallet.setBalance(recipientNewBalance);
             stockCoinWalletRepository.save(recipientWallet);
-            log.info("수신자 지갑 잔액 설정: " + recipientNewBalance);
+            log.info("[Update Wallet Info] 수신자 잔액 업데이트 완료");
         } else {
+            log.info("[Update Wallet Info] SYSTEM 계정이 아닌 지갑으로 부터 발신된 코인, 수발신자 지갑 정보 업데이트 진행");
 //          발신자의 발송 후 잔액
             double senderNewBalance = senderWallet.getBalance() - (transaction.getAmount() - transaction.getFee());
             senderWallet.setBalance(senderNewBalance);
             stockCoinWalletRepository.save(senderWallet);
-            log.info("발신자 지갑 잔액 설정: " + senderNewBalance);
+            log.info("[Update Wallet Info] 발신자 지갑 정보가 업데이트 됨");
 //          수신자의 수신 후 잔액
             double recipientNewBalance = recipientWallet.getBalance() + transaction.getAmount();
             recipientWallet.setBalance(recipientNewBalance);
             stockCoinWalletRepository.save(recipientWallet);
-            log.info("수신자 지갑 잔액 설정: " + recipientNewBalance);
+            log.info("[Update Wallet Info] 수신자 지갑 정보가 업데이트 됨");
         }
     }
 

@@ -280,13 +280,14 @@ public class StockCoinServiceImpl implements StockCoinService {
 
         if (isValidTransaction(persistentTransaction)) {
             List<Transaction> transactions = new ArrayList<>();
+            log.info("[Process Transaction] (1/7) Transaction에 거래 정보 추가");
             transactions.add(persistentTransaction);
             mineBlock(transactions);
-
-//            stockCoinWalletService.updateWalletBalances(persistentTransaction);
+            log.info("[Process Transaction] (7/7) 블록체인 거래 성공 됨");
 
             return true;
         } else {
+            log.info("[Process Transaction] (7/7) 블록체인 거래 실패");
             return false;
         }
     }
@@ -313,6 +314,7 @@ public class StockCoinServiceImpl implements StockCoinService {
 
     public String calculateHash(Block block) {
         try {
+            log.info("[Process Transaction] (3/7) 새로운 블럭 정보 해시 값 계산");
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             String transactionsAsString = block.getTransactions().stream()
                     .map(transaction -> generateTransactionId(transaction))
@@ -322,12 +324,12 @@ public class StockCoinServiceImpl implements StockCoinService {
                     + ";" + Long.toString(block.getTimeStamp())
                     + ";" + transactionsAsString;
 
-            log.info("[StockCoinServiceImpl: calculateHash] 입력된 해시 값: {}", input);
+            log.info("[Process Transaction] 입력된 해시 값: {}", input);
 
             byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
             String result = bytesToHex(hash);
 
-            log.info("[StockCoinServiceImpl: calculateHash] 계산된 해시 값: {}", result);
+            log.info("[Process Transaction] 계산된 해시 값: {}", result);
 
             return result;
         } catch (NoSuchAlgorithmException e) {
@@ -359,6 +361,7 @@ public class StockCoinServiceImpl implements StockCoinService {
 
     @Override
     public Block mineBlock(List<Transaction> transactions) {
+        log.info("[Process Transaction] (2/7) 새로운 블럭 정보 추가");
         Block newBlock = Block.builder()
                 .transactions(transactions)
                 .previousHash(getLatestBlock().getHash())
@@ -367,8 +370,12 @@ public class StockCoinServiceImpl implements StockCoinService {
                 .build();
 
         newBlock.setHash(calculateHash(newBlock));
+
+        log.info("[Process Transaction] (4/7) 블록체인에 새로운 블럭 정보 추가");
         blockchain.add(newBlock);
+        log.info("[Process Transaction] (5/7) 새로운 거래 정보 저장");
         transactionRepository.saveAll(transactions);
+        log.info("[Process Transaction] (6/7) 새로운 블럭 정보 저장");
         blockRepository.save(newBlock);
 
         return newBlock;
@@ -431,7 +438,7 @@ public class StockCoinServiceImpl implements StockCoinService {
 
 //        블록체인 유효성 검증
         if (!isChainValid()) {
-            throw new IllegalStateException("The blockchain in the database is invalid.");
+            throw new IllegalStateException("블록체인 정보를 사용할 수 없습니다.");
         }
     }
 
