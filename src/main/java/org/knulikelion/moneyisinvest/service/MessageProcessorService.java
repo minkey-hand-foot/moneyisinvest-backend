@@ -28,8 +28,9 @@ public class MessageProcessorService {
                 Transaction transaction = messageQueueService.dequeue("transaction");
 
                 if (transaction != null) {
+                    log.info("[Coin Transaction: Loop] 대기열에서 유효 거래 처리 프로세스 실행: 시작 됨");
                     doProcessTransaction(transaction);
-                    log.info("[Coin Transaction: Loop] 대기열에서 유효 거래 처리 프로세스 실행");
+                    log.info("[Coin Transaction: Loop] 대기열에서 유효 거래 처리 프로세스 실행: 완료 됨");
                 } else {
                     log.info("[Coin Transaction: Loop] 대기열에서 유효한 거래를 찾지 못 함");
                     try {

@@ -72,9 +72,9 @@ public class StockCoinServiceImpl implements StockCoinService {
                     .build();
 
 //            거래 과정 진행
-            processTransaction(transaction);
+            messageQueueService.enqueue("transaction", transaction);
 
-            return "코인 거래 완료";
+            return "코인 거래 요청 완료";
         } else {
             return "잔액 부족";
         }
@@ -93,10 +93,10 @@ public class StockCoinServiceImpl implements StockCoinService {
                     .build();
 
             if(stockCoinWalletService.getWalletBalanceByUsername(transactionToSystemRequestDto.getTargetUid()) >= (transaction.getFee() + transaction.getAmount())) {
-                processTransaction(transaction);
+                messageQueueService.enqueue("transaction", transaction);
 
                 baseResponseDto.setSuccess(true);
-                baseResponseDto.setMsg("스톡 코인 출금이 완료되었습니다.");
+                baseResponseDto.setMsg("스톡 코인 출금 요청이 완료되었습니다.");
             } else {
                 baseResponseDto.setSuccess(false);
                 baseResponseDto.setMsg("보유한 스톡 코인이 부족합니다.");
@@ -133,12 +133,10 @@ public class StockCoinServiceImpl implements StockCoinService {
                     .build();
 
             if(stockCoinWalletService.getWalletBalanceByUsername(foundUser.get().getUid()) >= (transaction.getFee() + transaction.getAmount())) {
-//                    processTransaction(transaction);
                 messageQueueService.enqueue("transaction", transaction);
                 log.info("[Coin Transaction] 대기열 추가 요청 됨");
 
                 baseResponseDto.setSuccess(true);
-//                    baseResponseDto.setMsg(transaction.getAmount() + " 스톡 코인을 사용하여 매수가 완료되었습니다.");
                 baseResponseDto.setMsg("거래 요청이 완료되었습니다.");
             } else {
                 baseResponseDto.setSuccess(false);
@@ -177,7 +175,7 @@ public class StockCoinServiceImpl implements StockCoinService {
                             .build();
 
                     if(stockCoinWalletService.getWalletBalanceByUsername(transactionToSystemRequestDto.getTargetUid()) >= (transaction.getFee() + transaction.getAmount())) {
-                        processTransaction(transaction);
+                        messageQueueService.enqueue("transaction", transaction);
 
 //                    베이직 플랜 손해 저장
                         stockCoinBenefit.setLoss(stockCoinBenefit.getLoss() + (transactionToSystemRequestDto.getAmount() * 0.015));
@@ -187,7 +185,7 @@ public class StockCoinServiceImpl implements StockCoinService {
 
                         return BaseResponseDto.builder()
                                 .success(true)
-                                .msg("보유 주식을 매도하여 " + transaction.getAmount() + " 스톡 코인을 얻었습니다.")
+                                .msg("스톡 코인 출금 요청이 완료되었습니다.")
                             .build();
                     } else {
                         return BaseResponseDto.builder()
@@ -213,10 +211,10 @@ public class StockCoinServiceImpl implements StockCoinService {
                             .build();
 
 //                    주식 매도 Transaction
-                    processTransaction(transaction);
+                    messageQueueService.enqueue("transaction", transaction);
 
 //                    주식 매도 프리미엄 보너스 스톡 코인 Transaction
-                    processTransaction(bonusTransaction);
+                    messageQueueService.enqueue("transaction", bonusTransaction);
 
 //                    프리미엄 플랜 이득 저장
                     stockCoinBenefit.setBenefit(stockCoinBenefit.getBenefit() + (transactionToSystemRequestDto.getAmount() * 0.015));
@@ -248,9 +246,9 @@ public class StockCoinServiceImpl implements StockCoinService {
                     .fee(0)
                     .build();
 
-            processTransaction(transaction);
+            messageQueueService.enqueue("transaction", transaction);
 
-            return "코인 지급이 완료됨.";
+            return "코인 지급 요청이 완료됨.";
         } else {
             return "지급 대상 사용자를 찾을 수 없음";
         }
@@ -265,9 +263,9 @@ public class StockCoinServiceImpl implements StockCoinService {
                 .fee(0)
                 .build();
 
-        processTransaction(transaction);
+        messageQueueService.enqueue("transaction", transaction);
 
-        return "코인 지급 완료";
+        return "코인 지급 요청 완료";
     }
 
     @Transactional
