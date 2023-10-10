@@ -8,8 +8,10 @@ import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignInResultDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignUpResultDto;
 import org.knulikelion.moneyisinvest.data.entity.KakaoUser;
+import org.knulikelion.moneyisinvest.data.entity.StockCoinBenefit;
 import org.knulikelion.moneyisinvest.data.entity.User;
 import org.knulikelion.moneyisinvest.data.enums.RegisterType;
+import org.knulikelion.moneyisinvest.data.repository.StockCoinBenefitRepository;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.ProfileService;
 import org.knulikelion.moneyisinvest.service.SignService;
@@ -45,17 +47,20 @@ public class SignServiceImpl implements SignService {
     public StockCoinService stockCoinService;
     public PasswordEncoder passwordEncoder;
     public StockCoinWalletService stockCoinWalletService;
+    public StockCoinBenefitRepository stockCoinBenefitRepository;
 
     @Autowired
     public SignServiceImpl(UserRepository userRepository, JwtTokenProvider jwtTokenProvider,
                            PasswordEncoder passwordEncoder, ProfileService profileService,
-                           StockCoinWalletService stockCoinWalletService, StockCoinService stockCoinService) {
+                           StockCoinWalletService stockCoinWalletService, StockCoinService stockCoinService,
+                           StockCoinBenefitRepository stockCoinBenefitRepository) {
         this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
         this.profileService = profileService;
         this.stockCoinWalletService = stockCoinWalletService;
         this.stockCoinService = stockCoinService;
+        this.stockCoinBenefitRepository = stockCoinBenefitRepository;
     }
 
     @Value("${KAKAO.CLIENT.ID}")
@@ -92,12 +97,20 @@ public class SignServiceImpl implements SignService {
                     .roles(Collections.singletonList("ROLE_USER"))
                     .build();
 
-            LOGGER.info("사용자의 새 지갑 생성, UID: " + signUpRequestDto.getUid());
-            BaseResponseDto walletResult = stockCoinWalletService.createWallet(signUpRequestDto.getUid());
+        LOGGER.info("사용자의 새 지갑 생성, UID: " + signUpRequestDto.getUid());
+        BaseResponseDto walletResult = stockCoinWalletService.createWallet(signUpRequestDto.getUid());
 
-            if(walletResult.isSuccess()) {
-                stockCoinService.giveSignUpCoin(walletResult.getMsg());
-            }
+        if(walletResult.isSuccess()) {
+            stockCoinService.giveSignUpCoin(walletResult.getMsg());
+        }
+
+        stockCoinBenefitRepository.save(StockCoinBenefit.builder()
+                        .benefit(0)
+                        .user(user)
+                        .benefitAmount(0)
+                        .loss(0)
+                        .loseAmount(0)
+                .build());
             
         SignUpResultDto signUpResultDto = new SignInResultDto();
 
