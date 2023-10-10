@@ -1,5 +1,7 @@
 package org.knulikelion.moneyisinvest.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import javax.persistence.*;
@@ -28,4 +30,15 @@ public class Transaction {
 
     @Column
     private double amount;
+
+    @JsonCreator
+    public Transaction(@JsonProperty("sender") String from,
+                       @JsonProperty("recipient") String to,
+                       @JsonProperty("fee") double fee,
+                       @JsonProperty("amount") double amount) {
+        this.from = from;
+        this.to = to;
+        this.fee = fee;
+        this.amount = amount;
+    }
 }

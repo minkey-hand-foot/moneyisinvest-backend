@@ -15,6 +15,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 
 @Service
@@ -31,9 +32,16 @@ public class FavoriteServiceImpl implements FavoriteService {
 
         BaseResponseDto baseResponseDto = new BaseResponseDto();
 
-        User getUser = userRepository.findByUid(uid);
+        Optional<User> getUser = userRepository.findByUid(uid);
 
-        Favorite existFavorite = favoriteRepository.findByUserAndStockId(getUser,stockId);
+        if(!getUser.isPresent()) {
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("사용자를 찾을 수 없습니다.");
+
+            return baseResponseDto;
+        }
+
+        Favorite existFavorite = favoriteRepository.findByUserAndStockId(getUser.get(),stockId);
 
         if(existFavorite != null) {
             baseResponseDto.setSuccess(false);
@@ -42,7 +50,7 @@ public class FavoriteServiceImpl implements FavoriteService {
         }
 
         Favorite favorite = new Favorite();
-        favorite.setUser(getUser);
+        favorite.setUser(getUser.get());
         favorite.setStockId(stockId);
 
         favoriteRepository.save(favorite);
@@ -55,13 +63,20 @@ public class FavoriteServiceImpl implements FavoriteService {
     public BaseResponseDto removeFavorite(String uid, String stockId) {
         BaseResponseDto baseResponseDto = new BaseResponseDto();
 
-        User user = userRepository.findByUid(uid);
+        Optional<User> user = userRepository.findByUid(uid);
 
-        Favorite existFavorite = favoriteRepository.findByUserAndStockId(user, stockId);
+        if(!user.isPresent()) {
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("사용자를 찾을 수 없습니다.");
+
+            return baseResponseDto;
+        }
+
+        Favorite existFavorite = favoriteRepository.findByUserAndStockId(user.get(), stockId);
 
         if (existFavorite != null) {
             existFavorite.setUser(null);
-            userRepository.save(user);
+            userRepository.save(user.get());
 
             favoriteRepository.delete(existFavorite);
             baseResponseDto.setSuccess(true);
@@ -75,8 +90,13 @@ public class FavoriteServiceImpl implements FavoriteService {
     }
     @Override
     public List<StockCompanyFavResponseDto> findUserFavoriteStockIds(String uid) {
-        User user = userRepository.findByUid(uid);
-        List<Favorite> favorites = favoriteRepository.findByUser(user);
+        Optional<User> user = userRepository.findByUid(uid);
+
+        if(!user.isPresent()) {
+            throw new RuntimeException();
+        }
+
+        List<Favorite> favorites = favoriteRepository.findByUser(user.get());
         List<StockCompanyFavResponseDto> outputList = new ArrayList<>();
         if(!favorites.isEmpty()) {
             for (Favorite temp : favorites) {
@@ -98,8 +118,13 @@ public class FavoriteServiceImpl implements FavoriteService {
 
     @Override
     public boolean getFavoriteStatus(String uid, String stockCode) {
-        User user = userRepository.findByUid(uid);
-        Favorite favorite = favoriteRepository.findByUserAndStockId(user,stockCode);
+        Optional<User> user = userRepository.findByUid(uid);
+
+        if(!user.isPresent()) {
+            throw new RuntimeException();
+        }
+
+        Favorite favorite = favoriteRepository.findByUserAndStockId(user.get(), stockCode);
 
         if(favorite == null){
             return false;

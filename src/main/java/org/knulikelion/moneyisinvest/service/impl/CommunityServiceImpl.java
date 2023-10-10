@@ -46,7 +46,7 @@ public class CommunityServiceImpl implements CommunityService {
 
     @Override
     public BaseResponseDto postComment(CommentRequestDto commentRequestDto, String token) {
-        User foundUser = userRepository.findByUid(jwtTokenProvider.getUsername(token));
+        User foundUser = userRepository.getByUid(jwtTokenProvider.getUsername(token));
 
         BaseResponseDto baseResponseDto = new BaseResponseDto();
 

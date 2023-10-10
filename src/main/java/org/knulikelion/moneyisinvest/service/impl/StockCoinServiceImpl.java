@@ -12,6 +12,7 @@ import org.knulikelion.moneyisinvest.data.repository.BlockRepository;
 import org.knulikelion.moneyisinvest.data.repository.StockCoinBenefitRepository;
 import org.knulikelion.moneyisinvest.data.repository.TransactionRepository;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
+import org.knulikelion.moneyisinvest.service.MessageQueueService;
 import org.knulikelion.moneyisinvest.service.StockCoinService;
 import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,17 +36,20 @@ public class StockCoinServiceImpl implements StockCoinService {
     private final StockCoinWalletService stockCoinWalletService;
     private final StockCoinBenefitRepository stockCoinBenefitRepository;
     private final BlockRepository blockRepository;
+    private final MessageQueueService messageQueueService;
 
     public StockCoinServiceImpl(TransactionRepository transactionRepository,
                                 UserRepository userRepository,
                                 StockCoinWalletService stockCoinWalletService,
                                 StockCoinBenefitRepository stockCoinBenefitRepository,
-                                BlockRepository blockRepository) {
+                                BlockRepository blockRepository,
+                                MessageQueueService messageQueueService) {
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
         this.stockCoinWalletService = stockCoinWalletService;
         this.stockCoinBenefitRepository = stockCoinBenefitRepository;
         this.blockRepository = blockRepository;
+        this.messageQueueService = messageQueueService;
     }
 
     @Override
@@ -67,10 +72,9 @@ public class StockCoinServiceImpl implements StockCoinService {
                     .build();
 
 //            거래 과정 진행
-            processTransaction(transaction);
+            messageQueueService.enqueue("transaction", transaction);
 
-            stockCoinWalletService.updateWalletBalances(transaction);
-            return "코인 거래 완료";
+            return "코인 거래 요청 완료";
         } else {
             return "잔액 부족";
         }
@@ -89,11 +93,10 @@ public class StockCoinServiceImpl implements StockCoinService {
                     .build();
 
             if(stockCoinWalletService.getWalletBalanceByUsername(transactionToSystemRequestDto.getTargetUid()) >= (transaction.getFee() + transaction.getAmount())) {
-                processTransaction(transaction);
-                stockCoinWalletService.updateWalletBalances(transaction);
+                messageQueueService.enqueue("transaction", transaction);
 
                 baseResponseDto.setSuccess(true);
-                baseResponseDto.setMsg("스톡 코인 출금이 완료되었습니다.");
+                baseResponseDto.setMsg("스톡 코인 출금 요청이 완료되었습니다.");
             } else {
                 baseResponseDto.setSuccess(false);
                 baseResponseDto.setMsg("보유한 스톡 코인이 부족합니다.");
@@ -107,34 +110,37 @@ public class StockCoinServiceImpl implements StockCoinService {
     }
 
     @Override
+    @Transactional
     public BaseResponseDto buyStock(TransactionToSystemRequestDto transactionToSystemRequestDto) {
         BaseResponseDto baseResponseDto = new BaseResponseDto();
 
-        User foundUser = userRepository.getByUid(transactionToSystemRequestDto.getTargetUid());
+        Optional<User> foundUser = userRepository.findByUid(transactionToSystemRequestDto.getTargetUid());
+
+        if(!foundUser.isPresent()) {
+            baseResponseDto.setSuccess(false);
+            baseResponseDto.setMsg("사용자를 찾을 수 없습니다.");
+
+            return baseResponseDto;
+        }
 
         if(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()) != null) {
-            if(foundUser == null) {
-                baseResponseDto.setSuccess(false);
-                baseResponseDto.setMsg("사용자를 찾을 수 없습니다.");
+            Transaction transaction = Transaction.builder()
+                    .from(stockCoinWalletService.getWalletAddress(foundUser.get().getUid()))
+                    .to(stockCoinWalletService.getWalletAddress("SYSTEM"))
+//                        수수료 적용 X
+                    .fee(0)
+                    .amount(transactionToSystemRequestDto.getAmount())
+                    .build();
+
+            if(stockCoinWalletService.getWalletBalanceByUsername(foundUser.get().getUid()) >= (transaction.getFee() + transaction.getAmount())) {
+                messageQueueService.enqueue("transaction", transaction);
+                log.info("[Coin Transaction] 대기열 추가 요청 됨");
+
+                baseResponseDto.setSuccess(true);
+                baseResponseDto.setMsg("거래 요청이 완료되었습니다.");
             } else {
-                Transaction transaction = Transaction.builder()
-                        .from(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()))
-                        .to(stockCoinWalletService.getWalletAddress("SYSTEM"))
-//                        주식 매수 시 수수료 적용 X
-                        .fee(0)
-                        .amount(transactionToSystemRequestDto.getAmount())
-                        .build();
-
-                if(stockCoinWalletService.getWalletBalanceByUsername(transactionToSystemRequestDto.getTargetUid()) >= (transaction.getFee() + transaction.getAmount())) {
-                    processTransaction(transaction);
-                    stockCoinWalletService.updateWalletBalances(transaction);
-
-                    baseResponseDto.setSuccess(true);
-                    baseResponseDto.setMsg(transaction.getAmount() + " 스톡 코인을 사용하여 매수가 완료되었습니다.");
-                } else {
-                    baseResponseDto.setSuccess(false);
-                    baseResponseDto.setMsg("보유한 스톡 코인이 부족합니다.");
-                }
+                baseResponseDto.setSuccess(false);
+                baseResponseDto.setMsg("보유한 스톡 코인이 부족합니다.");
             }
         } else {
             baseResponseDto.setSuccess(false);
@@ -169,8 +175,7 @@ public class StockCoinServiceImpl implements StockCoinService {
                             .build();
 
                     if(stockCoinWalletService.getWalletBalanceByUsername(transactionToSystemRequestDto.getTargetUid()) >= (transaction.getFee() + transaction.getAmount())) {
-                        processTransaction(transaction);
-                        stockCoinWalletService.updateWalletBalances(transaction);
+                        messageQueueService.enqueue("transaction", transaction);
 
 //                    베이직 플랜 손해 저장
                         stockCoinBenefit.setLoss(stockCoinBenefit.getLoss() + (transactionToSystemRequestDto.getAmount() * 0.015));
@@ -180,7 +185,7 @@ public class StockCoinServiceImpl implements StockCoinService {
 
                         return BaseResponseDto.builder()
                                 .success(true)
-                                .msg("보유 주식을 매도하여 " + transaction.getAmount() + " 스톡 코인을 얻었습니다.")
+                                .msg("스톡 코인 출금 요청이 완료되었습니다.")
                             .build();
                     } else {
                         return BaseResponseDto.builder()
@@ -206,12 +211,10 @@ public class StockCoinServiceImpl implements StockCoinService {
                             .build();
 
 //                    주식 매도 Transaction
-                    processTransaction(transaction);
-                    stockCoinWalletService.updateWalletBalances(transaction);
+                    messageQueueService.enqueue("transaction", transaction);
 
 //                    주식 매도 프리미엄 보너스 스톡 코인 Transaction
-                    processTransaction(bonusTransaction);
-                    stockCoinWalletService.updateWalletBalances(bonusTransaction);
+                    messageQueueService.enqueue("transaction", bonusTransaction);
 
 //                    프리미엄 플랜 이득 저장
                     stockCoinBenefit.setBenefit(stockCoinBenefit.getBenefit() + (transactionToSystemRequestDto.getAmount() * 0.015));
@@ -243,11 +246,9 @@ public class StockCoinServiceImpl implements StockCoinService {
                     .fee(0)
                     .build();
 
-            processTransaction(transaction);
+            messageQueueService.enqueue("transaction", transaction);
 
-            stockCoinWalletService.updateWalletBalances(transaction);
-
-            return "코인 지급이 완료됨.";
+            return "코인 지급 요청이 완료됨.";
         } else {
             return "지급 대상 사용자를 찾을 수 없음";
         }
@@ -262,25 +263,33 @@ public class StockCoinServiceImpl implements StockCoinService {
                 .fee(0)
                 .build();
 
-        processTransaction(transaction);
-        stockCoinWalletService.updateWalletBalances(transaction);
+        messageQueueService.enqueue("transaction", transaction);
 
-        return "코인 지급 완료";
+        return "코인 지급 요청 완료";
     }
 
-    @Override
-    public void processTransaction(Transaction transaction) {
-        // Check if the transaction is valid based on your criteria
-        if (isValidTransaction(transaction)) {
-            // Mine a new block with the transaction
+    @Transactional
+    public boolean processTransaction(Transaction transaction) {
+        Transaction persistentTransaction = new Transaction();
+        persistentTransaction.setFrom(transaction.getFrom());
+        persistentTransaction.setTo(transaction.getTo());
+        persistentTransaction.setFee(transaction.getFee());
+        persistentTransaction.setAmount(transaction.getAmount());
+
+        if (isValidTransaction(persistentTransaction)) {
             List<Transaction> transactions = new ArrayList<>();
-            transactions.add(transaction);
+            log.info("[Process Transaction] (1/7) Transaction에 거래 정보 추가");
+            transactions.add(persistentTransaction);
             mineBlock(transactions);
+            log.info("[Process Transaction] (7/7) 블록체인 거래 성공 됨");
+
+            return true;
         } else {
-            // Handle the case when the transaction is not valid
-            throw new IllegalArgumentException("Invalid transaction");
+            log.info("[Process Transaction] (7/7) 블록체인 거래 실패");
+            return false;
         }
     }
+
 
     private boolean isValidTransaction(Transaction transaction) {
 //        발신자 또는 수신자의 입력 값이 비어있는지 검증
@@ -303,6 +312,7 @@ public class StockCoinServiceImpl implements StockCoinService {
 
     public String calculateHash(Block block) {
         try {
+            log.info("[Process Transaction] (3/7) 새로운 블럭 정보 해시 값 계산");
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             String transactionsAsString = block.getTransactions().stream()
                     .map(transaction -> generateTransactionId(transaction))
@@ -312,12 +322,12 @@ public class StockCoinServiceImpl implements StockCoinService {
                     + ";" + Long.toString(block.getTimeStamp())
                     + ";" + transactionsAsString;
 
-            System.out.println("Input string: " + input);
+            log.info("[Process Transaction] 입력된 해시 값: {}", input);
 
             byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
             String result = bytesToHex(hash);
 
-            System.out.println("Calculated hash: " + result);
+            log.info("[Process Transaction] 계산된 해시 값: {}", result);
 
             return result;
         } catch (NoSuchAlgorithmException e) {
@@ -349,6 +359,7 @@ public class StockCoinServiceImpl implements StockCoinService {
 
     @Override
     public Block mineBlock(List<Transaction> transactions) {
+        log.info("[Process Transaction] (2/7) 새로운 블럭 정보 추가");
         Block newBlock = Block.builder()
                 .transactions(transactions)
                 .previousHash(getLatestBlock().getHash())
@@ -357,8 +368,12 @@ public class StockCoinServiceImpl implements StockCoinService {
                 .build();
 
         newBlock.setHash(calculateHash(newBlock));
+
+        log.info("[Process Transaction] (4/7) 블록체인에 새로운 블럭 정보 추가");
         blockchain.add(newBlock);
+        log.info("[Process Transaction] (5/7) 새로운 거래 정보 저장");
         transactionRepository.saveAll(transactions);
+        log.info("[Process Transaction] (6/7) 새로운 블럭 정보 저장");
         blockRepository.save(newBlock);
 
         return newBlock;
@@ -421,7 +436,7 @@ public class StockCoinServiceImpl implements StockCoinService {
 
 //        블록체인 유효성 검증
         if (!isChainValid()) {
-            throw new IllegalStateException("The blockchain in the database is invalid.");
+            throw new IllegalStateException("블록체인 정보를 사용할 수 없습니다.");
         }
     }
 
