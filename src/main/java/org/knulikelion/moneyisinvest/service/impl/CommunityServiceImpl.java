@@ -158,6 +158,7 @@ public class CommunityServiceImpl implements CommunityService {
                 commentDetailResponseDtoList.add(replyDto);
             }
 
+            commentDetailResponseDto.setReplyCount((long) communityReplyList.size());
             commentDetailResponseDto.setId(foundComment.getId());
             commentDetailResponseDto.setComment(foundComment.getComment());
             commentDetailResponseDto.setUid(foundComment.getUser().getUid());
