@@ -16,7 +16,7 @@ public class CommentDetailResponseDto {
     private String profileUrl;
     private String uid;
     private String name;
-    private List<CommunityReplyDto> communityReply;
+    private List<CommentDetailResponseDto> communityReply;
     private String createdAt;
     private String updatedAt;
     private boolean wroteUser;
