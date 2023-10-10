@@ -17,6 +17,7 @@ import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.CommunityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -122,6 +123,7 @@ public class CommunityServiceImpl implements CommunityService {
     }
 
     @Override
+    @Transactional
     public List<CommentDetailResponseDto> getAllCommentByStockIdContainsAllReply(String stockId) {
         List<CommentDetailResponseDto> commentResponseDtoList = new ArrayList<>();
         List<Community> foundComments = communityRepository.findAllByStockId(stockId);
