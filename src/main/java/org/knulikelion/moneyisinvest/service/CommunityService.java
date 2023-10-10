@@ -13,7 +13,7 @@ public interface CommunityService {
     BaseResponseDto postComment(CommentRequestDto commentRequestDto, String token);
     BaseResponseDto replyComment(ReplyCommentRequestDto replyCommentRequestDto, String token);
     List<CommentResponseDto> getAllCommentByStockId(String stockId);
-    List<CommentDetailResponseDto> getAllCommentByStockIdContainsAllReply(String stockId);
+    List<CommentDetailResponseDto> getAllCommentByStockIdContainsAllReply(String stockId, String uid);
     BaseResponseDto removeComment(Long id);
     BaseResponseDto updateComment(CommentUpdateRequestDto commentUpdateRequestDto);
     BaseResponseDto updateReplyComment(ReplyCommentRequestDto replyCommentRequestDto, String token);

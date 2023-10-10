@@ -17,13 +17,5 @@ public class CommunityReplyDto {
     private String name;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public CommunityReplyDto(CommunityReply communityReply) {
-        this.id = communityReply.getId();
-        this.comment = communityReply.getComment();
-        this.uid = communityReply.getUser().getUid();
-        this.name = communityReply.getUser().getName();
-        this.createdAt = communityReply.getCreatedAt();
-        this.updatedAt = communityReply.getUpdatedAt();
-    }
+    private boolean wroteUser;
 }

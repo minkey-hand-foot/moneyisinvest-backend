@@ -124,7 +124,7 @@ public class CommunityServiceImpl implements CommunityService {
 
     @Override
     @Transactional
-    public List<CommentDetailResponseDto> getAllCommentByStockIdContainsAllReply(String stockId) {
+    public List<CommentDetailResponseDto> getAllCommentByStockIdContainsAllReply(String stockId, String uid) {
         List<CommentDetailResponseDto> commentResponseDtoList = new ArrayList<>();
         List<Community> foundComments = communityRepository.findAllByStockId(stockId);
 
@@ -132,18 +132,52 @@ public class CommunityServiceImpl implements CommunityService {
             CommentDetailResponseDto commentDetailResponseDto = new CommentDetailResponseDto();
 
             List<CommunityReply> communityReplyList = communityReplyRepository.findAllByCommunity_Id(foundComment.getId());
+            List<CommentDetailResponseDto> commentDetailResponseDtoList = new ArrayList<>();
 
-            List<CommunityReplyDto> communityReplyDtoList = communityReplyList.stream()
-                    .map(CommunityReplyDto::new)
-                    .collect(Collectors.toList());
+            for(CommunityReply temp : communityReplyList) {
+                CommentDetailResponseDto replyDto = new CommentDetailResponseDto();
 
+                replyDto.setId(temp.getId());
+                replyDto.setComment(temp.getComment());
+                replyDto.setUid(temp.getUser().getUid());
+                replyDto.setName(temp.getUser().getName());
+                replyDto.setProfileUrl(temp.getUser().getProfileUrl());
+                replyDto.setUpdatedAt(temp.getUpdatedAt().toString());
+                replyDto.setCreatedAt(temp.getCreatedAt().toString());
+
+                if(uid != null) {
+                    if(userRepository.getByUid(uid).getId() == temp.getUser().getId()) {
+                        replyDto.setWroteUser(true);
+                    } else {
+                        replyDto.setWroteUser(false);
+                    }
+                } else {
+                    replyDto.setWroteUser(false);
+                }
+
+                commentDetailResponseDtoList.add(replyDto);
+            }
+
+            commentDetailResponseDto.setReplyCount((long) communityReplyList.size());
             commentDetailResponseDto.setId(foundComment.getId());
             commentDetailResponseDto.setComment(foundComment.getComment());
             commentDetailResponseDto.setUid(foundComment.getUser().getUid());
             commentDetailResponseDto.setName(foundComment.getUser().getName());
-            commentDetailResponseDto.setCommunityReply(communityReplyDtoList);
+            commentDetailResponseDto.setCommunityReply(commentDetailResponseDtoList);
             commentDetailResponseDto.setCreatedAt(foundComment.getCreatedAt().toString());
             commentDetailResponseDto.setUpdatedAt(foundComment.getUpdatedAt().toString());
+            commentDetailResponseDto.setProfileUrl(foundComment.getUser().getProfileUrl());
+
+            if(uid != null) {
+                if(userRepository.getByUid(uid).getId() == foundComment.getUser().getId()) {
+                    commentDetailResponseDto.setWroteUser(true);
+                } else {
+                    commentDetailResponseDto.setWroteUser(false);
+                }
+            } else {
+                commentDetailResponseDto.setWroteUser(false);
+            }
+
 
             commentResponseDtoList.add(commentDetailResponseDto);
         }
