@@ -13,9 +13,11 @@ import java.util.List;
 public class CommentDetailResponseDto {
     private Long id;
     private String comment;
+    private String profileUrl;
     private String uid;
     private String name;
     private List<CommunityReplyDto> communityReply;
     private String createdAt;
     private String updatedAt;
+    private boolean wroteUser;
 }

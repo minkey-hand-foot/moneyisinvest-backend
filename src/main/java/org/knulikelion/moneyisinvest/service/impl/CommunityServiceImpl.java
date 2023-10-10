@@ -122,7 +122,7 @@ public class CommunityServiceImpl implements CommunityService {
     }
 
     @Override
-    public List<CommentDetailResponseDto> getAllCommentByStockIdContainsAllReply(String stockId) {
+    public List<CommentDetailResponseDto> getAllCommentByStockIdContainsAllReply(String stockId, String uid) {
         List<CommentDetailResponseDto> commentResponseDtoList = new ArrayList<>();
         List<Community> foundComments = communityRepository.findAllByStockId(stockId);
 
@@ -142,6 +142,13 @@ public class CommunityServiceImpl implements CommunityService {
             commentDetailResponseDto.setCommunityReply(communityReplyDtoList);
             commentDetailResponseDto.setCreatedAt(foundComment.getCreatedAt().toString());
             commentDetailResponseDto.setUpdatedAt(foundComment.getUpdatedAt().toString());
+            commentDetailResponseDto.setProfileUrl(foundComment.getUser().getProfileUrl());
+
+            if(userRepository.getByUid(uid).getId() == foundComment.getUser().getId()) {
+                commentDetailResponseDto.setWroteUser(true);
+            } else {
+                commentDetailResponseDto.setWroteUser(false);
+            }
 
             commentResponseDtoList.add(commentDetailResponseDto);
         }
