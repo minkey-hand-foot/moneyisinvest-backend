@@ -45,7 +45,7 @@ public class CommunityController {
 
     @GetMapping("/detail")
     public List<CommentDetailResponseDto> getAllCommentByStockIdContainsAllReply(String stockId, HttpServletRequest request) {
-        if(request.getHeader("X-AUTH-TOKEN").isEmpty()) {
+        if(request.getHeader("X-AUTH-TOKEN") == null) {
             return communityService.getAllCommentByStockIdContainsAllReply(stockId, null);
         } else {
             return communityService.getAllCommentByStockIdContainsAllReply(stockId, jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")));

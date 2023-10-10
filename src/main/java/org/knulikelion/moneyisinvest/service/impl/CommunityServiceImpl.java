@@ -17,6 +17,7 @@ import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.CommunityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -122,6 +123,7 @@ public class CommunityServiceImpl implements CommunityService {
     }
 
     @Override
+    @Transactional
     public List<CommentDetailResponseDto> getAllCommentByStockIdContainsAllReply(String stockId, String uid) {
         List<CommentDetailResponseDto> commentResponseDtoList = new ArrayList<>();
         List<Community> foundComments = communityRepository.findAllByStockId(stockId);
@@ -143,8 +145,12 @@ public class CommunityServiceImpl implements CommunityService {
                 replyDto.setUpdatedAt(temp.getUpdatedAt().toString());
                 replyDto.setCreatedAt(temp.getCreatedAt().toString());
 
-                if(userRepository.getByUid(uid).getId() == temp.getUser().getId()) {
-                    replyDto.setWroteUser(true);
+                if(uid != null) {
+                    if(userRepository.getByUid(uid).getId() == temp.getUser().getId()) {
+                        replyDto.setWroteUser(true);
+                    } else {
+                        replyDto.setWroteUser(false);
+                    }
                 } else {
                     replyDto.setWroteUser(false);
                 }
@@ -161,11 +167,16 @@ public class CommunityServiceImpl implements CommunityService {
             commentDetailResponseDto.setUpdatedAt(foundComment.getUpdatedAt().toString());
             commentDetailResponseDto.setProfileUrl(foundComment.getUser().getProfileUrl());
 
-            if(userRepository.getByUid(uid).getId() == foundComment.getUser().getId()) {
-                commentDetailResponseDto.setWroteUser(true);
+            if(uid != null) {
+                if(userRepository.getByUid(uid).getId() == foundComment.getUser().getId()) {
+                    commentDetailResponseDto.setWroteUser(true);
+                } else {
+                    commentDetailResponseDto.setWroteUser(false);
+                }
             } else {
                 commentDetailResponseDto.setWroteUser(false);
             }
+
 
             commentResponseDtoList.add(commentDetailResponseDto);
         }
