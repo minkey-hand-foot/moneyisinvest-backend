@@ -43,6 +43,14 @@ public class CommunityController {
         return communityService.getAllCommentByStockId(stockId);
     }
 
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
+    @PostMapping("/like")
+    public BaseResponseDto likeComment(@RequestParam Long commentId, HttpServletRequest request) {
+        return communityService.likeComment(commentId, request.getHeader("X-AUTH-TOKEN"));
+    }
+
     @GetMapping("/detail")
     public List<CommentDetailResponseDto> getAllCommentByStockIdContainsAllReply(String stockId, HttpServletRequest request) {
         if(request.getHeader("X-AUTH-TOKEN") == null) {

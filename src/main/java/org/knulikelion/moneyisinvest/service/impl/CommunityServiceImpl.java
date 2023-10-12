@@ -3,14 +3,15 @@ package org.knulikelion.moneyisinvest.service.impl;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.request.CommentRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.CommentUpdateRequestDto;
-import org.knulikelion.moneyisinvest.data.dto.request.CommunityReplyDto;
 import org.knulikelion.moneyisinvest.data.dto.request.ReplyCommentRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.CommentDetailResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.CommentResponseDto;
 import org.knulikelion.moneyisinvest.data.entity.Community;
+import org.knulikelion.moneyisinvest.data.entity.CommunityLike;
 import org.knulikelion.moneyisinvest.data.entity.CommunityReply;
 import org.knulikelion.moneyisinvest.data.entity.User;
+import org.knulikelion.moneyisinvest.data.repository.CommunityLikeRepository;
 import org.knulikelion.moneyisinvest.data.repository.CommunityReplyRepository;
 import org.knulikelion.moneyisinvest.data.repository.CommunityRepository;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
@@ -22,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 public class CommunityServiceImpl implements CommunityService {
@@ -30,18 +31,62 @@ public class CommunityServiceImpl implements CommunityService {
     private final CommunityReplyRepository communityReplyRepository;
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final CommunityLikeRepository communityLikeRepository;
 
     @Autowired
     public CommunityServiceImpl(
             CommunityRepository communityRepository,
             UserRepository userRepository,
             CommunityReplyRepository communityReplyRepository,
-            JwtTokenProvider jwtTokenProvider
+            JwtTokenProvider jwtTokenProvider,
+            CommunityLikeRepository communityLikeRepository
     ) {
         this.communityRepository = communityRepository;
         this.userRepository = userRepository;
         this.communityReplyRepository = communityReplyRepository;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.communityLikeRepository = communityLikeRepository;
+    }
+
+    @Override
+    @Transactional
+    public BaseResponseDto likeComment(Long id, String token) {
+        Community community = communityRepository.getById(id);
+        User user = userRepository.getByUid(jwtTokenProvider.getUsername(token));
+        Optional<CommunityLike> communityLike = communityLikeRepository.getCommunityLikeByCommunityIdAndUserId(
+                id, user.getId());
+        List<CommunityLike> communityLikeList = communityLikeRepository.getCommunityLikeByCommunityId(id);
+
+        if(community == null) {
+            return BaseResponseDto.builder()
+                    .success(false)
+                    .msg("해당 댓글을 찾을 수 없습니다.")
+                    .build();
+        }
+
+        if(communityLike.isEmpty()) {
+            communityLikeRepository.save(CommunityLike.builder()
+                            .community(community)
+                            .user(user)
+                            .likedAt(LocalDateTime.now())
+                    .build());
+
+            return BaseResponseDto.builder()
+                    .success(true)
+                    .msg(String.valueOf(communityLikeList.size() + 1))
+                    .build();
+        } else {
+            CommunityLike nullCommunityLike = communityLike.get();
+            nullCommunityLike.setUser(null);
+            nullCommunityLike.setCommunity(null);
+            communityLikeRepository.save(nullCommunityLike);
+            communityLikeRepository.delete(nullCommunityLike);
+
+            return BaseResponseDto.builder()
+                    .success(true)
+                    .msg(String.valueOf(communityLikeList.size() - 1))
+                    .build();
+        }
     }
 
     @Override
@@ -133,6 +178,7 @@ public class CommunityServiceImpl implements CommunityService {
 
             List<CommunityReply> communityReplyList = communityReplyRepository.findAllByCommunity_Id(foundComment.getId());
             List<CommentDetailResponseDto> commentDetailResponseDtoList = new ArrayList<>();
+            List<CommunityLike> communityLikeList = communityLikeRepository.getCommunityLikeByCommunityId(foundComment.getId());
 
             for(CommunityReply temp : communityReplyList) {
                 CommentDetailResponseDto replyDto = new CommentDetailResponseDto();
@@ -167,6 +213,7 @@ public class CommunityServiceImpl implements CommunityService {
             commentDetailResponseDto.setCreatedAt(foundComment.getCreatedAt().toString());
             commentDetailResponseDto.setUpdatedAt(foundComment.getUpdatedAt().toString());
             commentDetailResponseDto.setProfileUrl(foundComment.getUser().getProfileUrl());
+            commentDetailResponseDto.setLiked(String.valueOf(communityLikeList.size()));
 
             if(uid != null) {
                 if(userRepository.getByUid(uid).getId() == foundComment.getUser().getId()) {
