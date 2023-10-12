@@ -18,6 +18,7 @@ public class CommentDetailResponseDto {
     private String name;
     private List<CommentDetailResponseDto> communityReply;
     private Long replyCount;
+    private String liked;
     private String createdAt;
     private String updatedAt;
     private boolean wroteUser;
