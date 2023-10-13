@@ -115,6 +115,7 @@ public class SignServiceImpl implements SignService {
         SignUpResultDto signUpResultDto = new SignInResultDto();
 
         String PHONE_REG = "^01(?:0|1|[6-9])[.-]?(\\d{3}|\\d{4})[.-]?(\\d{4})$";
+        String PASS_REG = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–[{}]:;',?/*~$^+=<>]).{8,20}$";
 
 //      signUpRequestDto에서 입력받는 uid가 이메일 주소인지 확인
         if(!validateUid(signUpRequestDto.getUid())) {
@@ -129,6 +130,9 @@ public class SignServiceImpl implements SignService {
             signUpResultDto.setSuccess(false);
             signUpResultDto.setMsg("휴대폰 번호는 '010-XXXX-XXXX' 형식으로 입력되어야 합니다.");
             signUpResultDto.setCode(1);
+        } else if(!signUpRequestDto.getPassword().matches(PASS_REG)) {
+            signUpResultDto.setSuccess(false);
+            signUpResultDto.setMsg("반드시 숫자 1자리, 소문자 1자리,");
         } else {
             User savedUser = userRepository.save(user);
             LOGGER.info("[getSignUpResult] userEntity 값이 들어왔는지 확인 후 결과값 주입");
