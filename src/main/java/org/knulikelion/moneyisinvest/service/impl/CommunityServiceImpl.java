@@ -233,7 +233,19 @@ public class CommunityServiceImpl implements CommunityService {
             for (CommunityReply temp : communityReplyList){
                 temp.setUser(null);
                 temp.setCommunity(null);
+                communityReplyRepository.save(temp);
                 communityReplyRepository.delete(temp);
+            }
+        }
+
+        List<CommunityLike> communityLikeList = communityLikeRepository.getCommunityLikeByCommunityId(id);
+
+        if(!communityLikeList.isEmpty()) {
+            for(CommunityLike communityLike : communityLikeList) {
+                communityLike.setCommunity(null);
+                communityLike.setUser(null);
+                communityLikeRepository.save(communityLike);
+                communityLikeRepository.delete(communityLike);
             }
         }
 
