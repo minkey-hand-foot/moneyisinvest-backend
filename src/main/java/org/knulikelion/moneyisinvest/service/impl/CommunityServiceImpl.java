@@ -193,6 +193,10 @@ public class CommunityServiceImpl implements CommunityService {
                         .build());
             }
 
+            Optional<CommunityLike> communityLike = communityLikeRepository.getCommunityLikeByCommunityIdAndUserId(
+                    foundComment.getId(), user.isPresent() ? user.get().getId() : null
+            );
+
 //            기본적인 댓글 객체 생성
             commentResponseDtoList.add(CommentDetailResponseDto.builder()
                             .id(foundComment.getId())
@@ -205,6 +209,7 @@ public class CommunityServiceImpl implements CommunityService {
                             .createdAt(foundComment.getCreatedAt().toString())
                             .updatedAt(foundComment.getUpdatedAt().toString())
                             .liked(String.valueOf(communityLikeList.size()))
+                            .clickedYn(communityLike.isPresent())
                             .wroteUser(user.isPresent() && user.get().equals(foundComment.getUser()))
                     .build());
         }
