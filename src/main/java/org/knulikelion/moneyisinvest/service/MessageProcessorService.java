@@ -26,18 +26,17 @@ public class MessageProcessorService {
         new Thread(() -> {
             while (true) {
                 Transaction transaction = messageQueueService.dequeue("transaction");
-
-                if (transaction != null) {
-                    log.info("[Coin Transaction: Loop] 대기열에서 유효 거래 처리 프로세스 실행: 시작 됨");
-                    doProcessTransaction(transaction);
-                    log.info("[Coin Transaction: Loop] 대기열에서 유효 거래 처리 프로세스 실행: 완료 됨");
-                } else {
-                    log.info("[Coin Transaction: Loop] 대기열에서 유효한 거래를 찾지 못 함");
+                if(transaction == null) {
                     try {
-                        Thread.sleep(1000);
+                        log.info("[Transaction Thread] 아무 요청이 존재하지 않음. 10초 대기");
+                        Thread.sleep(10000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                } else {
+                    log.info("[Transaction Thread] 유효 거래 처리 프로세스 실행: 시작");
+                    doProcessTransaction(transaction);
+                    log.info("[Transaction Thread] 유효 거래 처리 프로세스 실행: 완료");
                 }
             }
         }).start();
