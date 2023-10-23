@@ -11,6 +11,7 @@ public interface SignService {
     SignUpResultDto signUp(SignUpRequestDto signUpRequestDto);
     SignInResultDto signIn(SignInRequestDto signInRequestDto) throws RuntimeException;
     SignInResultDto kakaoLogin(String code) throws RuntimeException, IOException, InterruptedException;
+    SignInResultDto naverLogin(String code) throws RuntimeException, IOException, InterruptedException;
     BaseResponseDto changePasswd(ChangePasswdRequestDto changePasswdRequestDto, String uid);
     BaseResponseDto changeName(ChangeNameRequestDto changeNameRequestDto, String uid);
     BaseResponseDto unRegister(UnRegisterRequestDto unRegisterRequestDto, String uid);

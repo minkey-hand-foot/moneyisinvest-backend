@@ -8,6 +8,7 @@ import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignInResultDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignUpResultDto;
 import org.knulikelion.moneyisinvest.data.entity.KakaoUser;
+import org.knulikelion.moneyisinvest.data.entity.NaverUser;
 import org.knulikelion.moneyisinvest.data.entity.StockCoinBenefit;
 import org.knulikelion.moneyisinvest.data.entity.User;
 import org.knulikelion.moneyisinvest.data.enums.RegisterType;
@@ -68,6 +69,15 @@ public class SignServiceImpl implements SignService {
 
     @Value("${KAKAO.REDIRECT.URI}")
     private String kakaoRedirectUri;
+
+    @Value("${NAVER.CLIENT.ID}")
+    private String naverClientId;
+
+    @Value(("${NAVER.CLIENT.SECRET"))
+    private String naverClientSecret;
+
+    @Value("${NAVER.REDIRECT.URI}")
+    private String naverRedirectUri;
 
     private static final String EMAIL_REGEX = "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$";
 
@@ -319,6 +329,124 @@ public class SignServiceImpl implements SignService {
             return signInResultDto;
         }
     }
+
+
+    @Override
+    public SignInResultDto naverLogin(String code) throws RuntimeException, IOException, InterruptedException {
+        String naverUserToken = createNaverToken(code);
+        NaverUser naverUser = getNaverInfo(naverUserToken);
+
+//        네이버 로그인 시, 이미 가입된 회원이라면
+        if(userRepository.getByUid(naverUser.getEmail()) != null) {
+            User user = userRepository.getByUid(naverUser.getEmail());
+
+            user.setRecentLoggedIn(LocalDateTime.now());
+            userRepository.save(user);
+
+            SignInResultDto signInResultDto = SignInResultDto.builder()
+                    .token(jwtTokenProvider.createAccessToken(String.valueOf(user.getUid()), user.getRoles()))
+                    .refreshToken(jwtTokenProvider.createRefreshToken(String.valueOf(user.getUid())))
+                    .uid(user.getUid())
+                    .name(user.getName())
+                    .build();
+
+            setSuccessResult(signInResultDto);
+
+            return signInResultDto;
+        } else {
+//            네이버 프로필 이미지를 가져올 수 없을 때, 서비스 기본 프로필 사용
+            if(naverUser.getProfileImageUrl() == null) {
+                naverUser.setProfileImageUrl(DEFAULT_PROFILE);
+            }
+
+            if(naverUser.getEmail() == null || naverUser.getNickname() == null) {
+                throw new RuntimeException("네이버 정보에서 이메일 또는 닉네임을 가져올 수 없습니다");
+            }
+
+            User user = User.builder()
+                    .uid(naverUser.getEmail())
+                    .name(naverUser.getNickname())
+                    .plan("basic")
+                    .createdAt(LocalDateTime.now())
+                    .useAble(true)
+                    .registerType(RegisterType.NAVER)
+                    .profileUrl(naverUser.getProfileImageUrl())
+                    .password(passwordEncoder.encode(getRandomPassword()))
+                    .roles(Collections.singletonList("ROLE_USER"))
+                    .build();
+
+            BaseResponseDto walletResult = stockCoinWalletService.createWallet(user.getUid());
+
+            if(walletResult.isSuccess()) {
+                stockCoinService.giveSignUpCoin(walletResult.getMsg());
+            }
+
+            if(!validateUid(user.getUid())) {
+                throw new RuntimeException("이메일 주소 형식이 아닙니다.");
+            } else if(userRepository.getByUid(naverUser.getEmail()) != null) {
+                throw new RuntimeException("이미 존재하는 회원입니다.");
+            } else {
+                userRepository.save(user);
+            }
+
+//            회원가입 후 로그인 정보 반환
+            SignInResultDto signInResultDto = SignInResultDto.builder()
+                    .token(jwtTokenProvider.createAccessToken(String.valueOf(user.getUid()), user.getRoles()))
+                    .refreshToken(jwtTokenProvider.createRefreshToken(String.valueOf(user.getUid())))
+                    .uid(user.getUid())
+                    .name(user.getName())
+                    .build();
+
+            setSuccessResult(signInResultDto);
+
+            return signInResultDto;
+        }
+    }
+
+    public NaverUser getNaverInfo(String accessToken) throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://openapi.naver.com/v1/nid/me"))
+                .header("Content-Type", "application/x-www-form-urlencoded;charset=utf-8")
+                .header("Authorization", "Bearer " + accessToken)
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        JSONObject jsonObject = new JSONObject(response.body());
+
+        // Accessing the nested JSON Objects
+        JSONObject naver_account = jsonObject.getJSONObject("naver_account");
+        JSONObject profile = naver_account.getJSONObject("profile");
+
+        NaverUser naverUser = new NaverUser();
+        naverUser.setEmail(naver_account.getString("email"));
+        naverUser.setNickname(profile.getString("nickname"));
+        naverUser.setProfileImageUrl(profile.getString("profile_image_url"));
+
+        return naverUser;
+    }
+
+    public String createNaverToken(String code) throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://nid.naver.com/oauth2.0/token"))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(
+                        "grant_type=" + "authorization_code" +
+                                "&client_id=" + naverClientId +
+                                "&redirect_uri=" + naverRedirectUri +
+                                "&code=" + code
+                ))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        JSONObject jsonObject = new JSONObject(response.body());
+
+        return jsonObject.getString("access_token");
+    }
+
 
     @Override
     public BaseResponseDto changePasswd(ChangePasswdRequestDto changePasswdRequestDto, String uid) {

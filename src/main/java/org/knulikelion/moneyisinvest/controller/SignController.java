@@ -58,6 +58,11 @@ public class SignController {
         return ResponseEntity.ok(signService.kakaoLogin(code));
     }
 
+    @PostMapping(value = "/social/naver")
+    public ResponseEntity<SignInResultDto> naverLogin(@RequestParam String code) throws IOException, InterruptedException {
+        return ResponseEntity.ok(signService.naverLogin(code));
+    }
+
     @PostMapping(value = "/sign-up")
     public SignUpResultDto signUp(@RequestBody SignUpRequestDto signUpRequestDto) {
         LOGGER.info("[signUp] 회원가입을 수행합니다. id : {}, password : ****, name : {}", signUpRequestDto.getUid(),
