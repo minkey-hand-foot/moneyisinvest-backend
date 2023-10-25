@@ -82,6 +82,39 @@ public class SignServiceImpl implements SignService {
 
     @Override
     public SignUpResultDto signUp(SignUpRequestDto signUpRequestDto) {
+        LOGGER.info("[getSignUpResult] 회원가입 유효성 검사 진행");
+        SignUpResultDto signUpResultDto = new SignInResultDto();
+
+//        휴대폰 번호, 비밀번호 정규식 정의
+        String PHONE_REG = "^01(?:0|1|[6-9])[.-]?(\\d{3}|\\d{4})[.-]?(\\d{4})$";
+        String PASS_REG = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–[{}]:;',?/*~$^+=<>]).{8,20}$";
+
+        if(!validateUid(signUpRequestDto.getUid())) {
+            signUpResultDto.setSuccess(false);
+            signUpResultDto.setMsg("아이디는 이메일 주소 형식입니다.");
+            signUpResultDto.setCode(-1);
+
+            return signUpResultDto;
+        } else if(userRepository.findByUid(signUpRequestDto.getUid()).isPresent()) {
+            signUpResultDto.setSuccess(false);
+            signUpResultDto.setMsg("이미 가입된 회원");
+            signUpResultDto.setCode(-1);
+
+            return signUpResultDto;
+        } else if(!signUpRequestDto.getPhoneNum().matches(PHONE_REG)) {
+            signUpResultDto.setSuccess(false);
+            signUpResultDto.setMsg("휴대폰 번호는 '010-XXXX-XXXX' 형식으로 입력되어야 합니다.");
+            signUpResultDto.setCode(-1);
+
+            return signUpResultDto;
+        } else if(!signUpRequestDto.getPassword().matches(PASS_REG)) {
+            signUpResultDto.setSuccess(false);
+            signUpResultDto.setMsg("비밀번호 정규식이 일치하지 않습니다.");
+            signUpResultDto.setCode(-1);
+
+            return signUpResultDto;
+        }
+
         LOGGER.info("[getSignUpResult] 회원 가입 정보 전달");
 //      회원가입 시 기본적으로 일반 유저 권한으로 가입 처리
         User user = User.builder()
@@ -112,37 +145,15 @@ public class SignServiceImpl implements SignService {
                         .loseAmount(0)
                 .build());
             
-        SignUpResultDto signUpResultDto = new SignInResultDto();
 
-        String PHONE_REG = "^01(?:0|1|[6-9])[.-]?(\\d{3}|\\d{4})[.-]?(\\d{4})$";
-        String PASS_REG = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–[{}]:;',?/*~$^+=<>]).{8,20}$";
-
-//      signUpRequestDto에서 입력받는 uid가 이메일 주소인지 확인
-        if(!validateUid(signUpRequestDto.getUid())) {
-            signUpResultDto.setSuccess(false);
-            signUpResultDto.setMsg("아이디는 이메일 주소 형식입니다.");
-            signUpResultDto.setCode(1);
-        } else if(userRepository.findByUid(user.getUid()) != null) {
-            signUpResultDto.setSuccess(false);
-            signUpResultDto.setMsg("이미 가입된 회원");
-            signUpResultDto.setCode(1);
-        } else if(!signUpRequestDto.getPhoneNum().matches(PHONE_REG)) {
-            signUpResultDto.setSuccess(false);
-            signUpResultDto.setMsg("휴대폰 번호는 '010-XXXX-XXXX' 형식으로 입력되어야 합니다.");
-            signUpResultDto.setCode(1);
-        } else if(!signUpRequestDto.getPassword().matches(PASS_REG)) {
-            signUpResultDto.setSuccess(false);
-            signUpResultDto.setMsg("반드시 숫자 1자리, 소문자 1자리,");
+        User savedUser = userRepository.save(user);
+        LOGGER.info("[getSignUpResult] userEntity 값이 들어왔는지 확인 후 결과값 주입");
+        if (!savedUser.getName().isEmpty()) {
+            LOGGER.info("[getSignUpResult] 정상 처리 완료");
+            setSuccessResult(signUpResultDto);
         } else {
-            User savedUser = userRepository.save(user);
-            LOGGER.info("[getSignUpResult] userEntity 값이 들어왔는지 확인 후 결과값 주입");
-            if (!savedUser.getName().isEmpty()) {
-                LOGGER.info("[getSignUpResult] 정상 처리 완료");
-                setSuccessResult(signUpResultDto);
-            } else {
-                LOGGER.info("[getSignUpResult] 실패 처리 완료");
-                setFailResult(signUpResultDto);
-            }
+            LOGGER.info("[getSignUpResult] 실패 처리 완료");
+            setFailResult(signUpResultDto);
         }
 
         return signUpResultDto;
