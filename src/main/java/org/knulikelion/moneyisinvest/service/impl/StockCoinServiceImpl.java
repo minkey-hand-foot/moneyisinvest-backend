@@ -116,7 +116,7 @@ public class StockCoinServiceImpl implements StockCoinService {
 
         Optional<User> foundUser = userRepository.findByUid(transactionToSystemRequestDto.getTargetUid());
 
-        if(!foundUser.isPresent()) {
+        if(foundUser.isEmpty()) {
             baseResponseDto.setSuccess(false);
             baseResponseDto.setMsg("사용자를 찾을 수 없습니다.");
 
