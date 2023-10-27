@@ -26,6 +26,7 @@ import org.knulikelion.moneyisinvest.data.dto.response.*;
 import org.knulikelion.moneyisinvest.data.entity.*;
 import org.knulikelion.moneyisinvest.data.repository.*;
 import org.knulikelion.moneyisinvest.service.StockCoinService;
+import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.knulikelion.moneyisinvest.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,6 +67,7 @@ public class StockServiceImpl implements StockService {
     private final FavoriteRepository favoriteRepository;
     private final StockCoinBenefitRepository stockCoinBenefitRepository;
     private final StockTransactionRepository stockTransactionRepository;
+    private final StockCoinWalletService stockCoinWalletService;
 
     @Autowired
     public StockServiceImpl(StockHolidayRepository stockHolidayRepository,
@@ -74,7 +76,8 @@ public class StockServiceImpl implements StockService {
                             UserRepository userRepository,
                             FavoriteRepository favoriteRepository,
                             StockCoinBenefitRepository stockCoinBenefitRepository,
-                            StockTransactionRepository stockTransactionRepository) {
+                            StockTransactionRepository stockTransactionRepository,
+                            StockCoinWalletService stockCoinWalletService) {
         this.stockHolidayRepository = stockHolidayRepository;
         this.stockRepository = stockRepository;
         this.stockCoinService = stockCoinService;
@@ -82,6 +85,7 @@ public class StockServiceImpl implements StockService {
         this.favoriteRepository = favoriteRepository;
         this.stockCoinBenefitRepository = stockCoinBenefitRepository;
         this.stockTransactionRepository = stockTransactionRepository;
+        this.stockCoinWalletService = stockCoinWalletService;
     }
 
     @PostConstruct
@@ -739,6 +743,15 @@ public class StockServiceImpl implements StockService {
 
         transactionToSystemRequestDto.setTargetUid(uid);
         transactionToSystemRequestDto.setAmount(Double.parseDouble(stockBuyRequestDto.getConclusion_price()) / 100);
+
+//        사용자 잔액 확인
+        double userBalance = stockCoinWalletService.getWalletBalance(
+                stockCoinWalletService.getWalletAddress(uid)
+        );
+
+        if(userBalance < Double.parseDouble(stockBuyRequestDto.getConclusion_price()) / 100) {
+            throw new RuntimeException("사용자 지갑 잔액 부족");
+        }
 
         BaseResponseDto transactionResult = stockCoinService.buyStock(transactionToSystemRequestDto);
 
