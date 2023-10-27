@@ -64,7 +64,7 @@ public class SignController {
                 signUpRequestDto.getName());
         SignUpResultDto signUpResultDto = signService.signUp(signUpRequestDto);
 
-        if(signUpResultDto.getCode() == 1) {
+        if(signUpResultDto.getCode() == -1) {
             LOGGER.info("[signUp] 회원가입을 완료할 수 없습니다. id : {}", signUpRequestDto.getUid());
         } else {
             LOGGER.info("[signUp] 회원가입을 완료했습니다. id : {}", signUpRequestDto.getUid());
