@@ -1,124 +1,122 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
-import lombok.RequiredArgsConstructor;
-import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.request.SupportRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SupportResponseDto;
 import org.knulikelion.moneyisinvest.data.entity.Support;
 import org.knulikelion.moneyisinvest.data.entity.User;
+import org.knulikelion.moneyisinvest.data.enums.SupportStatus;
 import org.knulikelion.moneyisinvest.data.repository.SupportRepository;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.SupportService;
-import org.knulikelion.moneyisinvest.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class SupportServiceImpl implements SupportService {
 
     private final UserRepository userRepository;
     private final SupportRepository supportRepository;
-    private final JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    private UserService userService;
+    public SupportServiceImpl(UserRepository userRepository,
+                              SupportRepository supportRepository) {
+        this.userRepository = userRepository;
+        this.supportRepository = supportRepository;
+    }
 
     @Override
     public SupportResponseDto addSupport(SupportRequestDto supportRequestDto, String uid) {
-        SupportResponseDto supportResponseDto = new SupportResponseDto();
-
-        Optional<User> getUser = userRepository.findByUid(uid);
-
-        if (!getUser.isPresent()) {
-            supportResponseDto.setMsg("사용자가 존재하지 않음");
-            return supportResponseDto;
+        Optional<User> user = userRepository.findByUid(uid);
+        if (user.isEmpty()) {
+            throw new RuntimeException("사용자가 존재하지 않음");
         }
 
-        Support support = new Support();
-        support.setUser(getUser.get());
-        support.setTitle(supportRequestDto.getTitle());
-        support.setStatus("답변 대기중");
-        support.setContents(supportRequestDto.getContents());
-        support.setCreatedAt(LocalDateTime.now());
-        support.setUpdatedAt(LocalDateTime.now());
+        Support savedSupport = supportRepository.save(
+                Support.builder()
+                        .user(user.get())
+                        .title(supportRequestDto.getTitle())
+                        .content(supportRequestDto.getContents())
+                        .status(SupportStatus.PENDING)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build()
+        );
 
-        Support savedSupport = supportRepository.save(support); // 저장된 Support 객체를 반환받습니다.
-
-        // 필요한 객체의 필드들을 SupportResponseDto 객체로 복사합니다.
-        supportResponseDto.setSupportId(savedSupport.getId());
-        supportResponseDto.setUid(getUser.get().getUid());
-        supportResponseDto.setTitle(savedSupport.getTitle());
-        supportResponseDto.setContents(savedSupport.getContents());
-        supportResponseDto.setStatus(savedSupport.getStatus());
-        supportResponseDto.setCreatedAt(savedSupport.getCreatedAt().toString()); // LocalDateTime 객체를 문자열로 변환
-        supportResponseDto.setUpdatedAt(savedSupport.getUpdatedAt().toString()); // LocalDateTime 객체를 문자열로 변환
-        supportResponseDto.setMsg("문의 사항 추가");
-
-        return supportResponseDto;
+        return SupportResponseDto.builder()
+                .supportId(savedSupport.getId())
+                .title(savedSupport.getTitle())
+                .contents(savedSupport.getContent())
+                .status(
+                        (savedSupport.getStatus() == SupportStatus.PENDING) ? "답변 대기 중" : "답변 완료"
+                )
+                .createdAt(savedSupport.getCreatedAt().toString())
+                .updatedAt(savedSupport.getUpdatedAt().toString())
+                .build();
     }
 
 
     @Override
-    public SupportResponseDto getUserSupport(String uid, Long supprotId) {
+    public SupportResponseDto getUserSupport(String uid, Long supportId) {
         Optional<User> user = userRepository.findByUid(uid);
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd.E");
 
-        if(!user.isPresent()) {
-            throw new RuntimeException("사용자를 찾을 수 없습니다.");
+        if(user.isEmpty()) {
+            throw new RuntimeException("사용자를 찾을 수 없음");
         }
 
-        List<Support> supportList = supportRepository.findByUser_Id(user.get().getId());
+        Optional<Support> support = supportRepository.findById(supportId);
 
-        SupportResponseDto responseDto = null;
-        if (supportList.isEmpty()) {
-            return null;
-        } else {
-            for (Support temp : supportList) {
-                if (temp.getId().equals(supprotId)) {
-                    responseDto = new SupportResponseDto();
-
-                    responseDto.setSupportId(temp.getId());
-                    responseDto.setUid(temp.getUser().getUid());
-                    responseDto.setTitle(temp.getTitle());
-                    responseDto.setStatus(temp.getStatus());
-                    responseDto.setContents(temp.getContents());
-                    responseDto.setCreatedAt(temp.getCreatedAt().toString());
-                    responseDto.setUpdatedAt(temp.getUpdatedAt().toString());
-
-                    break;
-                }
-            }
+        if(support.isEmpty()) {
+            throw new RuntimeException("해당 문의 사항을 조회할 수 없음");
         }
-        return responseDto;
+
+        return SupportResponseDto.builder()
+                .supportId(support.get().getId())
+                .title(support.get().getTitle())
+                .contents(support.get().getContent())
+                .closed(support.get().getStatus() != SupportStatus.PENDING)
+                .closedDate(
+                        (support.get().getClosedDate() != null) ? support.get().getClosedDate().format(outputFormatter) : null
+                )
+                .comment(support.get().getComment())
+                .createdAt(support.get().getCreatedAt().format(outputFormatter))
+                .updatedAt(support.get().getUpdatedAt().format(outputFormatter))
+                .build();
     }
 
     @Override
     public List<SupportResponseDto> getAll(String uid) {
-
-        if(uid ==null) throw new RuntimeException("사용자 uid가 없습니다.");
         List<SupportResponseDto> supportResponseDtoList = new ArrayList<>();
+        List<Support> supports = supportRepository.findAllByUser(userRepository.getByUid(uid));
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd.E");
 
-        List<Support> getSupports = supportRepository.findAllByUserUid(uid);
-
-        for(Support getSupport : getSupports) {
-            SupportResponseDto supportResponseDto = new SupportResponseDto();
-            supportResponseDto.setSupportId(getSupport.getId());
-            supportResponseDto.setUid(getSupport.getUser().getUid());
-            supportResponseDto.setTitle(getSupport.getTitle());
-            supportResponseDto.setContents(getSupport.getContents());
-            supportResponseDto.setStatus(getSupport.getStatus());
-            supportResponseDto.setCreatedAt(getSupport.getCreatedAt().toString());
-            supportResponseDto.setUpdatedAt(getSupport.getUpdatedAt().toString());
-
-            supportResponseDtoList.add(supportResponseDto);
+        for (Support support : supports) {
+            supportResponseDtoList.add(
+                    SupportResponseDto.builder()
+                            .supportId(support.getId())
+                            .title(support.getTitle())
+                            .contents(support.getContent())
+                            .closed(support.getStatus() != SupportStatus.PENDING)
+                            .closedDate(
+                                    (support.getClosedDate() != null) ? support.getClosedDate().format(outputFormatter) : null
+                            )
+                            .status(
+                                    (support.getStatus() == SupportStatus.PENDING) ? "답변 대기 중" : "답변 완료"
+                            )
+                            .comment(support.getComment())
+                            .createdAt(support.getCreatedAt().format(outputFormatter))
+                            .updatedAt(support.getUpdatedAt().format(outputFormatter))
+                    .build()
+            );
         }
+
         return supportResponseDtoList;
     }
 
