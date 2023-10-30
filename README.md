@@ -4,12 +4,7 @@
 # Team members
 ## Back-End Developers
 
-|                                      손민기                                      |                                      김성수                                       |
-| :------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------: |
-| <img width="160px" src="https://avatars.githubusercontent.com/u/126847381?v=4" /> | <img width="160px" src="https://avatars.githubusercontent.com/u/99383331?v=4" /> |
-|                    [@MinkeySon](https://github.com/MinkeySon)                    |                       [@zkdl2727](https://github.com/zkdl2727)                        |
-
-|                                      전윤환                                       |
-| :-------------------------------------------------------------------------------: |
-| <img width="150px" src="https://avatars.githubusercontent.com/u/57185499?v=4" /> |
-|                    [@yunh03](https://github.com/yunh03)                     |
+|                                      손민기                                      |                                      김성수                                       |                                      전윤환                                       |
+| :------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------: |
+| <img width="160px" src="https://avatars.githubusercontent.com/u/126847381?v=4" /> | <img width="160px" src="https://avatars.githubusercontent.com/u/99383331?v=4" /> | <img width="150px" src="https://avatars.githubusercontent.com/u/57185499?v=4" /> |
+|                    [@MinkeySon](https://github.com/MinkeySon)                    |                       [@zkdl2727](https://github.com/zkdl2727)                        |                    [@yunh03](https://github.com/yunh03)                     |
