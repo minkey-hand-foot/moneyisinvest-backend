@@ -1,12 +1,10 @@
 package org.knulikelion.moneyisinvest.data.entity;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.knulikelion.moneyisinvest.data.enums.SupportStatus;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -18,20 +16,29 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(callSuper = true)
+@Builder
 @Table(name = "support")
 public class Support {
 
-    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String Title ="";
+    private String title;
 
     @Column(nullable = false)
-    private String contents="";
+    private String content;
 
-    @Column(nullable = false)
-    private String status ="";
+    @Column
+    @Enumerated(EnumType.STRING)
+    private SupportStatus status = SupportStatus.PENDING;
+
+    @Column
+    private String comment;
+
+    @Column
+    private LocalDateTime closedDate;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

@@ -12,6 +12,7 @@ import java.util.Optional;
 public interface SupportRepository extends JpaRepository<Support, Long> {
     void delete (Support getSupport);
     List<Support> findAllByUserUid(String uid);
+    List<Support> findAllByUser(User user);
     Optional<Support> findByIdAndUserUid(Long supportId, String uid);
     List<Support> findByUser_Id(Long userId);
 }
