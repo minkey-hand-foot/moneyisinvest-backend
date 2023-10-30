@@ -18,7 +18,7 @@
 
 ## Designer
 
-|                                      박지혜                                      |
+|                                      박지혜                                      |
 | :------------------------------------------------------------------------------: |
 | <img width="160px" src="https://avatars.githubusercontent.com/u/128332058?v=4" /> |
 |                    [@parkjihye2420](https://github.com/parkjihye2420)                    |
