@@ -6,19 +6,19 @@
 
 |                                      손민기                                      |                                      김성수                                       |                                      전윤환                                       |
 | :------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------: |
-| <img width="160px" src="https://avatars.githubusercontent.com/u/126847381?v=4" /> | <img width="160px" src="https://avatars.githubusercontent.com/u/99383331?v=4" /> | <img width="150px" src="https://avatars.githubusercontent.com/u/57185499?v=4" /> |
+| <img width="150px" src="https://avatars.githubusercontent.com/u/126847381?v=4" /> | <img width="150px" src="https://avatars.githubusercontent.com/u/99383331?v=4" /> | <img width="150px" src="https://avatars.githubusercontent.com/u/57185499?v=4" /> |
 |                    [@MinkeySon](https://github.com/MinkeySon)                    |                       [@zkdl2727](https://github.com/zkdl2727)                        |                    [@yunh03](https://github.com/yunh03)                     |
 
 ## Front-End Developers
 
 |                                      최지은                                      |                                      김찬주                                       |                                      양은지                                       |
 | :------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------: |
-| <img width="160px" src="https://avatars.githubusercontent.com/u/122079153?v=4" /> | <img width="160px" src="https://avatars.githubusercontent.com/u/129511216?v=4" /> | <img width="150px" src="https://avatars.githubusercontent.com/u/129482143?v=4" /> |
+| <img width="150px" src="https://avatars.githubusercontent.com/u/122079153?v=4" /> | <img width="150px" src="https://avatars.githubusercontent.com/u/129511216?v=4" /> | <img width="150px" src="https://avatars.githubusercontent.com/u/129482143?v=4" /> |
 |                    [@Cjieun](https://github.com/Cjieun)                    |                       [@Chanju03](https://github.com/Chanju03)                        |                    [@heubanufi](https://github.com/heubanufi)                     |
 
 ## Designer
 
 |                                      박지혜                                      |
 | :------------------------------------------------------------------------------: |
-| <img width="160px" src="https://avatars.githubusercontent.com/u/128332058?v=4" /> |
+| <img width="150px" src="https://avatars.githubusercontent.com/u/128332058?v=4" /> |
 |                    [@parkjihye2420](https://github.com/parkjihye2420)                    |
