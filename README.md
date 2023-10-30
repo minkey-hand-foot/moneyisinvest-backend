@@ -15,3 +15,10 @@
 | :------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------: |
 | <img width="160px" src="https://avatars.githubusercontent.com/u/122079153?v=4" /> | <img width="160px" src="https://avatars.githubusercontent.com/u/129511216?v=4" /> | <img width="150px" src="https://avatars.githubusercontent.com/u/129482143?v=4" /> |
 |                    [@Cjieun](https://github.com/Cjieun)                    |                       [@Chanju03](https://github.com/Chanju03)                        |                    [@heubanufi](https://github.com/heubanufi)                     |
+
+## Designer
+
+|                                      박지혜                                      |
+| :------------------------------------------------------------------------------: |
+| <img width="160px" src="https://avatars.githubusercontent.com/u/128332058?v=4" /> |
+|                    [@parkjihye2420](https://github.com/parkjihye2420)                    |
