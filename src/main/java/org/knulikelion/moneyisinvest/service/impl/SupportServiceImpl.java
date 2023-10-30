@@ -85,6 +85,9 @@ public class SupportServiceImpl implements SupportService {
                 .closedDate(
                         (support.get().getClosedDate() != null) ? support.get().getClosedDate().format(outputFormatter) : null
                 )
+                .status(
+                        (support.get().getStatus() == SupportStatus.PENDING) ? "답변 대기 중" : "답변 완료"
+                )
                 .comment(support.get().getComment())
                 .createdAt(support.get().getCreatedAt().format(outputFormatter))
                 .updatedAt(support.get().getUpdatedAt().format(outputFormatter))
