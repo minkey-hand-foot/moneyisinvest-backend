@@ -143,6 +143,11 @@ public class JwtTokenProvider {
         }
     }
 
+    public Long getTokenExpirationTime(String token) {
+        Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
+        return claims.getBody().getExpiration().getTime();
+    }
+
     public boolean validateUseAble(String token) {
         User user = userRepository.getByUid(getUsername(token));
         System.out.println(user.isUseAble());
