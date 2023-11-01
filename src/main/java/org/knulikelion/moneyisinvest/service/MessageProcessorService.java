@@ -25,7 +25,7 @@ public class MessageProcessorService {
     public void init() {
         new Thread(() -> {
             while (true) {
-                Transaction transaction = messageQueueService.dequeue("transaction");
+                Transaction transaction = messageQueueService.getTransactionViaDequeue();
                 if(transaction == null) {
                     try {
                         log.info("[Transaction Thread] 아무 요청이 존재하지 않음. 10초 대기");

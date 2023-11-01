@@ -72,7 +72,7 @@ public class StockCoinServiceImpl implements StockCoinService {
                     .build();
 
 //            거래 과정 진행
-            messageQueueService.enqueue("transaction", transaction);
+            messageQueueService.insertTransactionViaEnqueue(transaction);
 
             return "코인 거래 요청 완료";
         } else {
@@ -93,7 +93,7 @@ public class StockCoinServiceImpl implements StockCoinService {
                     .build();
 
             if(stockCoinWalletService.getWalletBalanceByUsername(transactionToSystemRequestDto.getTargetUid()) >= (transaction.getFee() + transaction.getAmount())) {
-                messageQueueService.enqueue("transaction", transaction);
+                messageQueueService.insertTransactionViaEnqueue(transaction);
 
                 baseResponseDto.setSuccess(true);
                 baseResponseDto.setMsg("스톡 코인 출금 요청이 완료되었습니다.");
@@ -133,7 +133,7 @@ public class StockCoinServiceImpl implements StockCoinService {
                     .build();
 
             if(stockCoinWalletService.getWalletBalanceByUsername(foundUser.get().getUid()) >= (transaction.getFee() + transaction.getAmount())) {
-                messageQueueService.enqueue("transaction", transaction);
+                messageQueueService.insertTransactionViaEnqueue(transaction);
                 log.info("[Coin Transaction] 대기열 추가 요청 됨");
 
                 baseResponseDto.setSuccess(true);
@@ -175,7 +175,7 @@ public class StockCoinServiceImpl implements StockCoinService {
                             .build();
 
                     if(stockCoinWalletService.getWalletBalanceByUsername(transactionToSystemRequestDto.getTargetUid()) >= (transaction.getFee() + transaction.getAmount())) {
-                        messageQueueService.enqueue("transaction", transaction);
+                        messageQueueService.insertTransactionViaEnqueue(transaction);
 
 //                    베이직 플랜 손해 저장
                         stockCoinBenefit.setLoss(stockCoinBenefit.getLoss() + (transactionToSystemRequestDto.getAmount() * 0.015));
@@ -211,10 +211,10 @@ public class StockCoinServiceImpl implements StockCoinService {
                             .build();
 
 //                    주식 매도 Transaction
-                    messageQueueService.enqueue("transaction", transaction);
+                    messageQueueService.insertTransactionViaEnqueue(transaction);
 
 //                    주식 매도 프리미엄 보너스 스톡 코인 Transaction
-                    messageQueueService.enqueue("transaction", bonusTransaction);
+                    messageQueueService.insertTransactionViaEnqueue(bonusTransaction);
 
 //                    프리미엄 플랜 이득 저장
                     stockCoinBenefit.setBenefit(stockCoinBenefit.getBenefit() + (transactionToSystemRequestDto.getAmount() * 0.015));
@@ -246,7 +246,7 @@ public class StockCoinServiceImpl implements StockCoinService {
                     .fee(0)
                     .build();
 
-            messageQueueService.enqueue("transaction", transaction);
+            messageQueueService.insertTransactionViaEnqueue(transaction);
 
             return "코인 지급 요청이 완료됨.";
         } else {
@@ -263,7 +263,7 @@ public class StockCoinServiceImpl implements StockCoinService {
                 .fee(0)
                 .build();
 
-        messageQueueService.enqueue("transaction", transaction);
+        messageQueueService.insertTransactionViaEnqueue(transaction);
 
         return "코인 지급 요청 완료";
     }
@@ -303,11 +303,7 @@ public class StockCoinServiceImpl implements StockCoinService {
         }
 
 //        전송 금액이 0보다 큰지 검증
-        if(transaction.getAmount() < 0) {
-            return false;
-        }
-
-        return true;
+        return !(transaction.getAmount() < 0);
     }
 
     public String calculateHash(Block block) {
