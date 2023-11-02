@@ -1,5 +1,6 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.knulikelion.moneyisinvest.common.CommonResponse;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
@@ -27,22 +28,28 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.Collections;
 
 @Service
+@Slf4j
 public class SignServiceImpl implements SignService {
+    @Resource(name = "tokenTemplate")
+    private RedisTemplate<String, String> redisTemplate;
+
     private final Logger LOGGER = LoggerFactory.getLogger(SignServiceImpl.class);
 
     public UserRepository userRepository;
     public ProfileService profileService;
-
     public JwtTokenProvider jwtTokenProvider;
     public StockCoinService stockCoinService;
     public PasswordEncoder passwordEncoder;
@@ -179,13 +186,20 @@ public class SignServiceImpl implements SignService {
         user.setRecentLoggedIn(LocalDateTime.now());
         userRepository.save(user);
 
+        String ACCESS_TOKEN = jwtTokenProvider.createAccessToken(String.valueOf(user.getUid()), user.getRoles());
+        String REFRESH_TOKEN = jwtTokenProvider.createRefreshToken(String.valueOf(user.getUid()));
+
         LOGGER.info("[getSignInResult] SignInResultDto 객체 생성");
         SignInResultDto signInResultDto = SignInResultDto.builder()
-                .token(jwtTokenProvider.createAccessToken(String.valueOf(user.getUid()), user.getRoles()))
-                .refreshToken(jwtTokenProvider.createRefreshToken(String.valueOf(user.getUid())))
+                .token(ACCESS_TOKEN)
+                .refreshToken(REFRESH_TOKEN)
                 .uid(user.getUid())
                 .name(user.getName())
                 .build();
+
+        log.info("[SignIn] 사용자 Refresh Token 값을 Redis에 저장");
+        String key = "RT:" + user.getUid();
+        redisTemplate.opsForValue().set(key, REFRESH_TOKEN, 1209600, TimeUnit.SECONDS);
 
         LOGGER.info("[getSignInResult] SignInResultDto 객체에 값 주입");
         setSuccessResult(signInResultDto);

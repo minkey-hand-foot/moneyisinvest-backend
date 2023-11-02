@@ -38,11 +38,20 @@ public class RedisConfiguration {
 
     @Bean
     public StringRedisTemplate stringRedisTemplate(){
-        StringRedisTemplate stringRedisTemplate=new StringRedisTemplate();
+        StringRedisTemplate stringRedisTemplate = new StringRedisTemplate();
         stringRedisTemplate.setKeySerializer(new StringRedisSerializer());
         stringRedisTemplate.setValueSerializer(new StringRedisSerializer());
         stringRedisTemplate.setConnectionFactory(redisConnectionFactory());
         return stringRedisTemplate;
+    }
+
+    @Bean
+    public RedisTemplate<String, String> tokenTemplate() {
+        RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
+        return redisTemplate;
     }
 
     @Bean
