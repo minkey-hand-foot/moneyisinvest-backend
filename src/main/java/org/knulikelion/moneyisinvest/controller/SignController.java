@@ -48,9 +48,10 @@ public class SignController {
     }
 
     @PostMapping(value = "/refresh-token")
-    public ResponseEntity<?> refreshToken(@RequestBody TokenRequestDto tokenRequestDto){
-        String accessToken = jwtTokenProvider.refreshToken(tokenRequestDto.getRefreshToken(), jwtTokenProvider.getUsername(tokenRequestDto.getRefreshToken()));
-        return ResponseEntity.ok(new TokenResponseDto(accessToken));
+    public ResponseEntity<?> refreshToken(@RequestBody TokenRequestDto tokenRequestDto) {
+        return jwtTokenProvider.refreshToken(tokenRequestDto);
+//        String accessToken = jwtTokenProvider.refreshToken(tokenRequestDto.getRefreshToken(), jwtTokenProvider.getUsername(tokenRequestDto.getRefreshToken()));
+//        return ResponseEntity.ok(new TokenResponseDto(accessToken));
     }
 
     @PostMapping(value = "/social/kakao")
