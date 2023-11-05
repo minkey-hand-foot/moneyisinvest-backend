@@ -48,9 +48,10 @@ public class SignController {
     }
 
     @PostMapping(value = "/refresh-token")
-    public ResponseEntity<?> refreshToken(@RequestBody TokenRequestDto tokenRequestDto){
-        String accessToken = jwtTokenProvider.refreshToken(tokenRequestDto.getRefreshToken(), jwtTokenProvider.getUsername(tokenRequestDto.getRefreshToken()));
-        return ResponseEntity.ok(new TokenResponseDto(accessToken));
+    public ResponseEntity<?> refreshToken(@RequestBody TokenRequestDto tokenRequestDto) {
+        return jwtTokenProvider.refreshToken(tokenRequestDto);
+//        String accessToken = jwtTokenProvider.refreshToken(tokenRequestDto.getRefreshToken(), jwtTokenProvider.getUsername(tokenRequestDto.getRefreshToken()));
+//        return ResponseEntity.ok(new TokenResponseDto(accessToken));
     }
 
     /*Kakao Social Login*/
@@ -71,7 +72,7 @@ public class SignController {
                 signUpRequestDto.getName());
         SignUpResultDto signUpResultDto = signService.signUp(signUpRequestDto);
 
-        if(signUpResultDto.getCode() == 1) {
+        if(signUpResultDto.getCode() == -1) {
             LOGGER.info("[signUp] 회원가입을 완료할 수 없습니다. id : {}", signUpRequestDto.getUid());
         } else {
             LOGGER.info("[signUp] 회원가입을 완료했습니다. id : {}", signUpRequestDto.getUid());

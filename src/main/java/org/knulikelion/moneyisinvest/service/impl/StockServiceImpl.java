@@ -26,6 +26,7 @@ import org.knulikelion.moneyisinvest.data.dto.response.*;
 import org.knulikelion.moneyisinvest.data.entity.*;
 import org.knulikelion.moneyisinvest.data.repository.*;
 import org.knulikelion.moneyisinvest.service.StockCoinService;
+import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.knulikelion.moneyisinvest.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,6 +67,7 @@ public class StockServiceImpl implements StockService {
     private final FavoriteRepository favoriteRepository;
     private final StockCoinBenefitRepository stockCoinBenefitRepository;
     private final StockTransactionRepository stockTransactionRepository;
+    private final StockCoinWalletService stockCoinWalletService;
 
     @Autowired
     public StockServiceImpl(StockHolidayRepository stockHolidayRepository,
@@ -74,7 +76,8 @@ public class StockServiceImpl implements StockService {
                             UserRepository userRepository,
                             FavoriteRepository favoriteRepository,
                             StockCoinBenefitRepository stockCoinBenefitRepository,
-                            StockTransactionRepository stockTransactionRepository) {
+                            StockTransactionRepository stockTransactionRepository,
+                            StockCoinWalletService stockCoinWalletService) {
         this.stockHolidayRepository = stockHolidayRepository;
         this.stockRepository = stockRepository;
         this.stockCoinService = stockCoinService;
@@ -82,6 +85,7 @@ public class StockServiceImpl implements StockService {
         this.favoriteRepository = favoriteRepository;
         this.stockCoinBenefitRepository = stockCoinBenefitRepository;
         this.stockTransactionRepository = stockTransactionRepository;
+        this.stockCoinWalletService = stockCoinWalletService;
     }
 
     @PostConstruct
@@ -722,26 +726,41 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override /*주식 매수*/
-    public BaseResponseDto buyStock(String uid, StockBuyRequestDto stockBuyRequestDto) throws JSONException, IOException {
+    public BaseResponseDto buyStock(String uid, StockBuyRequestDto stockBuyRequestDto) throws JSONException {
         stockBuyRequestDto.setConclusion_price(stockBuyRequestDto.getConclusion_price().replace(",", ""));
-        log.info("[buyStock] 주식 매수 종목 코드 : {}", stockBuyRequestDto.getStockCode());
+        Optional<User> user = userRepository.findByUid(uid);
+
+        if(user.isEmpty()) {
+            throw new RuntimeException("사용자를 찾을 수 없습니다.");
+        }
+
+        User foundUser = user.get();
+        log.info("[StockServiceImpl: buyStock] (1/7) 사용자 정보 조회 성공: {}", foundUser.getUid());
+
+        log.info("[StockServiceImpl: buyStock] (2/7) 주식 매수 종목 코드 : {}", stockBuyRequestDto.getStockCode());
         BaseResponseDto baseResponseDto = new BaseResponseDto();
         TransactionToSystemRequestDto transactionToSystemRequestDto = new TransactionToSystemRequestDto();
 
         transactionToSystemRequestDto.setTargetUid(uid);
         transactionToSystemRequestDto.setAmount(Double.parseDouble(stockBuyRequestDto.getConclusion_price()) / 100);
 
+//        사용자 잔액 확인
+        double userBalance = stockCoinWalletService.getWalletBalance(
+                stockCoinWalletService.getWalletAddress(uid)
+        );
+
+        if(userBalance < Double.parseDouble(stockBuyRequestDto.getConclusion_price()) / 100) {
+            throw new RuntimeException("사용자 지갑 잔액 부족");
+        }
+
         BaseResponseDto transactionResult = stockCoinService.buyStock(transactionToSystemRequestDto);
 
         if (transactionResult.isSuccess()) {
-            log.info("[buyStock] stock 거래 성공 후 DB 저장");
-            Stock foundStock = stockRepository.findByUserIdAndStockCode(userRepository.getByUid(uid).getId(), stockBuyRequestDto.getStockCode());
+            log.info("[StockServiceImpl: buyStock] (3/7) Transaction 요청 완료");
+            log.info("[StockServiceImpl: buyStock] (4/7) 주식 거래 정보 저장 진행");
+            Stock foundStock = stockRepository.findByUserIdAndStockCode(foundUser.getId(), stockBuyRequestDto.getStockCode());
             if(foundStock == null) {
-                log.info("[buyStock] 신규 매수 종목 코드 : {}", stockBuyRequestDto.getStockCode());
-                Stock stock = new Stock();
-                stock.setStockUrl(getCompanyInfoByStockId(stockBuyRequestDto.getStockCode()).getStockLogoUrl()); // 로고
-                stock.setStockCode(stockBuyRequestDto.getStockCode()); // 종목 코드
-                stock.setStockName(getStockNameByStockId(stockBuyRequestDto.getStockCode())); // 종목 이름
+                log.info("[StockServiceImpl: buyStock] (5/7) 신규 매수를 진행하는 사용자, 대상 종목 코드: {}", stockBuyRequestDto.getStockCode());
 
                 /*수익률 = ((현재 가격 × 보유 주식 개수) - (구매 가격 × 보유 주식 개수)) / (구매 가격 × 보유 주식 개수) × 100*/
                 Integer myAmount = Integer.parseInt(stockBuyRequestDto.getStockAmount());
@@ -750,33 +769,32 @@ public class StockServiceImpl implements StockService {
 
                 Double rate = ((real_price * myAmount) - (my_buy_price * myAmount)) / (my_buy_price * myAmount) * 100;
                 rate = Math.round(rate * 1000) / 1000.0;
-                stock.setRate(rate); // 수익률
-
-                stock.setStockAmount(Integer.valueOf(stockBuyRequestDto.getStockAmount())); // 총 종목 수량
 
                 Integer conclusion_price = Integer.valueOf(getCurrentPrice(stockBuyRequestDto.getStockCode()));
                 Integer conclusion_amount = Integer.parseInt(stockBuyRequestDto.getStockAmount());
                 Integer current_price = conclusion_price * conclusion_amount;
-                stock.setReal_sum_coin_price(current_price/100); // 실제 종목의 평가 총 코인 가격
-
-                stock.setReal_sum_price(current_price); // 실제 종목의 평가 총 가격
 
                 Integer my_conclusion_price = Integer.valueOf(stockBuyRequestDto.getConclusion_price());
-                stock.setMy_conclusion_sum_coin((my_conclusion_price * conclusion_amount)/100); // 내 체결 총 코인 가격
 
-                stock.setMy_conclusion_sum_price(my_conclusion_price * conclusion_amount); // 내 체결 총 가격
+                User freshUser = userRepository.findByUid(uid).orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+                Stock stock = Stock.builder()
+                        .stockUrl(getCompanyInfoByStockId(stockBuyRequestDto.getStockCode()).getStockLogoUrl())
+                        .stockCode(stockBuyRequestDto.getStockCode())
+                        .stockName(getStockNameByStockId(stockBuyRequestDto.getStockCode()))
+                        .rate(rate)
+                        .stockAmount(Integer.valueOf(stockBuyRequestDto.getStockAmount()))
+                        .real_sum_coin_price(current_price / 100)
+                        .real_sum_price(current_price)
+                        .my_conclusion_sum_coin((my_conclusion_price * conclusion_amount) / 100)
+                        .my_conclusion_sum_price(my_conclusion_price * conclusion_amount)
+                        .my_per_conclusion_coin(Integer.parseInt(stockBuyRequestDto.getConclusion_price()) / 100)
+                        .my_per_conclusion_price(Integer.valueOf(stockBuyRequestDto.getConclusion_price()))
+                        .real_per_coin(Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode())) / 100)
+                        .real_per_price(Integer.valueOf(getCurrentPrice(stockBuyRequestDto.getStockCode())))
+                        .user(freshUser)
+                        .build();
 
-                stock.setMy_per_conclusion_coin(Integer.parseInt(stockBuyRequestDto.getConclusion_price())/100); // 보유 평 코인
-
-                stock.setMy_per_conclusion_price(Integer.valueOf(stockBuyRequestDto.getConclusion_price())); // 평 단가
-
-                stock.setReal_per_coin(Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode()))/100); // 실제 평 코인
-
-                stock.setReal_per_price(Integer.valueOf(getCurrentPrice(stockBuyRequestDto.getStockCode()))); // 실제 평 단가
-
-                User user = userRepository.getByUid(uid);
-
-                List<Favorite> favoriteList = favoriteRepository.findAllByUserId(user.getId());
+                List<Favorite> favoriteList = favoriteRepository.findAllByUserId(foundUser.getId());
                 boolean isFavoriteSet = false;
                 if (!favoriteList.isEmpty()) { // 찜 여부
                     for (Favorite favorite : favoriteList) {
@@ -787,46 +805,55 @@ public class StockServiceImpl implements StockService {
                         }
                     }
                 }
+
                 if (!isFavoriteSet) {
                     stock.setFavorite_status(false);
                 }
 
-                stock.setUser(user); // 유저 저장
                 stockRepository.save(stock); // Entity 저장
+
+                log.info("[StockServiceImpl: buyStock] (6/7) 주식 정보 저장이 완료 됨");
             } else {
-                log.info("[withdrawStockCoinToSystem]stock 거래 성공 후 DB 저장");
-                log.info("[buyStock] 기존 보유 종목 코드 : {}", stockBuyRequestDto.getStockCode());
-//                Stock findStock = foundStock;
-//                Stock findStock = stockRepository.findByStockCode(stockBuyRequestDto.getStockCode());
+                log.info("[StockServiceImpl: buyStock] (5/7) 추가 매수를 진행하는 사용자, 대상 종목 코드: {}", stockBuyRequestDto.getStockCode());
 
                 Integer myAmount = foundStock.getStockAmount() + Integer.parseInt(stockBuyRequestDto.getStockAmount());
-                foundStock.setStockAmount(myAmount); // 총 보유 수량
 
+//                수익률 계산
                 Integer current_price = Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode()));
                 Integer compare_price = current_price * myAmount;
                 Integer my_total_price = foundStock.getMy_conclusion_sum_price() + (Integer.parseInt(stockBuyRequestDto.getConclusion_price()) * Integer.parseInt(stockBuyRequestDto.getStockAmount()));
                 Double rate = (((double) compare_price - my_total_price) / my_total_price) * 100;
                 rate = Math.round(rate * 1000) / 1000.0;
-                foundStock.setRate(rate); // 수익률
 
-                foundStock.setReal_sum_coin_price(((Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode())))*myAmount) / 100); // 실제 종목의 평가 총 코인 가격
+                Stock updatedFoundStock = Stock.builder()
+                        .id(foundStock.getId())
+                        .stockUrl(foundStock.getStockUrl())
+                        .stockCode(foundStock.getStockCode())
+                        .stockName(foundStock.getStockName())
+                        // 총 보유 수량
+                        .stockAmount(myAmount)
+                        // 수익률
+                        .rate(rate)
+                        // 실제 종목의 평가 총 코인가
+                        .real_sum_coin_price(((Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode()))) * myAmount) / 100)
+                        // 실제 종목의 평가 총가
+                        .real_sum_price(Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode())) * myAmount)
+                        // 체결 총 코인가
+                        .my_conclusion_sum_coin(my_total_price / 100)
+                        // 체결 총가
+                        .my_conclusion_sum_price(my_total_price)
+                        // 보유 평 코인
+                        .my_per_conclusion_coin((my_total_price / myAmount) / 100)
+                        // 평 단가
+                        .my_per_conclusion_price(my_total_price / myAmount)
+                        // 실제 평 코인
+                        .real_per_coin(Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode())) / 100)
+                        // 실제 평 단가
+                        .real_per_price(Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode())))
+                        .user(foundUser)
+                        .build();
 
-                foundStock.setReal_sum_price(Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode()))*myAmount); // 실제 종목의 평가 총 가격
-
-                foundStock.setMy_conclusion_sum_coin(my_total_price / 100); // 내 체결 총 코인 가격
-
-                foundStock.setMy_conclusion_sum_price(my_total_price); // 내 체결 총 가격
-
-                foundStock.setMy_per_conclusion_coin((my_total_price / myAmount) / 100); // 보유 평 코인
-
-                foundStock.setMy_per_conclusion_price(my_total_price / myAmount); // 평 단가
-
-                foundStock.setReal_per_coin(Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode()))/100); // 실제 평 코인
-
-                foundStock.setReal_per_price(Integer.parseInt(getCurrentPrice(stockBuyRequestDto.getStockCode()))); // 실제 평 단가
-
-                User user = userRepository.getByUid(uid);
-                List<Favorite> favoriteList = favoriteRepository.findAllByUserId(user.getId());
+                List<Favorite> favoriteList = favoriteRepository.findAllByUserId(foundUser.getId());
                 boolean isFavoriteSet = false;
                 if (!favoriteList.isEmpty()) { // 찜 여부
                     for (Favorite favorite : favoriteList) {
@@ -837,10 +864,13 @@ public class StockServiceImpl implements StockService {
                         }
                     }
                 }
+
                 if (!isFavoriteSet) {
                     foundStock.setFavorite_status(false);
                 }
-                stockRepository.save(foundStock);
+
+                stockRepository.save(updatedFoundStock);
+                log.info("[StockServiceImpl: buyStock] (6/7) 주식 정보 저장이 완료 됨");
             }
 
             StockTransaction stockTransaction = StockTransaction.builder()
@@ -851,10 +881,11 @@ public class StockServiceImpl implements StockService {
                     .transactionDate(LocalDateTime.now())
                     .unitPrice((int) (Double.parseDouble(stockBuyRequestDto.getConclusion_price()) * Integer.parseInt(stockBuyRequestDto.getStockAmount())))
                     .stockPrice((int) (Double.parseDouble(stockBuyRequestDto.getConclusion_price()) * Integer.parseInt(stockBuyRequestDto.getStockAmount()) /100))
-                    .user(userRepository.findByUid(uid))
+                    .user(foundUser)
                     .build();
 
             stockTransactionRepository.save(stockTransaction);
+            log.info("[StockServiceImpl: buyStock] (7/7) 주식 거래 정보 저장이 완료 됨");
 
             baseResponseDto.setSuccess(true);
             baseResponseDto.setMsg("주식 매수가 완료되었습니다.");
@@ -952,7 +983,7 @@ public class StockServiceImpl implements StockService {
                             .transactionDate(LocalDateTime.now())
                             .unitPrice((int)(Double.parseDouble(stockSellRequestDto.getSell_price())*Integer.parseInt(stockSellRequestDto.getStockAmount())))
                             .stockPrice((int) (Double.parseDouble(stockSellRequestDto.getSell_price()) * Integer.parseInt(stockSellRequestDto.getStockAmount())/100))
-                            .user(userRepository.findByUid(uid))
+                            .user(userRepository.findByUid(uid).get())
                             .build();
 
                     stockTransactionRepository.save(stockTransaction);
@@ -1070,8 +1101,8 @@ public class StockServiceImpl implements StockService {
 
     @Override
     public List<OwnedStockResponseDto> getUserStock(String uid) {
-        User user = userRepository.findByUid(uid);
-        List<Stock> stockList = stockRepository.findAllByUser(user);
+        Optional<User> user = userRepository.findByUid(uid);
+        List<Stock> stockList = stockRepository.findAllByUser(user.get());
         if(stockList.isEmpty()){
             return null;
         }
@@ -1103,7 +1134,7 @@ public class StockServiceImpl implements StockService {
             ownedStockResponseDto.setReal_per_coin(nf.format(current_price / 100));
             ownedStockResponseDto.setReal_per_price(nf.format(current_price));
 
-            List<Favorite> favoriteList = favoriteRepository.findAllByUserId(user.getId());
+            List<Favorite> favoriteList = favoriteRepository.findAllByUserId(user.get().getId());
             boolean isFavoriteSet = false;
             if (!favoriteList.isEmpty()) {
                 for (Favorite favorite : favoriteList) {

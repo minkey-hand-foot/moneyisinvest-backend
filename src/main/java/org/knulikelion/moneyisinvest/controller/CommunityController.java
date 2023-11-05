@@ -2,6 +2,7 @@ package org.knulikelion.moneyisinvest.controller;
 
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
+import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.request.CommentRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.CommentUpdateRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.ReplyCommentRequestDto;
@@ -21,10 +22,12 @@ import java.util.List;
 @RequestMapping("/api/v1/community")
 public class CommunityController {
     private final CommunityService communityService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    public CommunityController(CommunityService communityService) {
+    public CommunityController(CommunityService communityService, JwtTokenProvider jwtTokenProvider) {
         this.communityService = communityService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @ApiImplicitParams({
@@ -40,9 +43,21 @@ public class CommunityController {
         return communityService.getAllCommentByStockId(stockId);
     }
 
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
+    })
+    @PostMapping("/like")
+    public BaseResponseDto likeComment(@RequestParam Long commentId, HttpServletRequest request) {
+        return communityService.likeComment(commentId, request.getHeader("X-AUTH-TOKEN"));
+    }
+
     @GetMapping("/detail")
-    public List<CommentDetailResponseDto> getAllCommentByStockIdContainsAllReply(String stockId) {
-        return communityService.getAllCommentByStockIdContainsAllReply(stockId);
+    public List<CommentDetailResponseDto> getAllCommentByStockIdContainsAllReply(String stockId, HttpServletRequest request) {
+        if(request.getHeader("X-AUTH-TOKEN") == null) {
+            return communityService.getAllCommentByStockIdContainsAllReply(stockId, null);
+        } else {
+            return communityService.getAllCommentByStockIdContainsAllReply(stockId, jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")));
+        }
     }
 
     @ApiImplicitParams({

@@ -1,8 +1,6 @@
 package org.knulikelion.moneyisinvest.data.entity;
 
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -13,14 +11,14 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @ToString(callSuper = true)
 @Builder
-@Table(name = "community_reply")
-public class CommunityReply {
+@Table
+public class CommunityLike {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "comment_id")
+    @JoinColumn(name = "community_id")
     private Community community;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -28,12 +26,5 @@ public class CommunityReply {
     private User user;
 
     @Column(nullable = false)
-    private String comment;
-
-    @CreatedDate
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
+    private LocalDateTime likedAt;
 }

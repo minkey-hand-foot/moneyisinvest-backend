@@ -8,6 +8,7 @@ import org.knulikelion.moneyisinvest.data.dto.request.SupportRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SupportResponseDto;
 import org.knulikelion.moneyisinvest.service.SupportService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -25,25 +26,27 @@ public class SupportController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
-    @PostMapping("/post")
+    @PostMapping("/")
     public SupportResponseDto addSupport(@RequestBody SupportRequestDto supportRequestDto, HttpServletRequest request) {
-        return supportService.addSupport(supportRequestDto,jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")));
+        return supportService.addSupport(supportRequestDto,
+                jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")));
     }
 
     // 문의사항 상세보기
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
-    @GetMapping("/get/user-support")
-    public SupportResponseDto getOneSupportById(HttpServletRequest request, Long support_id) {
-        return supportService.getUserSupport(jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")),support_id);
+    @GetMapping("/")
+    public SupportResponseDto getOneSupportById(HttpServletRequest request, @RequestParam Long supportId) {
+        return supportService.getUserSupport(
+                jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")), supportId);
     }
 
     // 문의사항 전체 보기
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
-    @GetMapping("/getAll")
+    @GetMapping("/all")
     public List<SupportResponseDto> getAllSupportById(HttpServletRequest request) {
         return supportService.getAll(jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")));
     }
@@ -52,9 +55,10 @@ public class SupportController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "X-AUTH-TOKEN", value = "로그인 성공 후 발급 받은 access_token", required = true, dataType = "String", paramType = "header")
     })
-    @DeleteMapping("/remove")
-    public BaseResponseDto removeSupport(HttpServletRequest request, @RequestParam("supportId") Long supportId) {
-        return supportService.removeSupport(jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")),supportId);
+    @DeleteMapping("/")
+    public BaseResponseDto removeSupport(HttpServletRequest request, @RequestParam Long supportId) {
+        return supportService.removeSupport(
+                jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")), supportId);
     }
 
 }

@@ -1,11 +1,13 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
+
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.knulikelion.moneyisinvest.common.CommonResponse;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
@@ -15,8 +17,10 @@ import org.knulikelion.moneyisinvest.data.dto.response.SignInResultDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignUpResultDto;
 import org.knulikelion.moneyisinvest.data.entity.GoogleUser;
 import org.knulikelion.moneyisinvest.data.entity.KakaoUser;
+import org.knulikelion.moneyisinvest.data.entity.StockCoinBenefit;
 import org.knulikelion.moneyisinvest.data.entity.User;
 import org.knulikelion.moneyisinvest.data.enums.RegisterType;
+import org.knulikelion.moneyisinvest.data.repository.StockCoinBenefitRepository;
 import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.ProfileService;
 import org.knulikelion.moneyisinvest.service.SignService;
@@ -34,38 +38,48 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.Collections;
 
 @Service
+@Slf4j
 public class SignServiceImpl implements SignService {
+    @Resource(name = "tokenTemplate")
+    private RedisTemplate<String, String> redisTemplate;
+
     private final Logger LOGGER = LoggerFactory.getLogger(SignServiceImpl.class);
 
     public UserRepository userRepository;
     public ProfileService profileService;
-
     public JwtTokenProvider jwtTokenProvider;
     public StockCoinService stockCoinService;
     public PasswordEncoder passwordEncoder;
     public StockCoinWalletService stockCoinWalletService;
+    public StockCoinBenefitRepository stockCoinBenefitRepository;
 
     @Autowired
     public SignServiceImpl(UserRepository userRepository, JwtTokenProvider jwtTokenProvider,
                            PasswordEncoder passwordEncoder, ProfileService profileService,
-                           StockCoinWalletService stockCoinWalletService, StockCoinService stockCoinService) {
+                           StockCoinWalletService stockCoinWalletService, StockCoinService stockCoinService,
+                           StockCoinBenefitRepository stockCoinBenefitRepository) {
         this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
         this.profileService = profileService;
         this.stockCoinWalletService = stockCoinWalletService;
         this.stockCoinService = stockCoinService;
+        this.stockCoinBenefitRepository = stockCoinBenefitRepository;
     }
 
     @Value("${KAKAO.CLIENT.ID}")
@@ -90,6 +104,39 @@ public class SignServiceImpl implements SignService {
 
     @Override
     public SignUpResultDto signUp(SignUpRequestDto signUpRequestDto) {
+        LOGGER.info("[getSignUpResult] 회원가입 유효성 검사 진행");
+        SignUpResultDto signUpResultDto = new SignInResultDto();
+
+//        휴대폰 번호, 비밀번호 정규식 정의
+        String PHONE_REG = "^01(?:0|1|[6-9])[.-]?(\\d{3}|\\d{4})[.-]?(\\d{4})$";
+        String PASS_REG = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–[{}]:;',?/*~$^+=<>]).{8,20}$";
+
+        if(!validateUid(signUpRequestDto.getUid())) {
+            signUpResultDto.setSuccess(false);
+            signUpResultDto.setMsg("아이디는 이메일 주소 형식입니다.");
+            signUpResultDto.setCode(-1);
+
+            return signUpResultDto;
+        } else if(userRepository.findByUid(signUpRequestDto.getUid()).isPresent()) {
+            signUpResultDto.setSuccess(false);
+            signUpResultDto.setMsg("이미 가입된 회원");
+            signUpResultDto.setCode(-1);
+
+            return signUpResultDto;
+        } else if(!signUpRequestDto.getPhoneNum().matches(PHONE_REG)) {
+            signUpResultDto.setSuccess(false);
+            signUpResultDto.setMsg("휴대폰 번호는 '010-XXXX-XXXX' 형식으로 입력되어야 합니다.");
+            signUpResultDto.setCode(-1);
+
+            return signUpResultDto;
+        } else if(!signUpRequestDto.getPassword().matches(PASS_REG)) {
+            signUpResultDto.setSuccess(false);
+            signUpResultDto.setMsg("비밀번호 정규식이 일치하지 않습니다.");
+            signUpResultDto.setCode(-1);
+
+            return signUpResultDto;
+        }
+
         LOGGER.info("[getSignUpResult] 회원 가입 정보 전달");
 //      회원가입 시 기본적으로 일반 유저 권한으로 가입 처리
         User user = User.builder()
@@ -105,40 +152,30 @@ public class SignServiceImpl implements SignService {
                     .roles(Collections.singletonList("ROLE_USER"))
                     .build();
 
-            LOGGER.info("사용자의 새 지갑 생성, UID: " + signUpRequestDto.getUid());
-            BaseResponseDto walletResult = stockCoinWalletService.createWallet(signUpRequestDto.getUid());
+        LOGGER.info("사용자의 새 지갑 생성, UID: " + signUpRequestDto.getUid());
+        BaseResponseDto walletResult = stockCoinWalletService.createWallet(signUpRequestDto.getUid());
 
-            if(walletResult.isSuccess()) {
-                stockCoinService.giveSignUpCoin(walletResult.getMsg());
-            }
+        if(walletResult.isSuccess()) {
+            stockCoinService.giveSignUpCoin(walletResult.getMsg());
+        }
+
+        stockCoinBenefitRepository.save(StockCoinBenefit.builder()
+                        .benefit(0)
+                        .user(user)
+                        .benefitAmount(0)
+                        .loss(0)
+                        .loseAmount(0)
+                .build());
             
-        SignUpResultDto signUpResultDto = new SignInResultDto();
 
-        String PHONE_REG = "^01(?:0|1|[6-9])[.-]?(\\d{3}|\\d{4})[.-]?(\\d{4})$";
-
-//      signUpRequestDto에서 입력받는 uid가 이메일 주소인지 확인
-        if(!validateUid(signUpRequestDto.getUid())) {
-            signUpResultDto.setSuccess(false);
-            signUpResultDto.setMsg("아이디는 이메일 주소 형식입니다.");
-            signUpResultDto.setCode(1);
-        } else if(userRepository.findByUid(user.getUid()) != null) {
-            signUpResultDto.setSuccess(false);
-            signUpResultDto.setMsg("이미 가입된 회원");
-            signUpResultDto.setCode(1);
-        } else if(!signUpRequestDto.getPhoneNum().matches(PHONE_REG)) {
-            signUpResultDto.setSuccess(false);
-            signUpResultDto.setMsg("휴대폰 번호는 '010-XXXX-XXXX' 형식으로 입력되어야 합니다.");
-            signUpResultDto.setCode(1);
+        User savedUser = userRepository.save(user);
+        LOGGER.info("[getSignUpResult] userEntity 값이 들어왔는지 확인 후 결과값 주입");
+        if (!savedUser.getName().isEmpty()) {
+            LOGGER.info("[getSignUpResult] 정상 처리 완료");
+            setSuccessResult(signUpResultDto);
         } else {
-            User savedUser = userRepository.save(user);
-            LOGGER.info("[getSignUpResult] userEntity 값이 들어왔는지 확인 후 결과값 주입");
-            if (!savedUser.getName().isEmpty()) {
-                LOGGER.info("[getSignUpResult] 정상 처리 완료");
-                setSuccessResult(signUpResultDto);
-            } else {
-                LOGGER.info("[getSignUpResult] 실패 처리 완료");
-                setFailResult(signUpResultDto);
-            }
+            LOGGER.info("[getSignUpResult] 실패 처리 완료");
+            setFailResult(signUpResultDto);
         }
 
         return signUpResultDto;
@@ -164,13 +201,20 @@ public class SignServiceImpl implements SignService {
         user.setRecentLoggedIn(LocalDateTime.now());
         userRepository.save(user);
 
+        String ACCESS_TOKEN = jwtTokenProvider.createAccessToken(String.valueOf(user.getUid()), user.getRoles());
+        String REFRESH_TOKEN = jwtTokenProvider.createRefreshToken(String.valueOf(user.getUid()));
+
         LOGGER.info("[getSignInResult] SignInResultDto 객체 생성");
         SignInResultDto signInResultDto = SignInResultDto.builder()
-                .token(jwtTokenProvider.createAccessToken(String.valueOf(user.getUid()), user.getRoles()))
-                .refreshToken(jwtTokenProvider.createRefreshToken(String.valueOf(user.getUid())))
+                .token(ACCESS_TOKEN)
+                .refreshToken(REFRESH_TOKEN)
                 .uid(user.getUid())
                 .name(user.getName())
                 .build();
+
+        log.info("[SignIn] 사용자 Refresh Token 값을 Redis에 저장");
+        String key = "RT:" + user.getUid();
+        redisTemplate.opsForValue().set(key, REFRESH_TOKEN, 1209600, TimeUnit.SECONDS);
 
         LOGGER.info("[getSignInResult] SignInResultDto 객체에 값 주입");
         setSuccessResult(signInResultDto);

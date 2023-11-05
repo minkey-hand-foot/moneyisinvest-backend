@@ -10,6 +10,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.knulikelion.moneyisinvest.data.dto.response.*;
+import org.knulikelion.moneyisinvest.service.MessageQueueService;
 import org.knulikelion.moneyisinvest.service.StockService;
 import org.knulikelion.moneyisinvest.service.StockWebSocketService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,9 +44,19 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
     private String app_Secret;
 
     private final StockService stockService;
+    private final MessageQueueService messageQueueService;
+
+    private static final String CREATE_APPROVAL_TOKEN_API_URL = "https://openapi.koreainvestment.com:9443/oauth2/tokenP";
+    private static final String GET_STOCK_INFO_API_URL = "https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-price";
+    private static final String GET_STOCK_RANK_API_URL = "https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/volume-rank";
+    private static final String KOSPI_INFO_URL = "https://finance.naver.com/sise/sise_index_day.naver?code=KOSPI";
+    private static final String KOSDAQ_INFO_URL = "https://finance.naver.com/sise/sise_index_day.naver?code=KOSDAQ";
+    private static final String NAVER_SISE_URL = "https://finance.naver.com/sise/";
+
     @Autowired
-    public StockWebSocketServiceImpl(StockService stockService) {
+    public StockWebSocketServiceImpl(StockService stockService, MessageQueueService messageQueueService) {
         this.stockService = stockService;
+        this.messageQueueService = messageQueueService;
     }
 
     @PostConstruct
@@ -85,10 +96,9 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
     }
 
     public String createApprovalToken(JSONObject body) throws IOException, JSONException { /*승인 키 반환하는 코드 입니다.*/
-        String apiUrl = "https://openapi.koreainvestment.com:9443/oauth2/tokenP";
         JSONObject result;
         HttpURLConnection connection;
-        URL url = new URL(apiUrl);
+        URL url = new URL(CREATE_APPROVAL_TOKEN_API_URL);
 
         connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("POST");
@@ -112,7 +122,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
 
     @Override /*종목 코드로 종목 데이터 가져오는 메서드 입니다.*/
     public StockPriceResponseDto getStock(String stockCode) throws IOException, JSONException {
-        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-price").newBuilder();
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(GET_STOCK_INFO_API_URL).newBuilder();
         urlBuilder.addQueryParameter("FID_COND_MRKT_DIV_CODE", "J");
         urlBuilder.addQueryParameter("FID_INPUT_ISCD", stockCode);
         String url = urlBuilder.build().toString(); /*한국 현재 주식 시세 url*/
@@ -169,7 +179,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
 
     @Override /*종목 거래량 순위를 가져오는 코드 입니다.*/
     public List<StockRankResponseDto> getStockRank() throws IOException, JSONException {
-        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/volume-rank").newBuilder();
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(GET_STOCK_RANK_API_URL).newBuilder();
         urlBuilder.addQueryParameter("FID_COND_MRKT_DIV_CODE", "J");
         urlBuilder.addQueryParameter("FID_COND_SCR_DIV_CODE", "20171");
         urlBuilder.addQueryParameter("FID_INPUT_ISCD", "0002");/*0000(전체) 기타(업종코드)*/
@@ -204,30 +214,25 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
                 JSONArray outputs = jsonObject.getJSONArray("output");
 
                 int limit = Math.min(outputs.length(), 5);
-                for (int i = 0; i < limit; i++) { /*5등 까지만*/
+                boolean isAvaliableValue = true;
+
+                // 5등까지만 정보를 불러옴
+                for (int i = 0; i < limit; i++) {
                     JSONObject obj = outputs.getJSONObject(i);
-                    System.out.println("obj result : "+obj.toString());
 
                     StockRankResponseDto stockRank = new StockRankResponseDto();
-//                    종목 이름이 존재하지 않을 때
+
+                    // 한국 투자증권 API를 불러올 수 없을 때
                     if(obj.isNull("hts_kor_isnm")) {
-                        log.info("주식 랭킹 정보 조회 불가능");
-                        stockRank.setStockName("업데이트 중");
-                        stockRank.setStockCode("-----");
-                        stockRank.setCoinPrice("- ");
-                        stockRank.setStockPrice("- ");
-                        stockRank.setDay_before_status(true);
+                        isAvaliableValue = false;
+                        break;
                     } else {
                         stockRank.setStockName(obj.getString("hts_kor_isnm"));
                         stockRank.setStockUrl(stockService.getCompanyInfoByStockId(obj.getString("mksc_shrn_iscd")).getStockLogoUrl());
                         stockRank.setStockCode(obj.getString("mksc_shrn_iscd"));
                         double prdyCtrtDouble = Double.parseDouble(obj.getString("prdy_ctrt"));
                         long prdyCtrt = Math.round(prdyCtrtDouble);
-                        if(prdyCtrt<0){
-                            stockRank.setDay_before_status(false);
-                        }else {
-                            stockRank.setDay_before_status(true);
-                        }
+                        stockRank.setDay_before_status(prdyCtrt >= 0);
 
                         double stckPrprDouble = Double.parseDouble(obj.getString("stck_prpr"));
                         int coinPrice = (int) (stckPrprDouble / 100);
@@ -241,22 +246,23 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
                     }
                     outputList.add(stockRank);
                 }
-                return outputList;
+
+                if(isAvaliableValue) {
+                    messageQueueService.dequeueStockRank();
+                    messageQueueService.enqueueStockRank(outputList);
+                } else {
+                    log.error("한국투자증권 API에서 주식 랭킹을 불러올 수 없음. 기존 정보가 반환 됨");
+                    outputList = messageQueueService.getStockRankIfInfoNotExist();
+                }
             }
-            return null;
+            return outputList;
         }
     }
-
-
-
-
 
     @Override /*Kospi 데이터를 가져오는 코드 입니다.*/
     public List<KospiResponseDto> getKospi() throws IOException {
         List<KospiResponseDto> outputList = new ArrayList<>();
-//
-        String google_url = "https://finance.naver.com/sise/sise_index_day.naver?code=KOSPI";
-        Document doc = Jsoup.connect(google_url).get();
+        Document doc = Jsoup.connect(KOSPI_INFO_URL).get();
 
         // 6
         String kospi_date_selector = "body > div > table.type_1 > tbody > tr:nth-child(12) > td.date";
@@ -375,8 +381,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
         outputList.add(kospiResponseDto6);
 
         // 현재 코스피 지수
-        String naver_url = "https://finance.naver.com/sise/";
-        doc = Jsoup.connect(naver_url).get();
+        doc = Jsoup.connect(NAVER_SISE_URL).get();
 
         kospi_price_selector = "#KOSPI_now";
         kospi_price_element = doc.select(kospi_price_selector);
@@ -404,8 +409,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
     @Override /*Kosdaq 데이터를 가져오는 메서드입니다.*/
     public List<KosdaqResponseDto> getKosdaq() throws IOException {
         List<KosdaqResponseDto> outputList = new ArrayList<>();
-        String google_url = "https://finance.naver.com/sise/sise_index_day.naver?code=KOSDAQ";
-        Document doc = Jsoup.connect(google_url).get();
+        Document doc = Jsoup.connect(KOSDAQ_INFO_URL).get();
 
         // 6
         String kosdaq_selector = "body > div > table.type_1 > tbody > tr:nth-child(12) > td.date";
@@ -522,8 +526,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
         outputList.add(kosdaqResponseDto6);
 
         // 현재 코스닥 지수
-        String naver_url = "https://finance.naver.com/sise/";
-        doc = Jsoup.connect(naver_url).get();
+        doc = Jsoup.connect(NAVER_SISE_URL).get();
 
         kosdaq_price_selector = "#KOSDAQ_now";
         kosdaq_price_element = doc.select(kosdaq_price_selector);
