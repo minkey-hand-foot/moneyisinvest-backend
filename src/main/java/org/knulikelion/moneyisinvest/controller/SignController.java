@@ -53,11 +53,18 @@ public class SignController {
         return ResponseEntity.ok(new TokenResponseDto(accessToken));
     }
 
+    /*Kakao Social Login*/
     @PostMapping(value = "/social/kakao")
     public ResponseEntity<SignInResultDto> kakaoLogin(@RequestParam String code) throws IOException, InterruptedException {
         return ResponseEntity.ok(signService.kakaoLogin(code));
     }
 
+    
+    /*Google Socail Login*/
+    @PostMapping(value = "/social/google")
+    public ResponseEntity<?> googleLogin(@RequestParam String code) throws IOException, InterruptedException {
+        return ResponseEntity.ok(signService.googleLogin(code));
+    }
     @PostMapping(value = "/sign-up")
     public SignUpResultDto signUp(@RequestBody SignUpRequestDto signUpRequestDto) {
         LOGGER.info("[signUp] 회원가입을 수행합니다. id : {}, password : ****, name : {}", signUpRequestDto.getUid(),

@@ -1,5 +1,11 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.UserRecord;
 import org.json.JSONObject;
 import org.knulikelion.moneyisinvest.common.CommonResponse;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
@@ -7,6 +13,7 @@ import org.knulikelion.moneyisinvest.data.dto.request.*;
 import org.knulikelion.moneyisinvest.data.dto.response.BaseResponseDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignInResultDto;
 import org.knulikelion.moneyisinvest.data.dto.response.SignUpResultDto;
+import org.knulikelion.moneyisinvest.data.entity.GoogleUser;
 import org.knulikelion.moneyisinvest.data.entity.KakaoUser;
 import org.knulikelion.moneyisinvest.data.entity.User;
 import org.knulikelion.moneyisinvest.data.enums.RegisterType;
@@ -18,7 +25,9 @@ import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import org.json.JSONArray;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -29,6 +38,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -63,6 +73,9 @@ public class SignServiceImpl implements SignService {
 
     @Value("${KAKAO.REDIRECT.URI}")
     private String kakaoRedirectUri;
+
+    @Value("${GOOGLE.APP.KEY}")
+    private String googleAppKey;
 
     private static final String EMAIL_REGEX = "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$";
 
@@ -389,6 +402,111 @@ public class SignServiceImpl implements SignService {
 
         return baseResponseDto;
     }
+
+    // 인가코드로 google User 정보 가져오는 메서드
+    private GoogleUser getGoogleInfo(String code) throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newHttpClient();
+        String binaryJson = "{\"idToken\":\""+code+"\"}";
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://identitytoolkit.googleapis.com/v1/accounts:lookup?key="+googleAppKey))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(binaryJson))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        JSONObject jsonObject = new JSONObject(response.body());
+
+        // 유저,
+        JSONArray jsonArray = jsonObject.getJSONArray("users");
+        JSONObject userObject = jsonArray.getJSONObject(0);
+
+        GoogleUser googleUser = new GoogleUser();
+
+        if(userObject.has("displayName")&&!userObject.getString("displayName").isEmpty()){
+            googleUser.setNickname(userObject.getString("displayName"));
+        }else{
+            googleUser.setNickname(null);
+        }
+        googleUser.setEmail(userObject.getString("email"));
+
+        if(userObject.has("photoUrl")&&!userObject.getString("photoUrl").isEmpty()){
+            googleUser.setNickname(userObject.getString("displayName"));
+        }else{
+            googleUser.setNickname(null);
+        }
+        return googleUser;
+    }
+    @Override
+    public ResponseEntity<?> googleLogin(String code) throws RuntimeException, IOException, InterruptedException {
+        GoogleUser googleUser = getGoogleInfo(code);
+        // Google Login 이미 가입된 회원이라면
+        if(userRepository.getByUid(googleUser.getEmail()) != null) {
+            User user = userRepository.getByUid(googleUser.getEmail());
+
+            user.setRecentLoggedIn(LocalDateTime.now());
+            userRepository.save(user);
+
+            SignInResultDto signInResultDto = SignInResultDto.builder()
+                    .token(jwtTokenProvider.createAccessToken(String.valueOf(user.getUid()), user.getRoles()))
+                    .refreshToken(jwtTokenProvider.createRefreshToken(String.valueOf(user.getUid())))
+                    .uid(user.getUid())
+                    .name(user.getName())
+                    .build();
+
+            setSuccessResult(signInResultDto);
+
+            return ResponseEntity.ok(signInResultDto);
+        } else {
+            // 구글 프로필 이미지를 가져올 수 없을 때, 서비스 기본 프로필 사용
+            if(googleUser.getProfileImageUrl() == null) {
+                googleUser.setProfileImageUrl(DEFAULT_PROFILE);
+            }
+
+            if(googleUser.getEmail() == null || googleUser.getNickname() == null) {
+                throw new RuntimeException("구글 정보에서 이메일 또는 닉네임을 가져올 수 없습니다");
+            }
+
+            User user = User.builder()
+                    .uid(googleUser.getEmail())
+                    .name(googleUser.getNickname())
+                    .plan("basic")
+                    .createdAt(LocalDateTime.now())
+                    .useAble(true)
+                    .registerType(RegisterType.GOOGLE)
+                    .profileUrl(googleUser.getProfileImageUrl())
+                    .password(passwordEncoder.encode(getRandomPassword()))
+                    .roles(Collections.singletonList("ROLE_USER"))
+                    .build();
+
+            BaseResponseDto walletResult = stockCoinWalletService.createWallet(user.getUid());
+
+            if(walletResult.isSuccess()) {
+                stockCoinService.giveSignUpCoin(walletResult.getMsg());
+            }
+
+            if(!validateUid(user.getUid())) {
+                throw new RuntimeException("이메일 주소 형식이 아닙니다.");
+            } else if(userRepository.getByUid(googleUser.getEmail()) != null) {
+                throw new RuntimeException("이미 존재하는 회원입니다.");
+            } else {
+                userRepository.save(user);
+            }
+
+//            회원가입 후 로그인 정보 반환
+            SignInResultDto signInResultDto = SignInResultDto.builder()
+                    .token(jwtTokenProvider.createAccessToken(String.valueOf(user.getUid()), user.getRoles()))
+                    .refreshToken(jwtTokenProvider.createRefreshToken(String.valueOf(user.getUid())))
+                    .uid(user.getUid())
+                    .name(user.getName())
+                    .build();
+
+            setSuccessResult(signInResultDto);
+
+            return ResponseEntity.ok(signInResultDto);
+        }
+    }
+
+
 
     // 결과 모델에 api 요청 성공 데이터를 세팅해주는 메소드
     private void setSuccessResult(SignUpResultDto result) {
