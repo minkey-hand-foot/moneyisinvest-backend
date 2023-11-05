@@ -42,7 +42,7 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSH_KEY }}
         script: |
-          docker stop backend
-          docker rm backend
-          docker pull ${{ secrets.DOCKER_REPO }}/moneyisinvest-backend:latest
-          docker run -d -p 8080:8080 --net moneyisinvest --name backend ${{ secrets.DOCKER_REPO }}/moneyisinvest-backend:latest
+          sudo docker stop backend
+          sudo docker rm backend
+          sudo docker pull ${{ secrets.DOCKER_REPO }}/moneyisinvest-backend:latest
+          sudo docker run -d -p 8080:8080 --net moneyisinvest --name backend ${{ secrets.DOCKER_REPO }}/moneyisinvest-backend:latest
