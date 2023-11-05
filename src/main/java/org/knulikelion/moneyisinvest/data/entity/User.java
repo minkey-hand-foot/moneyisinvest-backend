@@ -55,7 +55,7 @@ public class User implements UserDetails {
     @Column
     private String profileUrl;
 
-    @Column(nullable = false)
+    @Column
     private String phoneNum;
 
     @Column
