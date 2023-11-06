@@ -93,7 +93,7 @@ public class StockController {
         return stockService.sellStock(jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")),stockSellRequestDto);
     }
     @PostMapping("/get/stockByDay")
-    public StocksByDayResponseDto getStockByDay(@RequestBody StocksByDayRequestDto stocksByDayRequestDto) throws IOException {
+    public List<StocksByDayResponseDto> getStockByDay(@RequestBody StocksByDayRequestDto stocksByDayRequestDto) throws IOException {
         return stockService.getStockByDay(stocksByDayRequestDto);
     }
 

@@ -31,7 +31,7 @@ public interface StockService {
     BaseResponseDto buyStock(String uid,StockBuyRequestDto stockBuyRequestDto) throws JSONException, IOException;
     String getCurrentPrice(String stockCode);
     BaseResponseDto sellStock(String uid,StockSellRequestDto stockSellRequestDto);
-    StocksByDayResponseDto getStockByDay(StocksByDayRequestDto stocksByDayRequestDto) throws IOException;
+    List<StocksByDayResponseDto> getStockByDay(StocksByDayRequestDto stocksByDayRequestDto) throws IOException;
     String getUsersStockQuantity(String uid, String stockId);
     BaseResponseDto getNewUsersStockQuantity(String uid, String stockId);
     List<OwnedStockResponseDto> getUserStock(String uid);
