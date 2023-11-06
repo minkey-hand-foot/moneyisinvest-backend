@@ -1006,7 +1006,7 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public JSONArray getStockByDay(StocksByDayRequestDto stocksByDayRequestDto) throws IOException {
+    public StocksByDayResponseDto getStockByDay(StocksByDayRequestDto stocksByDayRequestDto) throws IOException {
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
         LocalDateTime dateTime = LocalDateTime.now();
 
@@ -1042,7 +1042,16 @@ public class StockServiceImpl implements StockService {
         Response response = client.newCall(request).execute();
         JSONObject jsonObject = new JSONObject(response.body().string());
         JSONArray outputs = jsonObject.getJSONArray("output2");
-        System.out.println(outputs);
+
+        JSONObject output = outputs.getJSONObject(0);
+
+        StocksByDayResponseDto stocksByDayResponseDto = StocksByDayResponseDto.builder()
+                .current_date(output.getString("stck_bsop_date"))
+                .end_Price(output.getString("stck_clpr"))
+                .start_Price(output.getString("stck_oprc"))
+                .high_Price(output.getString("stck_hgpr"))
+                .low_Price(output.getString("stck_lwpr"))
+                .build();
 
 //        try(Response response = client.newCall(request).execute()){
 //            if(response.isSuccessful() && response.body() != null){
@@ -1064,7 +1073,7 @@ public class StockServiceImpl implements StockService {
 //                return outputList;
 //            }
 //        }
-        return outputs;
+        return stocksByDayResponseDto;
     }
 
     @Override
