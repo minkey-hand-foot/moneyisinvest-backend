@@ -461,7 +461,7 @@ public class StockServiceImpl implements StockService {
             System.out.println("Error fetching data: " + e.getMessage());
         }
 
-        return null;
+        return stockCompanyNewsList;
     }
 
     @Override
