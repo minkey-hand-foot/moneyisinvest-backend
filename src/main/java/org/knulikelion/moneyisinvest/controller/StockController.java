@@ -2,6 +2,9 @@ package org.knulikelion.moneyisinvest.controller;
 
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
+import okhttp3.Response;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.knulikelion.moneyisinvest.config.security.JwtTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.request.StockBuyRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.StockSellRequestDto;
@@ -90,7 +93,7 @@ public class StockController {
         return stockService.sellStock(jwtTokenProvider.getUsername(request.getHeader("X-AUTH-TOKEN")),stockSellRequestDto);
     }
     @PostMapping("/get/stockByDay")
-    public List<StocksByDayResponseDto> getStockByDay(@RequestBody StocksByDayRequestDto stocksByDayRequestDto) throws IOException {
+    public JSONArray getStockByDay(@RequestBody StocksByDayRequestDto stocksByDayRequestDto) throws IOException {
         return stockService.getStockByDay(stocksByDayRequestDto);
     }
 
