@@ -743,7 +743,7 @@ public class StockServiceImpl implements StockService {
         TransactionToSystemRequestDto transactionToSystemRequestDto = new TransactionToSystemRequestDto();
 
         transactionToSystemRequestDto.setTargetUid(uid);
-        transactionToSystemRequestDto.setAmount(Double.parseDouble(stockBuyRequestDto.getConclusion_price()) / 100);
+        transactionToSystemRequestDto.setAmount(Double.parseDouble(stockBuyRequestDto.getConclusion_price()) * Double.parseDouble(stockBuyRequestDto.getStockAmount()) / 100);
 
 //        사용자 잔액 확인
         double userBalance = stockCoinWalletService.getWalletBalance(
