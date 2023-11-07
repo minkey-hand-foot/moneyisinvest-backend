@@ -10,6 +10,7 @@ import org.knulikelion.moneyisinvest.data.repository.UserRepository;
 import org.knulikelion.moneyisinvest.service.FavoriteService;
 import org.knulikelion.moneyisinvest.service.StockService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -28,25 +29,24 @@ public class FavoriteServiceImpl implements FavoriteService {
     private final StockService stockService;
 
     @Override
+    @Transactional
     public BaseResponseDto addFavorite(String uid, String stockId) {
-
-        BaseResponseDto baseResponseDto = new BaseResponseDto();
-
         Optional<User> getUser = userRepository.findByUid(uid);
 
-        if(!getUser.isPresent()) {
-            baseResponseDto.setSuccess(false);
-            baseResponseDto.setMsg("사용자를 찾을 수 없습니다.");
-
-            return baseResponseDto;
+        if(getUser.isEmpty()) {
+            return BaseResponseDto.builder()
+                    .success(false)
+                    .msg("사용자를 찾을 수 없습니다.")
+                    .build();
         }
 
         Favorite existFavorite = favoriteRepository.findByUserAndStockId(getUser.get(),stockId);
 
         if(existFavorite != null) {
-            baseResponseDto.setSuccess(false);
-            baseResponseDto.setMsg("이미 관심 등록한 주식입니다.");
-            return baseResponseDto;
+            return BaseResponseDto.builder()
+                    .success(false)
+                    .msg("이미 관심 등록한 주식입니다.")
+                    .build();
         }
 
         Favorite favorite = new Favorite();
@@ -54,22 +54,22 @@ public class FavoriteServiceImpl implements FavoriteService {
         favorite.setStockId(stockId);
 
         favoriteRepository.save(favorite);
-        baseResponseDto.setSuccess(true);
-        baseResponseDto.setMsg("관심 종목 추가");
 
-        return baseResponseDto;
+        return BaseResponseDto.builder()
+                .success(true)
+                .msg("관심 종목에 추가되었습니다.")
+                .build();
     }
     @Override
+    @Transactional
     public BaseResponseDto removeFavorite(String uid, String stockId) {
-        BaseResponseDto baseResponseDto = new BaseResponseDto();
-
         Optional<User> user = userRepository.findByUid(uid);
 
-        if(!user.isPresent()) {
-            baseResponseDto.setSuccess(false);
-            baseResponseDto.setMsg("사용자를 찾을 수 없습니다.");
-
-            return baseResponseDto;
+        if(user.isEmpty()) {
+            return BaseResponseDto.builder()
+                    .success(false)
+                    .msg("사용자를 찾을 수 없습니다.")
+                    .build();
         }
 
         Favorite existFavorite = favoriteRepository.findByUserAndStockId(user.get(), stockId);
@@ -79,20 +79,23 @@ public class FavoriteServiceImpl implements FavoriteService {
             userRepository.save(user.get());
 
             favoriteRepository.delete(existFavorite);
-            baseResponseDto.setSuccess(true);
-            baseResponseDto.setMsg("관심 종목이 삭제 완료되었습니다.");
-        } else {
-            baseResponseDto.setSuccess(false);
-            baseResponseDto.setMsg("해당 관심 종목을 찾을 수 없습니다.");
-        }
 
-        return baseResponseDto;
+            return BaseResponseDto.builder()
+                    .success(true)
+                    .msg("관심 종목에서 제거되었습니다.")
+                    .build();
+        } else {
+            return BaseResponseDto.builder()
+                    .success(false)
+                    .msg("해당 관심 종목을 찾을 수 없습니다.")
+                    .build();
+        }
     }
     @Override
     public List<StockCompanyFavResponseDto> findUserFavoriteStockIds(String uid) {
         Optional<User> user = userRepository.findByUid(uid);
 
-        if(!user.isPresent()) {
+        if(user.isEmpty()) {
             throw new RuntimeException();
         }
 
@@ -120,16 +123,12 @@ public class FavoriteServiceImpl implements FavoriteService {
     public boolean getFavoriteStatus(String uid, String stockCode) {
         Optional<User> user = userRepository.findByUid(uid);
 
-        if(!user.isPresent()) {
+        if(user.isEmpty()) {
             throw new RuntimeException();
         }
 
         Favorite favorite = favoriteRepository.findByUserAndStockId(user.get(), stockCode);
 
-        if(favorite == null){
-            return false;
-        }else {
-            return true;
-        }
+        return favorite != null;
     }
 }
