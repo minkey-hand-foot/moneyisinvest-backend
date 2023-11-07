@@ -81,6 +81,7 @@ public class StockCoinWalletServiceImpl implements StockCoinWalletService {
     }
 
     @Override
+    @Transactional
     public List<TransactionHistoryResponseDto> getTransactionHistory(String username) {
         List<TransactionHistoryResponseDto> transactionHistoryResponseDtoList = new ArrayList<>();
 
