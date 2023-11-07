@@ -739,10 +739,6 @@ public class StockServiceImpl implements StockService {
 
         log.info("[StockServiceImpl: buyStock] (2/7) 주식 매수 종목 코드 : {}", stockBuyRequestDto.getStockCode());
         BaseResponseDto baseResponseDto = new BaseResponseDto();
-        TransactionToSystemRequestDto transactionToSystemRequestDto = new TransactionToSystemRequestDto();
-
-        transactionToSystemRequestDto.setTargetUid(uid);
-        transactionToSystemRequestDto.setAmount(Double.parseDouble(stockBuyRequestDto.getConclusion_price()) * Double.parseDouble(stockBuyRequestDto.getStockAmount()) / 100);
 
 //        사용자 잔액 확인
         double userBalance = stockCoinWalletService.getWalletBalance(
@@ -753,7 +749,11 @@ public class StockServiceImpl implements StockService {
             throw new RuntimeException("사용자 지갑 잔액 부족");
         }
 
-        BaseResponseDto transactionResult = stockCoinService.buyStock(transactionToSystemRequestDto);
+        BaseResponseDto transactionResult = stockCoinService.buyStock(TransactionToSystemRequestDto.builder()
+                        .targetUid(uid)
+                        .amount(Double.parseDouble(stockBuyRequestDto.getConclusion_price()) *
+                                Double.parseDouble(stockBuyRequestDto.getStockAmount()) / 100)
+                .build());
 
         if (transactionResult.isSuccess()) {
             log.info("[StockServiceImpl: buyStock] (3/7) Transaction 요청 완료");
