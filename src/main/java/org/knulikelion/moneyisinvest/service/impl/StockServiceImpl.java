@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -1159,7 +1160,10 @@ public class StockServiceImpl implements StockService {
         NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-        List<StockTransaction> stockTransactions = stockTransactionRepository.findByUserId(userRepository.getByUid(uid).getId());
+//        List<StockTransaction> stockTransactions = stockTransactionRepository.findByUserId(userRepository.getByUid(uid).getId());
+        List<StockTransaction> stockTransactions = stockTransactionRepository.findByUserIdOrderByTransactionDateDesc(
+                userRepository.getByUid(uid).getId());
+
 
         for(StockTransaction temp : stockTransactions) {
             StockTransactionHistoryResponseDto stockTransactionHistoryResponseDto = new StockTransactionHistoryResponseDto();
