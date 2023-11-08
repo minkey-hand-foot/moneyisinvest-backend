@@ -38,6 +38,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -294,19 +295,20 @@ public class SignServiceImpl implements SignService {
     public SignInResultDto kakaoLogin(String code) throws RuntimeException, IOException, InterruptedException {
         String kakaoUserToken = createKakaoToken(code);
         KakaoUser kakaoUser = getKakaoInfo(kakaoUserToken);
+        Optional<User> user = userRepository.findByUid(kakaoUser.getEmail());
 
 //        카카오톡 로그인 시, 이미 가입된 회원이라면
-        if(userRepository.getByUid(kakaoUser.getEmail()) != null) {
-            User user = userRepository.getByUid(kakaoUser.getEmail());
+        if(user.isPresent()) {
+            User foundUser = user.get();
 
-            user.setRecentLoggedIn(LocalDateTime.now());
-            userRepository.save(user);
+            foundUser.setRecentLoggedIn(LocalDateTime.now());
+            userRepository.save(foundUser);
 
             SignInResultDto signInResultDto = SignInResultDto.builder()
-                    .token(jwtTokenProvider.createAccessToken(String.valueOf(user.getUid()), user.getRoles()))
-                    .refreshToken(jwtTokenProvider.createRefreshToken(String.valueOf(user.getUid())))
-                    .uid(user.getUid())
-                    .name(user.getName())
+                    .token(jwtTokenProvider.createAccessToken(String.valueOf(foundUser.getUid()), foundUser.getRoles()))
+                    .refreshToken(jwtTokenProvider.createRefreshToken(String.valueOf(foundUser.getUid())))
+                    .uid(foundUser.getUid())
+                    .name(foundUser.getName())
                     .build();
 
             setSuccessResult(signInResultDto);
@@ -322,7 +324,7 @@ public class SignServiceImpl implements SignService {
                 throw new RuntimeException("카카오 정보에서 이메일 또는 닉네임을 가져올 수 없습니다");
             }
 
-            User user = User.builder()
+            User newUser = User.builder()
                     .uid(kakaoUser.getEmail())
                     .name(kakaoUser.getNickname())
                     .plan("basic")
@@ -336,26 +338,26 @@ public class SignServiceImpl implements SignService {
                     .roles(Collections.singletonList("ROLE_USER"))
                     .build();
 
-            BaseResponseDto walletResult = stockCoinWalletService.createWallet(user.getUid());
+            BaseResponseDto walletResult = stockCoinWalletService.createWallet(newUser.getUid());
 
             if(walletResult.isSuccess()) {
                 stockCoinService.giveSignUpCoin(walletResult.getMsg());
             }
 
-            if(!validateUid(user.getUid())) {
+            if(!validateUid(newUser.getUid())) {
                 throw new RuntimeException("이메일 주소 형식이 아닙니다.");
             } else if(userRepository.getByUid(kakaoUser.getEmail()) != null) {
                 throw new RuntimeException("이미 존재하는 회원입니다.");
             } else {
-                userRepository.save(user);
+                userRepository.save(newUser);
             }
 
 //            회원가입 후 로그인 정보 반환
             SignInResultDto signInResultDto = SignInResultDto.builder()
-                    .token(jwtTokenProvider.createAccessToken(String.valueOf(user.getUid()), user.getRoles()))
-                    .refreshToken(jwtTokenProvider.createRefreshToken(String.valueOf(user.getUid())))
-                    .uid(user.getUid())
-                    .name(user.getName())
+                    .token(jwtTokenProvider.createAccessToken(String.valueOf(newUser.getUid()), newUser.getRoles()))
+                    .refreshToken(jwtTokenProvider.createRefreshToken(String.valueOf(newUser.getUid())))
+                    .uid(newUser.getUid())
+                    .name(newUser.getName())
                     .build();
 
             setSuccessResult(signInResultDto);
