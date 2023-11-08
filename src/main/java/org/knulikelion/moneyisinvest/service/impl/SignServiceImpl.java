@@ -146,7 +146,9 @@ public class SignServiceImpl implements SignService {
                     .createdAt(LocalDateTime.now())
                     .useAble(true)
                     .registerType(RegisterType.WEB)
-                    .phoneNum(signUpRequestDto.getPhoneNum())
+                    .phoneNum(
+                            (signUpRequestDto.getPhoneNum() == null) ? "010-0000-0000" : signUpRequestDto.getPhoneNum()
+                    )
                     .profileUrl(DEFAULT_PROFILE)
                     .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
                     .roles(Collections.singletonList("ROLE_USER"))
@@ -326,6 +328,8 @@ public class SignServiceImpl implements SignService {
                     .plan("basic")
                     .createdAt(LocalDateTime.now())
                     .useAble(true)
+//                    휴대폰 번호 임시 Pass
+                    .phoneNum("010-0000-0000")
                     .registerType(RegisterType.KAKAO)
                     .profileUrl(kakaoUser.getProfileImageUrl())
                     .password(passwordEncoder.encode(getRandomPassword()))
