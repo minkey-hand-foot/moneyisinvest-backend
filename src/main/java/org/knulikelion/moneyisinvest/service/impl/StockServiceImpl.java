@@ -102,8 +102,8 @@ public class StockServiceImpl implements StockService {
             @Override
             public void run() {
                 try {
-                    JSONObject body = createBody();
-                    approvalToken = createApprovalToken(body);
+//                    JSONObject body = createBody();
+                    approvalToken = createApprovalToken();
                 } catch (JSONException | IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -125,7 +125,7 @@ public class StockServiceImpl implements StockService {
         return body;
     }
 
-    public String createApprovalToken(JSONObject body) throws IOException, JSONException { /*승인 키 반환하는 코드 입니다.*/
+    public String createApprovalToken() throws IOException, JSONException { /*승인 키 반환하는 코드 입니다.*/
         String apiUrl = "https://openapi.koreainvestment.com:9443/oauth2/tokenP";
         JSONObject result;
         HttpURLConnection connection;
@@ -135,6 +135,11 @@ public class StockServiceImpl implements StockService {
         connection.setRequestMethod("POST");
         connection.setRequestProperty("Content-Type", "application/json");
         connection.setDoOutput(true);
+
+        JSONObject body = new JSONObject();
+        body.put("grant_type", "client_credentials");
+        body.put("appkey", app_Key);
+        body.put("appsecret", app_Secret);
 
         try (OutputStream os = connection.getOutputStream()) { /*outPutStream 으로 connection 형태 가져옴*/
             byte[] input = body.toString().getBytes("utf-8"); /*body 값을 json 형태로 입력*/
