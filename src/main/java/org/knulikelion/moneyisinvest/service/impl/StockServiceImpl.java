@@ -1,6 +1,5 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -18,6 +17,8 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+
+import org.knulikelion.moneyisinvest.config.security.KISApprovalTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.request.StockBuyRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.StockSellRequestDto;
 import org.knulikelion.moneyisinvest.data.dto.request.StocksByDayRequestDto;
@@ -29,14 +30,12 @@ import org.knulikelion.moneyisinvest.service.StockCoinService;
 import org.knulikelion.moneyisinvest.service.StockCoinWalletService;
 import org.knulikelion.moneyisinvest.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import org.springframework.data.domain.Sort;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -54,8 +53,8 @@ import java.util.regex.Pattern;
 @Slf4j
 @Service
 public class StockServiceImpl implements StockService {
-    private String approvalToken;
-
+//    private String approvalToken;
+//
     @Value("${KIS.APP.KEY}")
     private String app_Key;
 
@@ -69,6 +68,7 @@ public class StockServiceImpl implements StockService {
     private final StockCoinBenefitRepository stockCoinBenefitRepository;
     private final StockTransactionRepository stockTransactionRepository;
     private final StockCoinWalletService stockCoinWalletService;
+    private final KISApprovalTokenProvider kisApprovalTokenProvider;
 
     @Autowired
     public StockServiceImpl(StockHolidayRepository stockHolidayRepository,
@@ -78,7 +78,7 @@ public class StockServiceImpl implements StockService {
                             FavoriteRepository favoriteRepository,
                             StockCoinBenefitRepository stockCoinBenefitRepository,
                             StockTransactionRepository stockTransactionRepository,
-                            StockCoinWalletService stockCoinWalletService) {
+                            StockCoinWalletService stockCoinWalletService, KISApprovalTokenProvider approvalTokenProvider, KISApprovalTokenProvider kisApprovalTokenProvider) {
         this.stockHolidayRepository = stockHolidayRepository;
         this.stockRepository = stockRepository;
         this.stockCoinService = stockCoinService;
@@ -87,74 +87,75 @@ public class StockServiceImpl implements StockService {
         this.stockCoinBenefitRepository = stockCoinBenefitRepository;
         this.stockTransactionRepository = stockTransactionRepository;
         this.stockCoinWalletService = stockCoinWalletService;
+        this.kisApprovalTokenProvider = kisApprovalTokenProvider;
     }
 
-    @PostConstruct
-    protected void init() {
-        log.info("[init] ApprovalToken 초기화 시작");
-        scheduleTokenRefresh();
-        log.info("[init] ApprovalToken 초기화 완료");
-    }
-
-    private void scheduleTokenRefresh() {
-        TimerTask timerTask = new TimerTask() {
-            @SneakyThrows
-            @Override
-            public void run() {
-                try {
-//                    JSONObject body = createBody();
-                    approvalToken = createApprovalToken();
-                } catch (JSONException | IOException e) {
-                    throw new RuntimeException(e);
-                }
-
-            }
-        };
-        Timer timer = new Timer();
-        long delay = 0;
-        long interval = 12 * 60 * 60 * 1000;
-
-        timer.scheduleAtFixedRate(timerTask, delay, interval);
-    }
-
-    public JSONObject createBody() throws JSONException { /*승인 키 받아올 때 사용되는 body 생성 코드 입니다.*/
-        JSONObject body = new JSONObject();
-        body.put("grant_type", "client_credentials");
-        body.put("appkey", app_Key);
-        body.put("appsecret", app_Secret);
-        return body;
-    }
-
-    public String createApprovalToken() throws IOException, JSONException { /*승인 키 반환하는 코드 입니다.*/
-        String apiUrl = "https://openapi.koreainvestment.com:9443/oauth2/tokenP";
-        JSONObject result;
-        HttpURLConnection connection;
-        URL url = new URL(apiUrl);
-
-        connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("POST");
-        connection.setRequestProperty("Content-Type", "application/json");
-        connection.setDoOutput(true);
-
-        JSONObject body = new JSONObject();
-        body.put("grant_type", "client_credentials");
-        body.put("appkey", app_Key);
-        body.put("appsecret", app_Secret);
-
-        try (OutputStream os = connection.getOutputStream()) { /*outPutStream 으로 connection 형태 가져옴*/
-            byte[] input = body.toString().getBytes("utf-8"); /*body 값을 json 형태로 입력*/
-            os.write(input, 0, input.length);
-        }
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"))) {
-            StringBuilder response = new StringBuilder();
-            String responseLine;
-            while ((responseLine = br.readLine()) != null) {
-                response.append(responseLine.trim());
-            }
-            result = new JSONObject(response.toString());
-        }
-        return result.getString("access_token");
-    }
+//    @PostConstruct
+//    protected void init() {
+//        log.info("[init] ApprovalToken 초기화 시작");
+//        scheduleTokenRefresh();
+//        log.info("[init] ApprovalToken 초기화 완료");
+//    }
+//
+//    private void scheduleTokenRefresh() {
+//        TimerTask timerTask = new TimerTask() {
+//            @SneakyThrows
+//            @Override
+//            public void run() {
+//                try {
+////                    JSONObject body = createBody();
+//                    approvalToken = createApprovalToken();
+//                } catch (JSONException | IOException e) {
+//                    throw new RuntimeException(e);
+//                }
+//
+//            }
+//        };
+//        Timer timer = new Timer();
+//        long delay = 0;
+//        long interval = 12 * 60 * 60 * 1000;
+//
+//        timer.scheduleAtFixedRate(timerTask, delay, interval);
+//    }
+//
+//    public JSONObject createBody() throws JSONException { /*승인 키 받아올 때 사용되는 body 생성 코드 입니다.*/
+//        JSONObject body = new JSONObject();
+//        body.put("grant_type", "client_credentials");
+//        body.put("appkey", app_Key);
+//        body.put("appsecret", app_Secret);
+//        return body;
+//    }
+//
+//    public String createApprovalToken() throws IOException, JSONException { /*승인 키 반환하는 코드 입니다.*/
+//        String apiUrl = "https://openapi.koreainvestment.com:9443/oauth2/tokenP";
+//        JSONObject result;
+//        HttpURLConnection connection;
+//        URL url = new URL(apiUrl);
+//
+//        connection = (HttpURLConnection) url.openConnection();
+//        connection.setRequestMethod("POST");
+//        connection.setRequestProperty("Content-Type", "application/json");
+//        connection.setDoOutput(true);
+//
+//        JSONObject body = new JSONObject();
+//        body.put("grant_type", "client_credentials");
+//        body.put("appkey", app_Key);
+//        body.put("appsecret", app_Secret);
+//
+//        try (OutputStream os = connection.getOutputStream()) { /*outPutStream 으로 connection 형태 가져옴*/
+//            byte[] input = body.toString().getBytes("utf-8"); /*body 값을 json 형태로 입력*/
+//            os.write(input, 0, input.length);
+//        }
+//        try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"))) {
+//            StringBuilder response = new StringBuilder();
+//            String responseLine;
+//            while ((responseLine = br.readLine()) != null) {
+//                response.append(responseLine.trim());
+//            }
+//            result = new JSONObject(response.toString());
+//        }
+//        return result.getString("access_token");
+//    }
 
     public static boolean checkImageExists(String logoUrl) {
         try {
@@ -662,6 +663,8 @@ public class StockServiceImpl implements StockService {
         urlBuilder.addQueryParameter("FID_COND_MRKT_DIV_CODE", "J");
         urlBuilder.addQueryParameter("FID_INPUT_ISCD", stockCode);
         String url = urlBuilder.build().toString(); /*한국 현재 주식 시세 url*/
+        String approvalToken = kisApprovalTokenProvider.getApprovalToken();
+
 
         OkHttpClient client = new OkHttpClient();
         StockPriceResponseDto stockPriceResponseDto = new StockPriceResponseDto();
@@ -699,6 +702,7 @@ public class StockServiceImpl implements StockService {
         urlBuilder.addQueryParameter("FID_COND_MRKT_DIV_CODE", "J");
         urlBuilder.addQueryParameter("FID_INPUT_ISCD", stockCode);
         String url = urlBuilder.build().toString(); /*한국 현재 주식 시세 url*/
+        String approvalToken = kisApprovalTokenProvider.getApprovalToken();
 
         OkHttpClient client = new OkHttpClient();
         StockPriceResponseDto stockPriceResponseDto = new StockPriceResponseDto();
@@ -1015,6 +1019,7 @@ public class StockServiceImpl implements StockService {
     public List<StocksByDayResponseDto> getStockByDay(StocksByDayRequestDto stocksByDayRequestDto) throws IOException {
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
         LocalDateTime dateTime = LocalDateTime.now();
+        String approvalToken = kisApprovalTokenProvider.getApprovalToken();
 
         // 어제 날짜 계산
         LocalDateTime yesterdayDate = dateTime.minusDays(1);

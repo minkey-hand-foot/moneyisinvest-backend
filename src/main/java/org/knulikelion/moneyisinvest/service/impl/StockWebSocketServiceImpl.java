@@ -1,6 +1,5 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -9,25 +8,20 @@ import okhttp3.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
+import org.knulikelion.moneyisinvest.config.security.KISApprovalTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.response.*;
 import org.knulikelion.moneyisinvest.service.MessageQueueService;
 import org.knulikelion.moneyisinvest.service.StockService;
 import org.knulikelion.moneyisinvest.service.StockWebSocketService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 
 import org.json.JSONException;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -35,8 +29,8 @@ import java.util.*;
 @Slf4j
 @Service
 public class StockWebSocketServiceImpl implements StockWebSocketService {
-    private String approvalToken;
-
+//    private String approvalToken;
+//
     @Value("${KIS.APP.KEY}")
     private String app_Key;
 
@@ -45,8 +39,9 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
 
     private final StockService stockService;
     private final MessageQueueService messageQueueService;
+    private final KISApprovalTokenProvider kisApprovalTokenProvider;
 
-    private static final String CREATE_APPROVAL_TOKEN_API_URL = "https://openapi.koreainvestment.com:9443/oauth2/tokenP";
+//    private static final String CREATE_APPROVAL_TOKEN_API_URL = "https://openapi.koreainvestment.com:9443/oauth2/tokenP";
     private static final String GET_STOCK_INFO_API_URL = "https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-price";
     private static final String GET_STOCK_RANK_API_URL = "https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/volume-rank";
     private static final String KOSPI_INFO_URL = "https://finance.naver.com/sise/sise_index_day.naver?code=KOSPI";
@@ -54,71 +49,72 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
     private static final String NAVER_SISE_URL = "https://finance.naver.com/sise/";
 
     @Autowired
-    public StockWebSocketServiceImpl(StockService stockService, MessageQueueService messageQueueService) {
+    public StockWebSocketServiceImpl(StockService stockService, MessageQueueService messageQueueService, KISApprovalTokenProvider kisApprovalTokenProvider) {
         this.stockService = stockService;
         this.messageQueueService = messageQueueService;
+        this.kisApprovalTokenProvider = kisApprovalTokenProvider;
     }
 
-    @PostConstruct
-    protected void init() {
-        log.info("[init] ApprovalToken 초기화 시작");
-        scheduleTokenRefresh();
-        log.info("[init] ApprovalToken 초기화 완료");
-    }
-    private void scheduleTokenRefresh() {
-        TimerTask timerTask = new TimerTask() {
-            @SneakyThrows
-            @Override
-            public void run() {
-                try {
-                    JSONObject body = createBody();
-                    approvalToken = createApprovalToken(body);
-                    System.out.println(approvalToken);
-                } catch (JSONException | IOException e) {
-                    throw new RuntimeException(e);
-                }
-
-            }
-        };
-        Timer timer = new Timer();
-        long delay = 0;
-        long interval = 12 * 60 * 60 * 1000;
-
-        timer.scheduleAtFixedRate(timerTask, delay, interval);
-    }
-
-    public JSONObject createBody() throws JSONException { /*승인 키 받아올 때 사용되는 body 생성 코드 입니다.*/
-        JSONObject body = new JSONObject();
-        body.put("grant_type", "client_credentials");
-        body.put("appkey", app_Key);
-        body.put("appsecret", app_Secret);
-        return body;
-    }
-
-    public String createApprovalToken(JSONObject body) throws IOException, JSONException { /*승인 키 반환하는 코드 입니다.*/
-        JSONObject result;
-        HttpURLConnection connection;
-        URL url = new URL(CREATE_APPROVAL_TOKEN_API_URL);
-
-        connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("POST");
-        connection.setRequestProperty("Content-Type", "application/json");
-        connection.setDoOutput(true);
-
-        try (OutputStream os = connection.getOutputStream()) { /*outPutStream 으로 connection 형태 가져옴*/
-            byte[] input = body.toString().getBytes("utf-8"); /*body 값을 json 형태로 입력*/
-            os.write(input, 0, input.length);
-        }
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"))) {
-            StringBuilder response = new StringBuilder();
-            String responseLine;
-            while ((responseLine = br.readLine()) != null) {
-                response.append(responseLine.trim());
-            }
-            result = new JSONObject(response.toString());
-        }
-        return result.getString("access_token");
-    }
+//    @PostConstruct
+//    protected void init() {
+//        log.info("[init] ApprovalToken 초기화 시작");
+//        scheduleTokenRefresh();
+//        log.info("[init] ApprovalToken 초기화 완료");
+//    }
+//    private void scheduleTokenRefresh() {
+//        TimerTask timerTask = new TimerTask() {
+//            @SneakyThrows
+//            @Override
+//            public void run() {
+//                try {
+//                    JSONObject body = createBody();
+//                    approvalToken = createApprovalToken(body);
+//                    System.out.println(approvalToken);
+//                } catch (JSONException | IOException e) {
+//                    throw new RuntimeException(e);
+//                }
+//
+//            }
+//        };
+//        Timer timer = new Timer();
+//        long delay = 0;
+//        long interval = 12 * 60 * 60 * 1000;
+//
+//        timer.scheduleAtFixedRate(timerTask, delay, interval);
+//    }
+//
+//    public JSONObject createBody() throws JSONException { /*승인 키 받아올 때 사용되는 body 생성 코드 입니다.*/
+//        JSONObject body = new JSONObject();
+//        body.put("grant_type", "client_credentials");
+//        body.put("appkey", app_Key);
+//        body.put("appsecret", app_Secret);
+//        return body;
+//    }
+//
+//    public String createApprovalToken(JSONObject body) throws IOException, JSONException { /*승인 키 반환하는 코드 입니다.*/
+//        JSONObject result;
+//        HttpURLConnection connection;
+//        URL url = new URL(CREATE_APPROVAL_TOKEN_API_URL);
+//
+//        connection = (HttpURLConnection) url.openConnection();
+//        connection.setRequestMethod("POST");
+//        connection.setRequestProperty("Content-Type", "application/json");
+//        connection.setDoOutput(true);
+//
+//        try (OutputStream os = connection.getOutputStream()) { /*outPutStream 으로 connection 형태 가져옴*/
+//            byte[] input = body.toString().getBytes("utf-8"); /*body 값을 json 형태로 입력*/
+//            os.write(input, 0, input.length);
+//        }
+//        try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"))) {
+//            StringBuilder response = new StringBuilder();
+//            String responseLine;
+//            while ((responseLine = br.readLine()) != null) {
+//                response.append(responseLine.trim());
+//            }
+//            result = new JSONObject(response.toString());
+//        }
+//        return result.getString("access_token");
+//    }
 
     @Override /*종목 코드로 종목 데이터 가져오는 메서드 입니다.*/
     public StockPriceResponseDto getStock(String stockCode) throws IOException, JSONException {
@@ -126,6 +122,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
         urlBuilder.addQueryParameter("FID_COND_MRKT_DIV_CODE", "J");
         urlBuilder.addQueryParameter("FID_INPUT_ISCD", stockCode);
         String url = urlBuilder.build().toString(); /*한국 현재 주식 시세 url*/
+        String approvalToken = kisApprovalTokenProvider.getApprovalToken();
 
         OkHttpClient client = new OkHttpClient();
         StockPriceResponseDto stockPriceResponseDto = new StockPriceResponseDto();
@@ -193,6 +190,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
         urlBuilder.addQueryParameter("FID_INPUT_DATE_1", "");
 
         String url = urlBuilder.build().toString();/*한국 현재 주식 순위 url*/
+        String approvalToken = kisApprovalTokenProvider.getApprovalToken();
 
         OkHttpClient client = new OkHttpClient();
 
