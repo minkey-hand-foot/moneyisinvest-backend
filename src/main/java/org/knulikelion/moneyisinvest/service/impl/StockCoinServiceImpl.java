@@ -157,15 +157,15 @@ public class StockCoinServiceImpl implements StockCoinService {
         stockCoinBenefit.setUser(foundUser);
 
 //        스톡 코인 거래
-        if(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()) != null) {
-            if(foundUser == null) {
+        if (stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()) != null) {
+            if (foundUser == null) {
                 return BaseResponseDto.builder()
                         .success(false)
                         .msg("사용자를 찾을 수 없습니다.")
-                    .build();
+                        .build();
             } else {
 //                베이직 플랜일 때
-                if(foundUser.getPlan().equals("basic")) {
+                if (foundUser.getPlan().equals("basic")) {
                     Transaction transaction = Transaction.builder()
                             .to(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()))
                             .from(stockCoinWalletService.getWalletAddress("SYSTEM"))
@@ -174,25 +174,18 @@ public class StockCoinServiceImpl implements StockCoinService {
                             .amount(transactionToSystemRequestDto.getAmount() - transactionToSystemRequestDto.getAmount() * 0.015)
                             .build();
 
-                    if(stockCoinWalletService.getWalletBalanceByUsername(transactionToSystemRequestDto.getTargetUid()) >= (transaction.getFee() + transaction.getAmount())) {
-                        messageQueueService.insertTransactionViaEnqueue(transaction);
+                    messageQueueService.insertTransactionViaEnqueue(transaction);
 
 //                    베이직 플랜 손해 저장
-                        stockCoinBenefit.setLoss(stockCoinBenefit.getLoss() + (transactionToSystemRequestDto.getAmount() * 0.015));
-                        stockCoinBenefit.setLoseAmount(stockCoinBenefit.getLoseAmount() + Double.parseDouble(stockAmount));
+                    stockCoinBenefit.setLoss(stockCoinBenefit.getLoss() + (transactionToSystemRequestDto.getAmount() * 0.015));
+                    stockCoinBenefit.setLoseAmount(stockCoinBenefit.getLoseAmount() + Double.parseDouble(stockAmount));
 
-                        stockCoinBenefitRepository.save(stockCoinBenefit);
+                    stockCoinBenefitRepository.save(stockCoinBenefit);
 
-                        return BaseResponseDto.builder()
-                                .success(true)
-                                .msg("스톡 코인 출금 요청이 완료되었습니다.")
+                    return BaseResponseDto.builder()
+                            .success(true)
+                            .msg("스톡 코인 출금 요청이 완료되었습니다.")
                             .build();
-                    } else {
-                        return BaseResponseDto.builder()
-                                .success(false)
-                                .msg("보유한 스톡 코인이 부족합니다.")
-                            .build();
-                    }
                 } else {
                     Transaction transaction = Transaction.builder()
                             .to(stockCoinWalletService.getWalletAddress(transactionToSystemRequestDto.getTargetUid()))
@@ -224,16 +217,16 @@ public class StockCoinServiceImpl implements StockCoinService {
 
                     return BaseResponseDto.builder()
                             .success(true)
-                            .msg("[프리미엄] 보유 주식을 매도하여" + (transaction.getAmount() + bonusTransaction.getAmount())  + " 스톡 코인을 얻었습니다.")
-                        .build();
+                            .msg("[프리미엄] 보유 주식을 매도하여" + (transaction.getAmount() + bonusTransaction.getAmount()) + " 스톡 코인을 얻었습니다.")
+                            .build();
                 }
             }
-        } else {
-            return BaseResponseDto.builder()
-                    .success(false)
-                    .msg("보유한 스톡 코인이 부족합니다.")
-                .build();
+
         }
+        return BaseResponseDto.builder()
+                .msg("지갑을 찾을 수 없습니다.")
+                .success(false)
+                .build();
     }
 
     @Override
