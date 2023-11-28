@@ -349,6 +349,13 @@ public class SignServiceImpl implements SignService {
             } else if(userRepository.getByUid(kakaoUser.getEmail()) != null) {
                 throw new RuntimeException("이미 존재하는 회원입니다.");
             } else {
+                stockCoinBenefitRepository.save(StockCoinBenefit.builder() // benefit 저장
+                        .benefit(0)
+                        .user(newUser)
+                        .benefitAmount(0)
+                        .loss(0)
+                        .loseAmount(0)
+                        .build());
                 userRepository.save(newUser);
             }
 
