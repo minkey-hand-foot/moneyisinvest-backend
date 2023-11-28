@@ -52,6 +52,7 @@ public class StockWebSocketHandler extends TextWebSocketHandler {
         synchronized (sessionMap) {
             sessionMap.put(session.getId(), session);
         }
+        System.out.println("sessionMap :" + sessionMap.toString());
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("sessionId",session.getId());
@@ -70,7 +71,7 @@ public class StockWebSocketHandler extends TextWebSocketHandler {
         super.afterConnectionClosed(session,status); /*실제로 closed*/
     }
 
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 5000)
     public void sendStockCode() throws JSONException, IOException {
         synchronized (sessionMap){
             for (WebSocketSession session : sessionMap.values()){
