@@ -1,15 +1,9 @@
 package org.knulikelion.moneyisinvest.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.knulikelion.moneyisinvest.config.security.KISApprovalTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.response.*;
 import org.knulikelion.moneyisinvest.service.MessageQueueService;
 import org.knulikelion.moneyisinvest.service.StockService;
@@ -17,12 +11,8 @@ import org.knulikelion.moneyisinvest.service.StockWebSocketService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.json.JSONException;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import yahoofinance.Stock;
-import yahoofinance.YahooFinance;
+
 
 import javax.print.Doc;
 import java.io.IOException;
