@@ -7,6 +7,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.knulikelion.moneyisinvest.config.security.KISApprovalTokenProvider;
 import org.knulikelion.moneyisinvest.data.dto.response.*;
@@ -20,7 +21,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import yahoofinance.Stock;
+import yahoofinance.YahooFinance;
 
+import javax.print.Doc;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
@@ -29,232 +33,160 @@ import java.util.*;
 @Slf4j
 @Service
 public class StockWebSocketServiceImpl implements StockWebSocketService {
-//    private String approvalToken;
-//
-    @Value("${KIS.APP.KEY}")
-    private String app_Key;
-
-    @Value("${KIS.APP.SECRET}")
-    private String app_Secret;
-
     private final StockService stockService;
     private final MessageQueueService messageQueueService;
-    private final KISApprovalTokenProvider kisApprovalTokenProvider;
-
-//    private static final String CREATE_APPROVAL_TOKEN_API_URL = "https://openapi.koreainvestment.com:9443/oauth2/tokenP";
-    private static final String GET_STOCK_INFO_API_URL = "https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-price";
-    private static final String GET_STOCK_RANK_API_URL = "https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/volume-rank";
+    private static final String GET_STOCK_INFO_API_URL = "https://finance.naver.com/item/main.naver?code=";
+    private static final String GET_STOCK_RANK_API_URL = "https://finance.naver.com/sise/";
     private static final String KOSPI_INFO_URL = "https://finance.naver.com/sise/sise_index_day.naver?code=KOSPI";
     private static final String KOSDAQ_INFO_URL = "https://finance.naver.com/sise/sise_index_day.naver?code=KOSDAQ";
     private static final String NAVER_SISE_URL = "https://finance.naver.com/sise/";
 
     @Autowired
-    public StockWebSocketServiceImpl(StockService stockService, MessageQueueService messageQueueService, KISApprovalTokenProvider kisApprovalTokenProvider) {
+    public StockWebSocketServiceImpl(StockService stockService, MessageQueueService messageQueueService) {
         this.stockService = stockService;
         this.messageQueueService = messageQueueService;
-        this.kisApprovalTokenProvider = kisApprovalTokenProvider;
     }
 
-//    @PostConstruct
-//    protected void init() {
-//        log.info("[init] ApprovalToken 초기화 시작");
-//        scheduleTokenRefresh();
-//        log.info("[init] ApprovalToken 초기화 완료");
-//    }
-//    private void scheduleTokenRefresh() {
-//        TimerTask timerTask = new TimerTask() {
-//            @SneakyThrows
-//            @Override
-//            public void run() {
-//                try {
-//                    JSONObject body = createBody();
-//                    approvalToken = createApprovalToken(body);
-//                    System.out.println(approvalToken);
-//                } catch (JSONException | IOException e) {
-//                    throw new RuntimeException(e);
-//                }
-//
-//            }
-//        };
-//        Timer timer = new Timer();
-//        long delay = 0;
-//        long interval = 12 * 60 * 60 * 1000;
-//
-//        timer.scheduleAtFixedRate(timerTask, delay, interval);
-//    }
-//
-//    public JSONObject createBody() throws JSONException { /*승인 키 받아올 때 사용되는 body 생성 코드 입니다.*/
-//        JSONObject body = new JSONObject();
-//        body.put("grant_type", "client_credentials");
-//        body.put("appkey", app_Key);
-//        body.put("appsecret", app_Secret);
-//        return body;
-//    }
-//
-//    public String createApprovalToken(JSONObject body) throws IOException, JSONException { /*승인 키 반환하는 코드 입니다.*/
-//        JSONObject result;
-//        HttpURLConnection connection;
-//        URL url = new URL(CREATE_APPROVAL_TOKEN_API_URL);
-//
-//        connection = (HttpURLConnection) url.openConnection();
-//        connection.setRequestMethod("POST");
-//        connection.setRequestProperty("Content-Type", "application/json");
-//        connection.setDoOutput(true);
-//
-//        try (OutputStream os = connection.getOutputStream()) { /*outPutStream 으로 connection 형태 가져옴*/
-//            byte[] input = body.toString().getBytes("utf-8"); /*body 값을 json 형태로 입력*/
-//            os.write(input, 0, input.length);
-//        }
-//        try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"))) {
-//            StringBuilder response = new StringBuilder();
-//            String responseLine;
-//            while ((responseLine = br.readLine()) != null) {
-//                response.append(responseLine.trim());
-//            }
-//            result = new JSONObject(response.toString());
-//        }
-//        return result.getString("access_token");
-//    }
+    private String changeJSoup(Document doc, String Selector){
+        Elements elements = doc.select(Selector);
+        return elements.text();
+    }
+
+    private String mergePrice(Document doc, String selector){
+        Elements elements = doc.select(selector);
+
+        if(elements.size() > 0){
+            Elements spans = elements.get(0).select("span"); // 첫 번째 <em> 태그 안의 모든 <span> 태그를 선택
+            if (spans.size() > 0) {
+                return spans.get(0).text(); // 첫 번째 <span> 태그의 텍스트를 반환
+            }
+        }
+
+        return "";
+    }
+    private String mergePrices(Document doc, String selector){
+        StringBuilder sb = new StringBuilder();
+        Elements elements = doc.select(selector);
+
+        elements.forEach(e ->{
+            String price = e.text();
+            sb.append(price);
+        });
+
+        return sb.toString();
+    }
+
+
+
+
 
     @Override /*종목 코드로 종목 데이터 가져오는 메서드 입니다.*/
     public StockPriceResponseDto getStock(String stockCode) throws IOException, JSONException {
-        HttpUrl.Builder urlBuilder = HttpUrl.parse(GET_STOCK_INFO_API_URL).newBuilder();
-        urlBuilder.addQueryParameter("FID_COND_MRKT_DIV_CODE", "J");
-        urlBuilder.addQueryParameter("FID_INPUT_ISCD", stockCode);
-        String url = urlBuilder.build().toString(); /*한국 현재 주식 시세 url*/
-        String approvalToken = kisApprovalTokenProvider.getApprovalToken();
-
-        OkHttpClient client = new OkHttpClient();
+        log.info("[getStock] : {}",stockCode);
         StockPriceResponseDto stockPriceResponseDto = new StockPriceResponseDto();
+        String url = GET_STOCK_INFO_API_URL + stockCode;
 
-        Request request = new Request.Builder()
-                .url(url)
-                .header("authorization", "Bearer " + approvalToken)
-                .header("appkey", app_Key)
-                .header("appsecret", app_Secret)
-                .header("tr_id", "FHKST01010100")
-                .header("Content-type", "application/json; charset=utf-8")
-                .build();
+        try {
+            Document doc = Jsoup.connect(url).get(); // url 설정
 
-        try (Response response = client.newCall(request).execute()) {
-            if (response.isSuccessful() && response.body() != null) {
-                JSONObject jsonObject = new JSONObject(response.body().string());
-                JSONObject outputs = jsonObject.getJSONObject("output");
-                stockPriceResponseDto.setCurrent_time(String.valueOf(LocalDateTime.now()));
-                stockPriceResponseDto.setStock_status_code((String) outputs.get("iscd_stat_cls_code"));
-                stockPriceResponseDto.setStock_market_index((String) outputs.get("rprs_mrkt_kor_name"));
-                stockPriceResponseDto.setBusiness_type((String) outputs.get("bstp_kor_isnm"));
+            stockPriceResponseDto.setCurrent_time(String.valueOf(LocalDateTime.now())); // 현재 시간
 
-                NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
-                stockPriceResponseDto.setStock_price(nf.format(Double.parseDouble((String) outputs.get("stck_prpr"))));
-                stockPriceResponseDto.setStock_coin(nf.format(Double.parseDouble(String.valueOf(Integer.parseInt((String) outputs.get("stck_prpr"))/100))));
+            stockPriceResponseDto.setStock_status_code(changeJSoup(doc,"#time > em > span")); // 종목 상태
 
+            String field = changeJSoup(doc,"#tab_con1 > div.first > table > tbody > tr:nth-child(2) > td");
+            field = field.substring(0,3);
+            stockPriceResponseDto.setStock_market_index(field.trim()); // 종목 시장
 
-                stockPriceResponseDto.setPreparation_day_before((String) outputs.get("prdy_vrss"));
-                stockPriceResponseDto.setPreparation_day_before_sign((String) outputs.get("prdy_vrss_sign"));
-                stockPriceResponseDto.setPreparation_day_before_rate((String) outputs.get("prdy_ctrt"));
-                stockPriceResponseDto.setStock_open_price((String) outputs.get("stck_oprc"));
-                stockPriceResponseDto.setStock_high_price((String) outputs.get("stck_hgpr"));
-                stockPriceResponseDto.setStock_low_price((String) outputs.get("stck_lwpr"));
-                stockPriceResponseDto.setStock_max_price((String) outputs.get("stck_mxpr"));
-                stockPriceResponseDto.setStock_price_floor((String) outputs.get("stck_llam"));
-                stockPriceResponseDto.setStock_base_price((String) outputs.get("stck_sdpr"));
-                stockPriceResponseDto.setWeighted_average_stock_price((String) outputs.get("wghn_avrg_stck_prc"));
-                stockPriceResponseDto.setPer((String) outputs.get("per"));
-                stockPriceResponseDto.setPbr((String) outputs.get("pbr"));
-                return stockPriceResponseDto;
-            } else {
-                return null;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
+            stockPriceResponseDto.setBusiness_type(changeJSoup(doc,"#content > div.section.trade_compare > h4 > em > a")); // 업종
+
+            NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+            Elements STOCK_PRICE = doc.select("#content > div.section.trade_compare > table > tbody > tr:nth-child(1) > td:nth-child(2)");
+            String priceText = STOCK_PRICE.text().replace(",","");
+            stockPriceResponseDto.setStock_price(nf.format(Double.parseDouble(priceText))); // 현재가
+
+            stockPriceResponseDto.setStock_coin(nf.format(Double.parseDouble(priceText)/100)); // 스톡가
+
+            String rate = changeJSoup(doc,"#content > div.section.trade_compare > table > tbody > tr:nth-child(2) > td:nth-child(2) > em");
+            rate = rate.substring(3,6);
+
+            stockPriceResponseDto.setPreparation_day_before(rate.trim()); // 전일 대비
+
+            stockPriceResponseDto.setPreparation_day_before_sign("4"); // 전일 대비 부호
+
+            String beforeRateString = changeJSoup(doc,"#content > div.section.trade_compare > table > tbody > tr:nth-child(3) > td:nth-child(2) > em");
+            beforeRateString=beforeRateString.substring(0,2);
+            stockPriceResponseDto.setPreparation_day_before_rate(beforeRateString); // 전일 대비율
+
+            stockPriceResponseDto.setStock_open_price(mergePrice(doc, "#chart_area > div.rate_info > table > tbody > tr:nth-child(2) > td.first > em")); // 주식 시가
+
+            stockPriceResponseDto.setStock_high_price(mergePrice(doc, "#chart_area > div.rate_info > table > tbody > tr:nth-child(1) > td:nth-child(2) > em.no_up")); // 주식 최고가
+
+            stockPriceResponseDto.setStock_low_price(mergePrice(doc, "#chart_area > div.rate_info > table > tbody > tr:nth-child(2) > td:nth-child(2) > em.no_down")); // 주식 최저가
+
+            stockPriceResponseDto.setStock_max_price(mergePrice(doc, "#chart_area > div.rate_info > table > tbody > tr:nth-child(1) > td:nth-child(2) > em.no_cha")); // 주식 상한가
+
+            stockPriceResponseDto.setStock_price_floor(mergePrices(doc, "#chart_area > div.rate_info > table > tbody > tr:nth-child(2) > td:nth-child(2) > em.no_cha")); // 주식 하한가
+
+            stockPriceResponseDto.setStock_base_price(mergePrices(doc, "#chart_area > div.rate_info > table > tbody > tr:nth-child(2) > td:nth-child(2) > em.no_cha")); // 주식 기준가
+
+            stockPriceResponseDto.setWeighted_average_stock_price((stockPriceResponseDto.getStock_price())); // 가중 평균 주식 가격
+
+            stockPriceResponseDto.setPer(changeJSoup(doc, "#content > div.section.trade_compare > table > tbody > tr:nth-child(13) > td:nth-child(2)")); // PER
+
+            stockPriceResponseDto.setPbr(changeJSoup(doc, "#content > div.section.trade_compare > table > tbody > tr:nth-child(14) > td:nth-child(2)")); // PBR
+
+            return stockPriceResponseDto;
+        }catch (Exception e){
+            log.error("Error fetching data : "+ e.getMessage());
         }
         return null;
     }
 
     @Override /*종목 거래량 순위를 가져오는 코드 입니다.*/
     public List<StockRankResponseDto> getStockRank() throws IOException, JSONException {
-        HttpUrl.Builder urlBuilder = HttpUrl.parse(GET_STOCK_RANK_API_URL).newBuilder();
-        urlBuilder.addQueryParameter("FID_COND_MRKT_DIV_CODE", "J");
-        urlBuilder.addQueryParameter("FID_COND_SCR_DIV_CODE", "20171");
-        urlBuilder.addQueryParameter("FID_INPUT_ISCD", "0002");/*0000(전체) 기타(업종코드)*/
-        urlBuilder.addQueryParameter("FID_DIV_CLS_CODE", "0");/*0(전체) 1(보통주) 2(우선주)*/
-        urlBuilder.addQueryParameter("FID_BLNG_CLS_CODE", "1");/*0 : 평균거래량 1:거래증가율 2:평균거래회전율 3:거래금액순 4:평균거래금액회전율*/
-        urlBuilder.addQueryParameter("FID_TRGT_CLS_CODE", "111111111");/*1 or 0 9자리 (차례대로 증거금 30% 40% 50% 60% 100% 신용보증금 30% 40% 50% 60%)*/
-        urlBuilder.addQueryParameter("FID_TRGT_EXLS_CLS_CODE", "000000");/*1 or 0 6자리 (차례대로 투자위험/경고/주의 관리종목 정리매매 불성실공시 우선주 거래정지)*/
-        urlBuilder.addQueryParameter("FID_INPUT_PRICE_1", "100"); /*가격 ~ ex) "0"*/
-        urlBuilder.addQueryParameter("FID_INPUT_PRICE_2", "1000000");/*~ 가격 ex) "1000000"*/
-        urlBuilder.addQueryParameter("FID_VOL_CNT", "100000");/*거래량 ~ ex) "100000"*/
-        urlBuilder.addQueryParameter("FID_INPUT_DATE_1", "");
+        log.info("[getStockRank] 1위부터 5위까지");
+        Document doc = Jsoup.connect(GET_STOCK_RANK_API_URL).get();
 
-        String url = urlBuilder.build().toString();/*한국 현재 주식 순위 url*/
-        String approvalToken = kisApprovalTokenProvider.getApprovalToken();
+        String SELECTOR_PREFIX = "#siselist_tab_0 > tbody";
 
-        OkHttpClient client = new OkHttpClient();
+        List<StockRankResponseDto> stockRankResponseDto = new ArrayList<>();
 
-        Request request = new Request.Builder()
-                .url(url)
-                .header("authorization", "Bearer " + approvalToken)
-                .header("appkey", app_Key)
-                .header("appsecret", app_Secret)
-                .header("tr_id", "FHPST01710000")
-                .header("custtype", "P")
-                .header("content-type", "application/json; charset=utf-8")
-                .build();
+        for(int i=3; i<=7; i++){
+            StockRankResponseDto dto = new StockRankResponseDto();
 
-        List<StockRankResponseDto> outputList = new ArrayList<>();
+            dto.setStockName(changeJSoup(doc, SELECTOR_PREFIX+" > tr:nth-child("+i+") > td:nth-child(4) > a")); // 종목 이름
 
-        try (Response response = client.newCall(request).execute()) {
-            if (response.isSuccessful() && response.body() != null) {
-                JSONObject jsonObject = new JSONObject(response.body().string());
-                JSONArray outputs = jsonObject.getJSONArray("output");
+            String stockCode = stockService.searchStockByKeyword(dto.getStockName()).get(0).getStockId();
+            dto.setStockCode(stockCode); // 종목 코드
 
-                int limit = Math.min(outputs.length(), 5);
-                boolean isAvaliableValue = true;
+            String url = stockService.getCompanyInfoByStockId(stockCode).getCompanyUrl();
+            dto.setStockUrl(url); // url
 
-                // 5등까지만 정보를 불러옴
-                for (int i = 0; i < limit; i++) {
-                    JSONObject obj = outputs.getJSONObject(i);
+            dto.setStockPrice(changeJSoup(doc, SELECTOR_PREFIX+" > tr:nth-child("+i+") > td:nth-child(5)")); // 현재가
 
-                    StockRankResponseDto stockRank = new StockRankResponseDto();
-
-                    // 한국 투자증권 API를 불러올 수 없을 때
-                    if(obj.isNull("hts_kor_isnm")) {
-                        isAvaliableValue = false;
-                        break;
-                    } else {
-                        stockRank.setStockName(obj.getString("hts_kor_isnm"));
-                        stockRank.setStockUrl(stockService.getCompanyInfoByStockId(obj.getString("mksc_shrn_iscd")).getStockLogoUrl());
-                        stockRank.setStockCode(obj.getString("mksc_shrn_iscd"));
-                        double prdyCtrtDouble = Double.parseDouble(obj.getString("prdy_ctrt"));
-                        long prdyCtrt = Math.round(prdyCtrtDouble);
-                        stockRank.setDay_before_status(prdyCtrt >= 0);
-
-                        double stckPrprDouble = Double.parseDouble(obj.getString("stck_prpr"));
-                        int coinPrice = (int) (stckPrprDouble / 100);
-                        stockRank.setCoinPrice(String.valueOf(coinPrice));
-                        stockRank.setRank(obj.getString("data_rank"));
-
-                        NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
-                        String price = nf.format(Integer.parseInt(obj.getString("stck_prpr")));
-                        stockRank.setStockPrice(price);
-                        stockRank.setPreparation_day_before_rate(obj.getString("prdy_ctrt"));
-                    }
-                    outputList.add(stockRank);
+            String stockPriceStr = dto.getStockPrice();
+            if(stockPriceStr != null){
+                try{
+                    stockPriceStr = stockPriceStr.replace(",", ""); // 콤마 제거
+                    int stockPrice = Integer.parseInt(stockPriceStr);
+                    dto.setDay_before_status(stockPrice > 0); // 전일 대비 상황
+                }catch (NumberFormatException e){
+                    log.error("[getStockRank] 전일 대비 상황 NumberFormatException");
                 }
 
-                if(isAvaliableValue) {
-                    messageQueueService.dequeueStockRank();
-                    messageQueueService.enqueueStockRank(outputList);
-                } else {
-                    log.error("한국투자증권 API에서 주식 랭킹을 불러올 수 없음. 기존 정보가 반환 됨");
-                    outputList = messageQueueService.getStockRankIfInfoNotExist();
+                try{
+                    int stockPrice = Integer.parseInt(stockPriceStr);
+                    dto.setCoinPrice(String.valueOf(stockPrice / 100)); // 종목 스톡 값
+                }catch (NumberFormatException e){
+                    log.error("[getStockRank] 종목 스톡 값 NumberFormatException");
                 }
             }
-            return outputList;
+            dto.setRank(String.valueOf(i-2)); // 종목 순위
+            dto.setPreparation_day_before_rate(changeJSoup(doc,SELECTOR_PREFIX+" > tr:nth-child("+i+") > td:nth-child(7) > span")); // 전일대비율
+
+            stockRankResponseDto.add(dto);
         }
+        return stockRankResponseDto;
     }
 
     @Override /*Kospi 데이터를 가져오는 코드 입니다.*/

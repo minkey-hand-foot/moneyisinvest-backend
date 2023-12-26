@@ -35,6 +35,7 @@ import org.json.JSONObject;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import yahoofinance.YahooFinance;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -53,8 +54,6 @@ import java.util.regex.Pattern;
 @Slf4j
 @Service
 public class StockServiceImpl implements StockService {
-//    private String approvalToken;
-//
     @Value("${KIS.APP.KEY}")
     private String app_Key;
 
@@ -69,6 +68,8 @@ public class StockServiceImpl implements StockService {
     private final StockTransactionRepository stockTransactionRepository;
     private final StockCoinWalletService stockCoinWalletService;
     private final KISApprovalTokenProvider kisApprovalTokenProvider;
+    private static final String TopFiveStockSymbolUrl = "https://finance.naver.com/sise/";
+    private static final String GET_STOCK_INFO_API_URL = "https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-price";
 
     @Autowired
     public StockServiceImpl(StockHolidayRepository stockHolidayRepository,
@@ -78,7 +79,7 @@ public class StockServiceImpl implements StockService {
                             FavoriteRepository favoriteRepository,
                             StockCoinBenefitRepository stockCoinBenefitRepository,
                             StockTransactionRepository stockTransactionRepository,
-                            StockCoinWalletService stockCoinWalletService, KISApprovalTokenProvider approvalTokenProvider, KISApprovalTokenProvider kisApprovalTokenProvider) {
+                            StockCoinWalletService stockCoinWalletService, KISApprovalTokenProvider kisApprovalTokenProvider) {
         this.stockHolidayRepository = stockHolidayRepository;
         this.stockRepository = stockRepository;
         this.stockCoinService = stockCoinService;
@@ -89,73 +90,6 @@ public class StockServiceImpl implements StockService {
         this.stockCoinWalletService = stockCoinWalletService;
         this.kisApprovalTokenProvider = kisApprovalTokenProvider;
     }
-
-//    @PostConstruct
-//    protected void init() {
-//        log.info("[init] ApprovalToken 초기화 시작");
-//        scheduleTokenRefresh();
-//        log.info("[init] ApprovalToken 초기화 완료");
-//    }
-//
-//    private void scheduleTokenRefresh() {
-//        TimerTask timerTask = new TimerTask() {
-//            @SneakyThrows
-//            @Override
-//            public void run() {
-//                try {
-////                    JSONObject body = createBody();
-//                    approvalToken = createApprovalToken();
-//                } catch (JSONException | IOException e) {
-//                    throw new RuntimeException(e);
-//                }
-//
-//            }
-//        };
-//        Timer timer = new Timer();
-//        long delay = 0;
-//        long interval = 12 * 60 * 60 * 1000;
-//
-//        timer.scheduleAtFixedRate(timerTask, delay, interval);
-//    }
-//
-//    public JSONObject createBody() throws JSONException { /*승인 키 받아올 때 사용되는 body 생성 코드 입니다.*/
-//        JSONObject body = new JSONObject();
-//        body.put("grant_type", "client_credentials");
-//        body.put("appkey", app_Key);
-//        body.put("appsecret", app_Secret);
-//        return body;
-//    }
-//
-//    public String createApprovalToken() throws IOException, JSONException { /*승인 키 반환하는 코드 입니다.*/
-//        String apiUrl = "https://openapi.koreainvestment.com:9443/oauth2/tokenP";
-//        JSONObject result;
-//        HttpURLConnection connection;
-//        URL url = new URL(apiUrl);
-//
-//        connection = (HttpURLConnection) url.openConnection();
-//        connection.setRequestMethod("POST");
-//        connection.setRequestProperty("Content-Type", "application/json");
-//        connection.setDoOutput(true);
-//
-//        JSONObject body = new JSONObject();
-//        body.put("grant_type", "client_credentials");
-//        body.put("appkey", app_Key);
-//        body.put("appsecret", app_Secret);
-//
-//        try (OutputStream os = connection.getOutputStream()) { /*outPutStream 으로 connection 형태 가져옴*/
-//            byte[] input = body.toString().getBytes("utf-8"); /*body 값을 json 형태로 입력*/
-//            os.write(input, 0, input.length);
-//        }
-//        try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"))) {
-//            StringBuilder response = new StringBuilder();
-//            String responseLine;
-//            while ((responseLine = br.readLine()) != null) {
-//                response.append(responseLine.trim());
-//            }
-//            result = new JSONObject(response.toString());
-//        }
-//        return result.getString("access_token");
-//    }
 
     public static boolean checkImageExists(String logoUrl) {
         try {
@@ -592,6 +526,68 @@ public class StockServiceImpl implements StockService {
 
         return stockSearchResponseDtoList;
     }
+
+    @Override
+    public StockPriceResponseDto getStock(String stockCode) throws IOException, JSONException {
+//        stockCode += ".KS"; // Yahoo Finance 는 KS 붙여야 함.
+        yahoofinance.Stock stock = YahooFinance.get(stockCode);
+
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(GET_STOCK_INFO_API_URL).newBuilder();
+        urlBuilder.addQueryParameter("FID_COND_MRKT_DIV_CODE", "J");
+        urlBuilder.addQueryParameter("FID_INPUT_ISCD", stockCode);
+        String url = urlBuilder.build().toString(); /*한국 현재 주식 시세 url*/
+        String approvalToken = kisApprovalTokenProvider.getApprovalToken();
+
+        OkHttpClient client = new OkHttpClient();
+        StockPriceResponseDto stockPriceResponseDto = new StockPriceResponseDto();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .header("authorization", "Bearer " + approvalToken)
+                .header("appkey", app_Key)
+                .header("appsecret", app_Secret)
+                .header("tr_id", "FHKST01010100")
+                .header("Content-type", "application/json; charset=utf-8")
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful() && response.body() != null) {
+                JSONObject jsonObject = new JSONObject(response.body().string());
+                JSONObject outputs = jsonObject.getJSONObject("output");
+                stockPriceResponseDto.setCurrent_time(String.valueOf(LocalDateTime.now()));
+                stockPriceResponseDto.setStock_status_code((String) outputs.get("iscd_stat_cls_code"));
+                stockPriceResponseDto.setStock_market_index((String) outputs.get("rprs_mrkt_kor_name"));
+                stockPriceResponseDto.setBusiness_type((String) outputs.get("bstp_kor_isnm"));
+
+                NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+                stockPriceResponseDto.setStock_price(nf.format(stock.getQuote().getPrice().toString()));
+                stockPriceResponseDto.setStock_coin(nf.format(Double.parseDouble(String.valueOf(Integer.parseInt((String) outputs.get("stck_prpr"))/100))));
+
+
+                stockPriceResponseDto.setPreparation_day_before(stock.getQuote().getChange().toString());
+                stockPriceResponseDto.setPreparation_day_before_sign((String) outputs.get("prdy_vrss_sign"));
+                stockPriceResponseDto.setPreparation_day_before_rate(stock.getQuote().getChangeInPercent().toString());
+                stockPriceResponseDto.setStock_open_price(stock.getQuote().getOpen().toString());
+                stockPriceResponseDto.setStock_high_price(stock.getQuote().getDayHigh().toString());
+                stockPriceResponseDto.setStock_low_price(stock.getQuote().getDayLow().toString());
+                stockPriceResponseDto.setStock_max_price((String) outputs.get("stck_mxpr"));
+                stockPriceResponseDto.setStock_price_floor((String) outputs.get("stck_llam"));
+                stockPriceResponseDto.setStock_base_price((String) outputs.get("stck_sdpr"));
+                stockPriceResponseDto.setWeighted_average_stock_price((String) outputs.get("wghn_avrg_stck_prc"));
+                stockPriceResponseDto.setPer(stock.getStats().getPe().toString());
+                stockPriceResponseDto.setPbr(stock.getStats().getPe().toString());
+                return stockPriceResponseDto;
+            } else {
+                return null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
 
     @Override
     public CheckHolidayResponseDto checkIsHolidayNow() {
@@ -1231,6 +1227,23 @@ public class StockServiceImpl implements StockService {
                 .lostAmount(String.valueOf(stockCoinBenefit.getLoseAmount()))
                 .losePrice(String.valueOf(stockCoinBenefit.getLoss()))
             .build();
+    }
+    @Override
+    public List<String> getTopFiveStockSymbol() throws IOException {
+        List<String> result = new ArrayList<>();
+
+        Document doc = Jsoup.connect(TopFiveStockSymbolUrl).get();
+
+        String SELECTOR_PREFIX = "#siselist_tab_0 > tbody > tr:nth-child(";
+        String SELECTOR_SUFFIX = ") > td:nth-child(4) > a";
+
+        for (int i = 3; i <= 7; i++) {
+            String selector = SELECTOR_PREFIX + i + SELECTOR_SUFFIX;
+            Elements element = doc.select(selector);
+            String symbol = element.text();
+            result.add(symbol);
+        }
+        return result;
     }
 }
 

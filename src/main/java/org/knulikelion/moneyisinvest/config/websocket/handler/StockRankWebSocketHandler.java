@@ -53,7 +53,7 @@ public class StockRankWebSocketHandler extends TextWebSocketHandler {
         session.sendMessage(new TextMessage(jsonObject.toString()));
     }
 
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 5000)
     public void sendStockRank() throws RuntimeException {
         synchronized (sessionMap){
         for (WebSocketSession session : sessionMap.values()){
