@@ -39,6 +39,4 @@ public interface StockService {
     List<StockTransactionHistoryResponseDto> getStockTransactionHistory(String uid);
     BaseResponseDto calculateCoin(int amount, String price);
     StockBenefitResponseDto getPremiumInfo(String uid);
-    List<String> getTopFiveStockSymbol() throws IOException;
-    StockPriceResponseDto getStock(String stockCode) throws IOException, JSONException;
 }
