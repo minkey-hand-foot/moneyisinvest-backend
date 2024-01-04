@@ -147,9 +147,10 @@ public class SignServiceImpl implements SignService {
                     .createdAt(LocalDateTime.now())
                     .useAble(true)
                     .registerType(RegisterType.WEB)
-                    .phoneNum(
-                            (signUpRequestDto.getPhoneNum() == null) ? "010-0000-0000" : signUpRequestDto.getPhoneNum()
-                    )
+//                    .phoneNum(
+//                            (signUpRequestDto.getPhoneNum() == null) ? "010-0000-0000" : signUpRequestDto.getPhoneNum()
+//                    )
+                    .phoneNum("010-0000-0000")
                     .recentLoggedIn(LocalDateTime.now())
                     .profileUrl(DEFAULT_PROFILE)
                     .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
