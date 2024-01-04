@@ -151,7 +151,7 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
             String stockCode = stockService.searchStockByKeyword(dto.getStockName()).get(0).getStockId();
             dto.setStockCode(stockCode); // 종목 코드
 
-            String url = stockService.getCompanyInfoByStockId(stockCode).getCompanyUrl();
+            String url = stockService.getCompanyInfoByStockId(stockCode).getStockLogoUrl();
             dto.setStockUrl(url); // url
 
             dto.setStockPrice(changeJSoup(doc, SELECTOR_PREFIX+" > tr:nth-child("+i+") > td:nth-child(5)")); // 현재가
