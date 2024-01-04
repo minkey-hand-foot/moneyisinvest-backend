@@ -150,6 +150,7 @@ public class SignServiceImpl implements SignService {
                     .phoneNum(
                             (signUpRequestDto.getPhoneNum() == null) ? "010-0000-0000" : signUpRequestDto.getPhoneNum()
                     )
+                    .recentLoggedIn(LocalDateTime.now())
                     .profileUrl(DEFAULT_PROFILE)
                     .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
                     .roles(Collections.singletonList("ROLE_USER"))
