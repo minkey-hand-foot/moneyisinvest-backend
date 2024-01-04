@@ -110,7 +110,7 @@ public class SignServiceImpl implements SignService {
 
 //        휴대폰 번호, 비밀번호 정규식 정의
         String PHONE_REG = "^01(?:0|1|[6-9])[.-]?(\\d{3}|\\d{4})[.-]?(\\d{4})$";
-        String PASS_REG = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–[{}]:;',?/*~$^+=<>]).{8,20}$";
+        String PASS_REG = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$";
 
         if(!validateUid(signUpRequestDto.getUid())) {
             signUpResultDto.setSuccess(false);
