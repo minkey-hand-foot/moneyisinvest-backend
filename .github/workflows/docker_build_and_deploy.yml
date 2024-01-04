@@ -41,6 +41,7 @@ jobs:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.SSH_PRIVATE_KEY }}
+        port : 1115
         script: |
           sudo docker stop backend
           sudo docker rm backend
