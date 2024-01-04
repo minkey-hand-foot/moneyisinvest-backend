@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import javax.print.Doc;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -90,11 +91,12 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
             stockPriceResponseDto.setBusiness_type(changeJSoup(doc,"#content > div.section.trade_compare > h4 > em > a")); // 업종
 
             NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+            DecimalFormat df = new DecimalFormat("#");
             Elements STOCK_PRICE = doc.select("#content > div.section.trade_compare > table > tbody > tr:nth-child(1) > td:nth-child(2)");
             String priceText = STOCK_PRICE.text().replace(",","");
-            stockPriceResponseDto.setStock_price(nf.format(Double.parseDouble(priceText))); // 현재가
+            stockPriceResponseDto.setStock_price(priceText); // 현재가
 
-            stockPriceResponseDto.setStock_coin(nf.format(Double.parseDouble(priceText)/100)); // 스톡가
+            stockPriceResponseDto.setStock_coin(String.valueOf(Double.parseDouble(priceText)/100)); // 스톡가
 
             String rate = changeJSoup(doc,"#content > div.section.trade_compare > table > tbody > tr:nth-child(2) > td:nth-child(2) > em");
             rate = rate.substring(3,6);
@@ -107,17 +109,17 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
             beforeRateString=beforeRateString.substring(0,2);
             stockPriceResponseDto.setPreparation_day_before_rate(beforeRateString); // 전일 대비율
 
-            stockPriceResponseDto.setStock_open_price(mergePrice(doc, "#chart_area > div.rate_info > table > tbody > tr:nth-child(2) > td.first > em")); // 주식 시가
+            stockPriceResponseDto.setStock_open_price(mergePrice(doc, "#chart_area > div.rate_info > table > tbody > tr:nth-child(2) > td.first > em").replace(",","")); // 주식 시가
 
-            stockPriceResponseDto.setStock_high_price(mergePrice(doc, "#chart_area > div.rate_info > table > tbody > tr:nth-child(1) > td:nth-child(2) > em.no_up")); // 주식 최고가
+            stockPriceResponseDto.setStock_high_price(mergePrice(doc, "#chart_area > div.rate_info > table > tbody > tr:nth-child(1) > td:nth-child(2) > em.no_up").replace(",","")); // 주식 최고가
 
-            stockPriceResponseDto.setStock_low_price(mergePrice(doc, "#chart_area > div.rate_info > table > tbody > tr:nth-child(2) > td:nth-child(2) > em.no_down")); // 주식 최저가
+            stockPriceResponseDto.setStock_low_price(mergePrice(doc, "#chart_area > div.rate_info > table > tbody > tr:nth-child(2) > td:nth-child(2) > em.no_down").replace(",","")); // 주식 최저가
 
-            stockPriceResponseDto.setStock_max_price(mergePrice(doc, "#chart_area > div.rate_info > table > tbody > tr:nth-child(1) > td:nth-child(2) > em.no_cha")); // 주식 상한가
+            stockPriceResponseDto.setStock_max_price(mergePrice(doc, "#chart_area > div.rate_info > table > tbody > tr:nth-child(1) > td:nth-child(2) > em.no_cha").replace(",","")); // 주식 상한가
 
-            stockPriceResponseDto.setStock_price_floor(mergePrices(doc, "#chart_area > div.rate_info > table > tbody > tr:nth-child(2) > td:nth-child(2) > em.no_cha")); // 주식 하한가
+            stockPriceResponseDto.setStock_price_floor(mergePrices(doc, "#chart_area > div.rate_info > table > tbody > tr:nth-child(2) > td:nth-child(2) > em.no_cha").replace(",","")); // 주식 하한가
 
-            stockPriceResponseDto.setStock_base_price(mergePrices(doc, "#chart_area > div.rate_info > table > tbody > tr:nth-child(2) > td:nth-child(2) > em.no_cha")); // 주식 기준가
+            stockPriceResponseDto.setStock_base_price(mergePrices(doc, "#chart_area > div.rate_info > table > tbody > tr:nth-child(2) > td:nth-child(2) > em.no_cha").replace(",","")); // 주식 기준가
 
             stockPriceResponseDto.setWeighted_average_stock_price((stockPriceResponseDto.getStock_price())); // 가중 평균 주식 가격
 
