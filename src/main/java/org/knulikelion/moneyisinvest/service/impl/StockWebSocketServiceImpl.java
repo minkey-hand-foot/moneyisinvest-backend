@@ -98,10 +98,9 @@ public class StockWebSocketServiceImpl implements StockWebSocketService {
 
             stockPriceResponseDto.setStock_coin(String.valueOf(Double.parseDouble(priceText)/100)); // 스톡가
 
-            String rate = changeJSoup(doc,"#content > div.section.trade_compare > table > tbody > tr:nth-child(2) > td:nth-child(2) > em");
-            rate = rate.substring(3,6);
+            String rate = changeJSoup(doc,"#chart_area > div.rate_info > div > p.no_exday > em:nth-child(2) > span.no0");
 
-            stockPriceResponseDto.setPreparation_day_before(rate.trim()); // 전일 대비
+            stockPriceResponseDto.setPreparation_day_before(rate); // 전일 대비
 
             stockPriceResponseDto.setPreparation_day_before_sign("4"); // 전일 대비 부호
 
